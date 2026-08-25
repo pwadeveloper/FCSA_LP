@@ -44,6 +44,48 @@ var FORM_ENDPOINT = null; /* e.g. 'https://formspree.io/f/xxxxxxxx' */
     window.addEventListener('load', reaim);
   }
 
+  /* ---------- 1c. header: transparent only while the media is behind it ----------
+     Watching .hero-media rather than the hero section covers both layouts: on
+     desktop the media is inset:0 so its bottom is the hero's bottom; on mobile
+     it is the 4:5 block, so the header goes solid as soon as that scrolls by
+     and stops colliding with the headline underneath. */
+  var head = document.getElementById('site-head');
+  var media = document.querySelector('.hero-media');
+  if (head && media && 'IntersectionObserver' in window) {
+    var headH = function () {
+      return parseInt(getComputedStyle(document.documentElement)
+        .getPropertyValue('--head-h'), 10) || 76;
+    };
+    var mkObserver = function () {
+      return new IntersectionObserver(function (entries) {
+        head.classList.toggle('is-solid', !entries[0].isIntersecting);
+      }, { rootMargin: '-' + headH() + 'px 0px 0px 0px', threshold: 0 });
+    };
+    var mo = mkObserver();
+    mo.observe(media);
+    /* --head-h changes at the 1024 breakpoint, so rebuild the observer */
+    var wideMq = window.matchMedia('(min-width: 1024px)');
+    if (wideMq.addEventListener) {
+      wideMq.addEventListener('change', function () {
+        mo.disconnect(); mo = mkObserver(); mo.observe(media);
+      });
+    }
+  } else if (head) {
+    head.classList.add('is-solid');
+  }
+
+  /* ---------- 1d. hero video: no autoplay below 1024px, none if reduced ---------- */
+  var hv = document.querySelector('.hero-video');
+  if (hv) {
+    var wide = window.matchMedia('(min-width: 1024px)');
+    var syncHero = function () {
+      if (wide.matches && !reduced) { hv.play().catch(function () {}); }
+      else { hv.pause(); }
+    };
+    syncHero();
+    if (wide.addEventListener) wide.addEventListener('change', syncHero);
+  }
+
   /* ---------- 2. section reveals ---------- */
   var reveals = document.querySelectorAll('.reveal');
 

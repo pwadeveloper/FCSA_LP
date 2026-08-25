@@ -1,62 +1,87 @@
 /* ==========================================================================
-   THE FILM AND CONTENT SCHOOL
-   Monochrome only. Six greys, no seventh. Emphasis comes from fill weight,
-   scale and spacing — never from hue.
+   TFCS.AFRIC — The Film & Content School Africa
+   Black ground, white type, one accent. Yellow appears in exactly one
+   place: the Apply CTA. Nowhere else.
    ========================================================================== */
 
-/* ---------- FONTS ---------- */
+/* ---------- FONTS ----------
+   Delight, by Måns Grebäck / supplied by the client. fsType=0 (installable,
+   no embedding restriction). NOTE: fsType is the font's technical permission
+   bit, NOT the EULA — confirm the webfont licence separately. See README. */
 @font-face {
-  font-family: 'Bodoni Moda';
-  src: url('assets/fonts/bodoni-moda-latin.woff2') format('woff2');
-  font-weight: 400 900;
-  font-style: normal;
-  font-display: swap;
+  font-family: 'Delight';
+  src: url('assets/fonts/delight-regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
 }
 @font-face {
-  font-family: 'Inter';
-  src: url('assets/fonts/inter-latin.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
+  font-family: 'Delight';
+  src: url('assets/fonts/delight-bold.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
 }
+@font-face {
+  font-family: 'Delight';
+  src: url('assets/fonts/delight-black.woff2') format('woff2');
+  font-weight: 900; font-style: normal; font-display: swap;
+}
+
+/* ---------- THE HEADLINE AMPERSAND — BLOCKED, see README ----------
+   The & in "The Film & Content School Africa" is meant to be Mezzotint CF.
+   Mezzotint CF is Adobe-Fonts-activated on this machine (The Type Founders);
+   that licence covers desktop use and Adobe's own web CDN, NOT self-hosting a
+   subset. Nothing has been extracted. Until a webfont licence lands, the &
+   renders in Delight, which looks correct — just not distinct.
+
+   To enable: drop a licensed assets/fonts/mezzotint-amp.woff2 (subset to
+   U+0026 only, 2-4KB) in place and uncomment this whole block.
+
+   @font-face {
+     font-family: 'Mezzotint CF';
+     src: url('assets/fonts/mezzotint-amp.woff2') format('woff2');
+     unicode-range: U+0026;
+     font-display: block;
+   }
+   .hero-amp {
+     font-family: 'Mezzotint CF', var(--sans);
+     font-weight: 400;
+     font-size: 1.12em;
+     vertical-align: -0.015em;
+     letter-spacing: 0.012em;
+   }
+   Those last four are a starting point. A serif ampersand dropped into a
+   heavy sans line reads small and floats high — tune by eye against the
+   comp, not by matching the numeric size.
+   ------------------------------------------------------------------- */
 
 /* ---------- TOKENS ---------- */
 :root {
-  /* palette — warm dark. Four brand colours in play; Sky Blue,
-     Carrot Light and Warm Beige are deliberately held back. */
-  --ground:  #2E1E1C;  /* Soft Black — page ground */
-  --paper:   #FCFCFA;  /* Paper White — display headings, primary CTA */
-  --body:    #DEDBDA;  /* Soft Gray — running text        11.57:1 on ground */
-  --mute:    #9B8D87;  /* warm mid — captions, lane labels 4.97:1 on ground */
-  --rule:    #5C4A45;  /* hairlines — decorative only, not a control boundary */
-  --surface: #3E2C29;  /* raised fill */
-  --sunk:    #241715;  /* recessed fill */
+  /* Three colours and a text-on-accent. That is the whole system. */
+  --ground:    #000000;
+  --paper:     #FFFFFF;
+  --accent:    #FFEA33;  /* sampled from the supplied comp */
+  --on-accent: #000000;  /* 17.07:1 on accent. NEVER white — white is 1.23:1 */
 
-  /* Action only. Two places on the whole page: the Apply CTA and the
-     PREMIERE block. Both mean the same thing — this is where you're going. */
-  --accent:       #F3681A;  /* Carrot */
-  --accent-hover: #D54A00;  /* Carrot Dark — rim only, never behind a label */
-  --on-accent:    #2E1E1C;  /* 5.16:1 on Carrot. NEVER white — white is 3.00:1 */
+  /* Supporting ladder, re-derived against pure black. */
+  --body:    #E9E9E9;  /* running text        17.30:1 */
+  --mute:    #949494;  /* captions, labels     6.92:1  / boundary 6.92:1 */
+  --rule:    #303030;  /* hairlines — decorative only */
+  --surface: #262626;  /* raised fill  — timeline: your track */
+  --sunk:    #141414;  /* recessed fill — timeline: quiet */
 
-  /* type */
-  --serif: 'Bodoni Moda', Didot, 'Bodoni MT', Georgia, 'Times New Roman', serif;
-  --sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --sans: 'Delight', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
-  --t-2: 0.75rem;
+  --t-2: 0.6875rem;
   --t-1: 0.8125rem;
   --t0:  clamp(1rem, 0.965rem + 0.15vw, 1.0625rem);
-  --t1:  clamp(1.1875rem, 1.11rem + 0.33vw, 1.375rem);
-  --t2:  clamp(1.5rem, 1.36rem + 0.6vw, 1.8125rem);
-  --t3:  clamp(1.875rem, 1.62rem + 1.09vw, 2.4375rem);
-  --t4:  clamp(2.25rem, 1.83rem + 1.79vw, 3.25rem);
-  --t5:  clamp(2.75rem, 2.09rem + 2.8vw, 4.3125rem);
-  --display: clamp(2.75rem, 11.2vw, 8rem);
+  --t1:  clamp(1.125rem, 1.06rem + 0.3vw, 1.3125rem);
+  --t2:  clamp(1.375rem, 1.24rem + 0.6vw, 1.75rem);
+  --t3:  clamp(1.75rem, 1.5rem + 1.05vw, 2.375rem);
+  --t4:  clamp(2.125rem, 1.72rem + 1.75vw, 3.125rem);
+  --t5:  clamp(2.5rem, 1.9rem + 2.6vw, 4rem);
 
-  /* space */
   --gut:  clamp(1.25rem, 5vw, 4rem);
   --sec:  clamp(3rem, 5.6vw, 5.25rem);
+  --head-h: 76px;
 
-  /* timeline */
   --lane-w: 92px;
   --week-w: 84px;
   --lane-h: 118px;
@@ -68,10 +93,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
-}
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 
 body {
   background: var(--ground);
@@ -82,247 +104,165 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'kern' 1, 'liga' 1;
   overflow-x: clip;
 }
 
-img, svg { display: block; max-width: 100%; }
+img, svg, video { display: block; max-width: 100%; }
 button, input, select, textarea { font: inherit; color: inherit; }
 ul, ol { list-style: none; padding: 0; }
 a { color: inherit; }
 
-/* ---------- FOCUS — stays --paper. Never carrot. 15.50:1 on ground,
-     and still 3.00:1 against a carrot CTA fill. ---------- */
+/* ---------- FOCUS ----------
+   White ring, never accent. The black halo keeps it visible where the ring
+   lands on the hero image or on the yellow pill (white on yellow is 1.23:1). */
 :focus-visible {
   outline: 2px solid var(--paper);
   outline-offset: 3px;
-  border-radius: 1px;
+  box-shadow: 0 0 0 6px rgba(0,0,0,0.75);
+  border-radius: 2px;
 }
 :focus:not(:focus-visible) { outline: none; }
 
 .skip {
-  position: absolute; left: 0; top: 0;
-  transform: translateY(-120%);
+  position: absolute; left: 0; top: 0; transform: translateY(-120%);
   background: var(--paper); color: var(--ground);
-  padding: .75rem 1.25rem; z-index: 100;
-  font-size: var(--t-1); font-weight: 600; text-decoration: none;
+  padding: .75rem 1.25rem; z-index: 200;
+  font-size: var(--t-1); font-weight: 700; text-decoration: none;
 }
 .skip:focus { transform: translateY(0); }
 
 .sr-only {
-  position: absolute; width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden;
-  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
 }
 
 /* ---------- LAYOUT ---------- */
-.wrap {
-  width: 100%; max-width: 1320px;
-  margin-inline: auto;
-  padding-inline: var(--gut);
-}
+.wrap { width: 100%; max-width: 1320px; margin-inline: auto; padding-inline: var(--gut); }
 .wrap-narrow { max-width: 820px; }
 .sec { padding-block: var(--sec); }
 
 /* ---------- TYPE ---------- */
-.display {
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 96, 'wght' 400;
-  font-size: var(--display);
-  line-height: 0.92;
-  letter-spacing: -0.022em;
-  color: var(--paper);
-  text-wrap: balance;
-}
-
 .h2 {
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 60, 'wght' 400;
-  font-size: var(--t4);
-  line-height: 1.02;
-  letter-spacing: -0.018em;
-  color: var(--paper);
-  text-wrap: balance;
+  font-size: var(--t4); font-weight: 900; line-height: 1.0;
+  letter-spacing: -0.032em; color: var(--paper); text-wrap: balance;
 }
-.h2-big { font-size: var(--t5); font-variation-settings: 'opsz' 96, 'wght' 400; }
-
+.h2-big { font-size: var(--t5); }
 .h3 {
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 36, 'wght' 400;
-  font-size: var(--t2);
-  line-height: 1.1;
-  letter-spacing: -0.012em;
-  color: var(--paper);
+  font-size: var(--t2); font-weight: 700; line-height: 1.1;
+  letter-spacing: -0.022em; color: var(--paper);
 }
-
-.eyebrow, .stat-l, .track-n, .tag, .cur-h span, .tl-lane-n, .blk-t, .blk-w, .tl-hint {
-  font-family: var(--sans);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 500;
-  font-size: var(--t-2);
+.eyebrow, .track-n, .tag, .tl-lane-n, .blk-t, .blk-w, .tl-hint, .kit-h, .partners-label {
+  text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; font-size: var(--t-2);
 }
-
 .sec-head { margin-bottom: clamp(1.75rem, 3.4vw, 2.5rem); }
-.sec-intro {
-  color: var(--mute);
-  font-size: var(--t1);
-  margin-top: 1rem;
-  max-width: 46ch;
-  line-height: 1.45;
-}
+.sec-intro { color: var(--mute); font-size: var(--t1); margin-top: 1rem; max-width: 46ch; line-height: 1.45; }
 .cap { color: var(--mute); font-size: var(--t-1); line-height: 1.55; }
 
-/* ---------- HEADER ---------- */
+/* ---------- HEADER — floats over the hero, solid once past it ---------- */
 .site-head {
-  position: sticky; top: 0; z-index: 50;
-  background: rgba(46, 30, 28, 0.88);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--rule);
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: transparent; border-bottom: 1px solid transparent;
+  transition: background-color .3s var(--ease), border-color .3s var(--ease);
 }
-.head-inner {
-  display: flex; align-items: center; gap: 1rem;
-  min-height: 60px;
-}
-.head-logos { display: flex; align-items: center; gap: .75rem; margin-right: auto; }
-.logo-cy  { height: 11px; width: auto; }
-.logo-mms { height: 17px; width: auto; }
-.head-x { width: 1px; height: 16px; background: var(--rule); flex: none; }
-
-.head-nav { display: none; gap: 1.75rem; }
-.head-nav a {
-  font-size: var(--t-1); color: var(--mute); text-decoration: none;
-  padding-block: .5rem; transition: color .2s var(--ease);
-}
-.head-nav a:hover { color: var(--paper); }
+.site-head.is-solid { background: var(--ground); border-bottom-color: var(--rule); }
+.head-inner { display: flex; align-items: center; gap: 1rem; min-height: var(--head-h); }
+.head-mark { margin-right: auto; display: block; line-height: 0; }
+.head-logo { height: 46px; width: auto; }
 
 /* ---------- BUTTONS ---------- */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 52px; padding: 0 1.75rem;
-  font-size: var(--t0); font-weight: 500; letter-spacing: -0.005em;
+  display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+  min-height: 52px; padding: 0 1.9rem;
+  font-size: var(--t0); font-weight: 700; letter-spacing: -0.005em;
   text-decoration: none; border: 1px solid transparent; cursor: pointer;
-  transition: background-color .22s var(--ease), color .22s var(--ease), border-color .22s var(--ease);
+  border-radius: 999px;
+  transition: background-color .22s var(--ease), color .22s var(--ease),
+              border-color .22s var(--ease), filter .22s var(--ease);
 }
-.btn-primary { background: var(--paper); color: var(--ground); }
-.btn-primary:hover { background: var(--body); }
+/* THE ONE PLACE YELLOW APPEARS */
+.btn-apply { background: var(--accent); color: var(--on-accent); }
+.btn-apply:hover { filter: brightness(1.07); }
+.btn-apply:active { filter: brightness(0.94); }
 
-/* CARROT, PLACE 1 OF 2 — the Apply CTA.
-   The fill never darkens under the label: --on-accent on Carrot Dark is
-   3.65:1 and fails AA. Hover is a Carrot Dark rim instead, so the label
-   holds 5.16:1 in every state. */
-.btn-accent { background: var(--accent); color: var(--on-accent); font-weight: 600; }
-.btn-accent:hover { box-shadow: inset 0 0 0 2px var(--accent-hover); }
-.btn-accent:active { box-shadow: inset 0 0 0 3px var(--accent-hover); }
-.btn-ghost { border-color: var(--mute); color: var(--paper); background: transparent; }
-.btn-ghost:hover { border-color: var(--paper); background: var(--sunk); }
-.btn-sm { min-height: 40px; padding: 0 1.1rem; font-size: var(--t-1); }
+.btn-outline { border-color: var(--paper); color: var(--paper); background: transparent; }
+.btn-outline:hover { background: var(--paper); color: var(--ground); }
+.btn-outline .arr { flex: none; }
+.btn-sm { min-height: 42px; padding: 0 1.35rem; font-size: var(--t-1); }
 .btn-block { width: 100%; }
 
-/* ---------- HERO ---------- */
-.hero { padding-top: clamp(2.5rem, 7vw, 5rem); padding-bottom: clamp(3rem, 7vw, 5.5rem); }
-.eyebrow { color: var(--mute); margin-bottom: clamp(1.75rem, 5vw, 2.75rem); line-height: 1.9; }
-.eyebrow .dot { display: none; }
+/* ==========================================================================
+   HERO
+   ========================================================================== */
+.hero { position: relative; background: var(--ground); }
 
-.lede {
-  margin-top: clamp(1.75rem, 4vw, 2.5rem);
-  font-size: var(--t1);
-  line-height: 1.5;
-  color: var(--body);
-  max-width: 34ch;
-  text-wrap: pretty;
-}
-.hero-cta {
-  display: flex; flex-direction: column; gap: .75rem;
-  margin-top: clamp(2rem, 5vw, 3rem);
-}
+.hero-media { position: relative; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; background: var(--sunk); }
+.hero-media img, .hero-media video { width: 100%; height: 100%; object-fit: cover; }
 
-/* ---------- WHY ---------- */
-.prose p + p { margin-top: 1.1rem; }
-.prose p { max-width: 56ch; text-wrap: pretty; }
-.pull {
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 36, 'wght' 400;
-  font-size: var(--t2); line-height: 1.22; color: var(--paper);
-  letter-spacing: -0.01em;
+/* labelled stand-in until a licensed asset lands */
+.hero-ph {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .5rem; text-align: center; padding: 1.5rem;
+  background: repeating-linear-gradient(135deg, var(--sunk) 0 10px, #0A0A0A 10px 20px);
+}
+.hero-ph b { font-size: var(--t-2); letter-spacing: .16em; text-transform: uppercase; color: var(--paper); font-weight: 700; }
+.hero-ph span { font-size: var(--t-2); color: var(--mute); line-height: 1.5; max-width: 34ch; }
+
+.hero-scrim { position: absolute; inset: 0; pointer-events: none;
+  /* below 1024 the header floats over the top of the 4:5 media block, so the
+     mark and the pill need a guaranteed dark band whatever the image is */
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 9%, rgba(0,0,0,0.12) 18%, rgba(0,0,0,0) 28%);
 }
 
-/* ---------- TRACKS ---------- */
-.tracks { display: grid; gap: 1px; background: var(--rule); border-bottom: 1px solid var(--rule); }
-.track { background: var(--ground); display: flex; flex-direction: column; padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem); }
-.track-n { color: var(--mute); margin-bottom: .85rem; }
-.track-days { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
-.tag {
-  display: inline-block; padding: .4rem .65rem;
-  background: var(--sunk); border: 1px solid var(--rule);
-  color: var(--body); font-size: 0.6875rem;
-}
-.tag-q { background: transparent; color: var(--mute); font-feature-settings: 'tnum' 1; }
+.hero-inner { position: relative; z-index: 2; padding-block: clamp(2rem, 5vw, 3rem) clamp(2rem, 4vw, 3rem); }
 
-.track-dl { margin-top: 1.75rem; }
-.track-dl dt {
-  font-size: var(--t-2); text-transform: uppercase; letter-spacing: .12em;
-  font-weight: 500; color: var(--mute);
-  padding-top: 1.1rem; margin-top: 1.1rem; border-top: 1px solid var(--rule);
+.hero-headline {
+  font-size: clamp(2.75rem, 13.4vw, 7.5rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: var(--paper);
 }
-.track-dl dt:first-child { padding-top: 0; margin-top: 0; border-top: 0; }
-.track-dl dd { margin-top: .6rem; color: var(--body); text-wrap: pretty; }
-.track-out {
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 24, 'wght' 500;
-  font-size: var(--t1); line-height: 1.3; color: var(--paper) !important;
-  letter-spacing: -0.008em;
+.hero-amp { font-family: var(--sans); }
+
+.hero-sub {
+  margin-top: clamp(1.5rem, 4vw, 2rem);
+  font-size: var(--t-1); font-weight: 700; line-height: 1.45;
+  color: var(--paper); max-width: 30ch;
 }
-.track-note {
-  margin-top: 1.5rem; padding: .85rem 1rem;
-  background: var(--sunk); border-left: 2px solid var(--rule);
-  color: var(--mute); font-size: var(--t-1); line-height: 1.5;
+.hero-actions { margin-top: clamp(1.75rem, 4vw, 2.5rem); }
+
+.partners { margin-top: clamp(2.25rem, 6vw, 3.5rem); }
+.partners-label { color: var(--paper); opacity: .6; margin-bottom: .9rem; }
+.partner-list { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem clamp(1.25rem, 3.5vw, 2.75rem); }
+.partner {
+  color: var(--paper); font-weight: 700;
+  font-size: clamp(0.75rem, 1.15vw, 0.9375rem);
+  letter-spacing: 0.005em; line-height: 1.2;
 }
 
 /* ---------- WHY: one line, standing alone ---------- */
 .pull-standalone {
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 72, 'wght' 400;
-  font-size: var(--t3);
-  line-height: 1.14;
-  letter-spacing: -0.016em;
-  color: var(--paper);
-  max-width: 30ch;
-  text-wrap: pretty;
+  font-size: var(--t3); font-weight: 700; line-height: 1.14;
+  letter-spacing: -0.026em; color: var(--paper); max-width: 30ch; text-wrap: pretty;
 }
 
-/* ---------- TRACKS: shared voice line ---------- */
-.sec-tagline {
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 24, 'wght' 400;
-  font-size: var(--t1);
-  line-height: 1.3;
-  color: var(--paper);
-  margin-top: .85rem;
-  letter-spacing: -0.008em;
-}
+/* ---------- TRACKS ---------- */
+.sec-tagline { font-size: var(--t1); font-weight: 700; color: var(--paper); margin-top: .85rem; letter-spacing: -0.015em; }
 
-/* ---------- FOUNDATION: full width, above the split ---------- */
 .foundation {
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
   padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem);
 }
 .foundation .track-n { color: var(--mute); margin-bottom: .85rem; }
 .foundation .h3 { margin-bottom: clamp(1.5rem, 3vw, 2rem); }
-
-.fnd-list {
-  column-gap: clamp(1.5rem, 3vw, 3rem);
-}
+.fnd-list { column-gap: clamp(1.5rem, 3vw, 3rem); }
 .fnd-list li { break-inside: avoid; }
 .class-list li {
-  padding: .65rem 0;
-  border-bottom: 1px solid var(--rule);
-  font-size: 0.9375rem; line-height: 1.4; color: var(--body);
-  text-wrap: pretty;
+  padding: .65rem 0; border-bottom: 1px solid var(--rule);
+  font-size: 0.9375rem; line-height: 1.4; color: var(--body); text-wrap: pretty;
 }
-
 .fnd-pulls {
   display: grid; gap: clamp(1rem, 2vw, 1.5rem) clamp(1.5rem, 3vw, 3rem);
   margin-top: clamp(1.5rem, 3vw, 2.25rem);
@@ -331,59 +271,53 @@ a { color: inherit; }
 }
 .fnd-pulls .track-pull { border-top: 0; padding-top: 0; }
 
-/* the sentences that sound like a person — set in the display face,
-   sitting at the foot of the panel they belong to */
-.track-pull {
-  padding-top: 1.15rem;
-  border-top: 1px solid var(--rule);
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 40, 'wght' 400;
-  font-size: var(--t2);
-  line-height: 1.14;
-  letter-spacing: -0.012em;
-  color: var(--paper);
-  text-wrap: pretty;
+.tracks { display: grid; gap: 1px; background: var(--rule); border-bottom: 1px solid var(--rule); }
+.track { background: var(--ground); display: flex; flex-direction: column; padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem); }
+.track-n { color: var(--mute); margin-bottom: .85rem; }
+.track-days { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.tag { display: inline-block; padding: .4rem .65rem; background: var(--sunk); border: 1px solid var(--rule); color: var(--body); }
+.tag-q { background: transparent; color: var(--mute); font-feature-settings: 'tnum' 1; }
+
+.track-dl { margin-top: 1.75rem; }
+.track-dl dt {
+  font-size: var(--t-2); text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  color: var(--mute); padding-top: 1.1rem; margin-top: 1.1rem; border-top: 1px solid var(--rule);
 }
-/* bottom-align the closing block so the three panels don't end ragged.
-   Film Production has no pull line, so its "what you leave with" falls to the
-   same baseline instead of leaving a hole. Degrades to top-aligned where
-   :has() is unsupported. */
+.track-dl dt:first-child { padding-top: 0; margin-top: 0; border-top: 0; }
+.track-dl dd { margin-top: .6rem; color: var(--body); text-wrap: pretty; }
+.track-out { font-size: var(--t1); font-weight: 700; line-height: 1.25; color: var(--paper) !important; letter-spacing: -0.018em; }
+.track-note { margin-top: 1.5rem; padding: .85rem 1rem; background: var(--sunk); border-left: 2px solid var(--rule); color: var(--mute); font-size: var(--t-1); line-height: 1.5; }
+
+.track-pull {
+  padding-top: 1.15rem; border-top: 1px solid var(--rule);
+  font-size: var(--t2); font-weight: 700; line-height: 1.14;
+  letter-spacing: -0.026em; color: var(--paper); text-wrap: pretty;
+}
 .track:not(:has(.track-pull)) .track-dl { display: flex; flex-direction: column; flex: 1; }
 .track:not(:has(.track-pull)) .track-dl dt:last-of-type { margin-top: auto; }
-
 .track > .track-pull { margin-top: auto; }
 .track > .track-note { margin-top: auto; }
 .track > .track-note + .track-pull { margin-top: 1.15rem; }
 
+.reassure {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  font-size: var(--t2); font-weight: 700; line-height: 1.18;
+  color: var(--paper); letter-spacing: -0.026em; max-width: 26ch;
+}
+
 /* ---------- FAQ kit lists ---------- */
 .kit { margin-top: 0; }
 .kit li {
-  padding: .6rem 0 .6rem 1.4rem;
-  border-bottom: 1px solid var(--rule);
-  font-size: 0.9375rem; line-height: 1.45; color: var(--body);
-  position: relative; text-wrap: pretty;
+  padding: .6rem 0 .6rem 1.4rem; border-bottom: 1px solid var(--rule);
+  font-size: 0.9375rem; line-height: 1.45; color: var(--body); position: relative; text-wrap: pretty;
 }
-.kit li::before {
-  content: ''; position: absolute; left: 0; top: 1.05rem;
-  width: 6px; height: 1px; background: var(--mute);
-}
-.kit-h {
-  font-size: var(--t-2); text-transform: uppercase; letter-spacing: .12em;
-  font-weight: 500; color: var(--mute); margin-bottom: .35rem;
-}
+.kit li::before { content: ''; position: absolute; left: 0; top: 1.05rem; width: 6px; height: 1px; background: var(--mute); }
+.kit-h { color: var(--mute); margin-bottom: .35rem; }
 .kit + .kit-h { margin-top: 1.5rem; }
 
-/* ---------- REASSURANCE ---------- */
-.reassure {
-  margin-top: clamp(2rem, 4vw, 3rem);
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 40, 'wght' 400;
-  font-size: var(--t2); line-height: 1.22; color: var(--paper);
-  letter-spacing: -0.01em; max-width: 26ch;
-}
+/* ---------- ANCHOR TARGETS clear the fixed header ---------- */
+#tracks, #weeks, #faq, #apply, #main { scroll-margin-top: calc(var(--head-h) + 24px); }
 
-/* ---------- ANCHOR TARGETS clear the sticky header ---------- */
-#tracks, #weeks, #faq, #apply, #main { scroll-margin-top: 84px; } /* 61px header + 23px air */
 
 /* ==========================================================================
    THE TIMELINE — the signature
@@ -479,9 +413,6 @@ a { color: inherit; }
 
 /* fill ladder: paper = whole school, surface = your track, sunk = quiet */
 .blk-all   { background: var(--paper); color: var(--ground); }
-/* CARROT, PLACE 2 OF 2 — PREMIERE, and nothing else in the timeline.
-   Foundation and Production stay --paper so carrot marks the destination. */
-.blk-a-prem { background: var(--accent); color: var(--on-accent); }
 .blk-mid   { background: var(--surface); color: var(--paper); }
 .blk-quiet { background: var(--sunk); color: var(--mute); border: 1px solid var(--rule); }
 .blk-tbc {
@@ -543,12 +474,9 @@ a { color: inherit; }
 .q { border-bottom: 1px solid var(--rule); }
 .q summary {
   list-style: none; cursor: pointer;
-  display: flex; align-items: flex-start; gap: 1.25rem;
-  padding: 1.35rem 0;
-  font-family: var(--serif);
-  font-variation-settings: 'opsz' 22, 'wght' 500;
-  font-size: var(--t1); line-height: 1.25; color: var(--paper);
-  letter-spacing: -0.008em;
+  display: flex; align-items: flex-start; gap: 1.25rem; padding: 1.35rem 0;
+  font-size: var(--t1); font-weight: 700; line-height: 1.25;
+  color: var(--paper); letter-spacing: -0.018em;
   transition: opacity .2s var(--ease);
 }
 .q summary::-webkit-details-marker { display: none; }
@@ -573,37 +501,29 @@ a { color: inherit; }
 .form { display: grid; gap: 1.4rem; }
 .f { display: grid; gap: .55rem; }
 .f-row { display: grid; gap: 1.4rem; }
-.f label, .f legend, .f-fs legend {
-  font-size: var(--t-1); font-weight: 500; color: var(--body);
-  padding: 0;
-}
+.f label, .f legend, .f-fs legend { font-size: var(--t-1); font-weight: 700; color: var(--body); padding: 0; }
 .opt { color: var(--mute); font-weight: 400; text-transform: none; letter-spacing: 0; }
 .f-fs { border: 0; padding: 0; margin: 0; }
 
 .f input[type="text"], .f input[type="tel"], .f input[type="email"], .f select, .f textarea {
-  width: 100%;
-  min-height: 52px;
-  padding: .85rem 1rem;
+  width: 100%; min-height: 52px; padding: .85rem 1rem;
   background: var(--sunk);
-  border: 1px solid var(--mute); /* 7.0:1 — control boundaries must clear 3:1 */
+  border: 1px solid var(--mute); /* 6.92:1 — control boundaries must clear 3:1 */
   color: var(--paper);
   font-size: 1rem; /* 16px — stops iOS zoom on focus */
-  line-height: 1.4;
-  border-radius: 0;
+  line-height: 1.4; border-radius: 6px;
   -webkit-appearance: none; appearance: none;
   transition: border-color .2s var(--ease), background-color .2s var(--ease);
 }
 .f textarea { min-height: 96px; resize: vertical; }
-.f input:hover, .f select:hover, .f textarea:hover { border-color: var(--mute); }
+.f input:hover, .f select:hover, .f textarea:hover { border-color: var(--paper); }
 .f input:focus, .f select:focus, .f textarea:focus { border-color: var(--paper); background: var(--surface); }
 .f select {
   background-image:
     linear-gradient(45deg, transparent 50%, var(--mute) 50%),
     linear-gradient(135deg, var(--mute) 50%, transparent 50%);
   background-position: calc(100% - 19px) 23px, calc(100% - 13px) 23px;
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
-  padding-right: 2.75rem;
+  background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; padding-right: 2.75rem;
 }
 .f select:invalid { color: var(--mute); }
 .f option { background: var(--sunk); color: var(--paper); }
@@ -613,101 +533,67 @@ a { color: inherit; }
 .rad input { position: absolute; opacity: 0; width: 0; height: 0; }
 .rad span {
   display: flex; align-items: center; justify-content: center;
-  min-height: 52px; padding: 0 1rem; cursor: pointer;
+  min-height: 52px; padding: 0 1rem; cursor: pointer; border-radius: 999px;
   background: var(--sunk); border: 1px solid var(--mute); color: var(--body);
   font-size: var(--t0);
   transition: background-color .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease);
 }
-.rad:hover span { border-color: var(--mute); color: var(--body); }
-.rad input:checked + span { background: var(--paper); border-color: var(--paper); color: var(--ground); font-weight: 500; }
-.rad input:focus-visible + span { outline: 2px solid var(--paper); outline-offset: 3px; }
+.rad:hover span { border-color: var(--paper); color: var(--paper); }
+.rad input:checked + span { background: var(--paper); border-color: var(--paper); color: var(--ground); font-weight: 700; }
+.rad input:focus-visible + span { outline: 2px solid var(--paper); outline-offset: 3px; box-shadow: 0 0 0 6px rgba(0,0,0,.75); }
 
-.chk {
-  display: flex; align-items: flex-start; gap: .85rem; cursor: pointer;
-  font-size: 0.9375rem; line-height: 1.45; color: var(--body); font-weight: 400;
-}
+.chk { display: flex; align-items: flex-start; gap: .85rem; cursor: pointer; font-size: 0.9375rem; line-height: 1.45; color: var(--body); font-weight: 400; }
 .chk input { position: absolute; opacity: 0; width: 0; height: 0; }
 .chk span { flex: 1; padding-top: .1rem; }
 .chk span::before {
-  content: ''; float: left; margin: 0 .85rem 0 -1.7rem;
-  width: 22px; height: 22px; flex: none;
-  background: var(--sunk); border: 1px solid var(--mute);
+  content: ''; float: left; margin: 0 .85rem 0 -1.7rem; width: 22px; height: 22px; flex: none;
+  background: var(--sunk); border: 1px solid var(--mute); border-radius: 4px;
   transition: background-color .18s var(--ease), border-color .18s var(--ease);
 }
 .chk input:checked + span::before {
-  background: var(--paper) center/11px 9px no-repeat;
-  border-color: var(--paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 9'%3E%3Cpath d='M1 4.5 4 7.5 10 1' stroke='%232E1E1C' stroke-width='1.8' fill='none' stroke-linecap='square'/%3E%3C/svg%3E");
+  background: var(--paper) center/11px 9px no-repeat; border-color: var(--paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 9'%3E%3Cpath d='M1 4.5 4 7.5 10 1' stroke='%23000000' stroke-width='1.8' fill='none' stroke-linecap='square'/%3E%3C/svg%3E");
 }
 .chk input:focus-visible + span::before { outline: 2px solid var(--paper); outline-offset: 3px; }
 
-.err { color: var(--paper); font-size: var(--t-1); font-weight: 500; }
+.err { color: var(--paper); font-size: var(--t-1); font-weight: 700; }
 .err::before { content: '— '; color: var(--mute); }
 .f.has-err input, .f.has-err select, .f.has-err textarea { border-color: var(--paper); }
 .f.has-err .rad span { border-color: var(--paper); }
-
-.form-msg {
-  padding: 1rem 1.25rem; border: 1px solid var(--paper);
-  background: var(--sunk); color: var(--paper);
-  font-size: var(--t0); line-height: 1.5;
-}
+.form-msg { padding: 1rem 1.25rem; border: 1px solid var(--paper); background: var(--sunk); color: var(--paper); font-size: var(--t0); line-height: 1.5; border-radius: 6px; }
 .form-msg[data-state="err"] { border-color: var(--rule); color: var(--body); }
 
 /* ---------- FOOTER ---------- */
 .foot { border-top: 1px solid var(--rule); padding-block: clamp(3rem, 7vw, 5rem); }
-.foot-name {
-  font-family: var(--serif); font-variation-settings: 'opsz' 40, 'wght' 400;
-  font-size: var(--t2); color: var(--paper); line-height: 1.1; letter-spacing: -0.012em;
-}
+.foot-name { font-size: var(--t2); font-weight: 900; color: var(--paper); line-height: 1.05; letter-spacing: -0.032em; }
 .foot-sub { color: var(--mute); font-size: var(--t-1); margin-top: .6rem; }
-.foot-logos {
-  display: flex; align-items: center; gap: clamp(1.75rem, 5vw, 3rem);
-  flex-wrap: wrap;
-  margin-block: clamp(2.5rem, 6vw, 3.5rem);
-  padding-block: clamp(2rem, 5vw, 2.75rem);
-  border-block: 1px solid var(--rule);
-}
-.logo-f-cy  { height: 20px; width: auto; }
-.logo-f-mms { height: 31px; width: auto; }
+.foot-founded { margin-block: clamp(2.5rem, 6vw, 3.5rem); padding-block: clamp(2rem, 5vw, 2.75rem); border-block: 1px solid var(--rule); }
+.foot-logo { height: 44px; width: auto; margin-bottom: clamp(1.5rem, 4vw, 2rem); }
+
 /* ==========================================================================
    MOTION — one orchestrated load, then near-nothing.
    ========================================================================== */
-/* Hidden state is gated behind .js — if the script never runs, every section
-   must still render. Content must never depend on JS to become visible. */
 .js .anim { opacity: 0; transform: translateY(14px); }
-.js.ready .anim {
-  animation: rise .62s var(--ease) both;
-  animation-delay: calc((var(--d, 1) - 1) * 75ms);
-}
+.js.ready .anim { animation: rise .62s var(--ease) both; animation-delay: calc((var(--d, 1) - 1) * 75ms); }
 [data-anim="1"] { --d: 1 } [data-anim="2"] { --d: 2 } [data-anim="3"] { --d: 3 }
 [data-anim="4"] { --d: 4 } [data-anim="5"] { --d: 5 }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-.js .reveal {
-  opacity: 0; transform: translateY(12px);
-  transition: opacity .5s var(--ease), transform .5s var(--ease);
-}
+.js .reveal { opacity: 0; transform: translateY(12px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
 .js .reveal.in { opacity: 1; transform: none; }
 
-/* timeline blocks lay down left-to-right, like clips */
 .js .tl-armed .blk { clip-path: inset(0 100% 0 0); }
 .js .tl-armed .tl-tie { opacity: 0; }
-.js .tl-run .blk {
-  clip-path: inset(0 0 0 0);
-  transition: clip-path .5s var(--ease);
-  transition-delay: calc(var(--b, 0) * 55ms);
-}
+.js .tl-run .blk { clip-path: inset(0 0 0 0); transition: clip-path .5s var(--ease); transition-delay: calc(var(--b, 0) * 55ms); }
 .js .tl-run .tl-tie { opacity: 1; transition: opacity .4s var(--ease) .55s; }
 
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 @media (min-width: 560px) {
-  .eyebrow .br-m { display: none; }
-  .eyebrow .dot { display: inline; margin-inline: .7rem; }
-  .hero-cta { flex-direction: row; }
   .f-row { grid-template-columns: 1fr 1fr; }
   .fnd-list { columns: 2; }
+  .hero-actions { display: flex; gap: .75rem; }
 }
 
 @media (min-width: 768px) {
@@ -718,18 +604,48 @@ a { color: inherit; }
   .foot-top .foot-sub:last-child { grid-column: 2; grid-row: 1 / 3; text-align: right; margin-top: 0; }
 }
 
-@media (min-width: 1000px) {
+/* ---------- >=1024: full-bleed hero, text over the media ---------- */
+@media (min-width: 1024px) {
+  :root { --head-h: 104px; }
+  .head-logo { height: 72px; }
+
+  .hero { min-height: 100svh; display: flex; }
+  .hero-media { position: absolute; inset: 0; aspect-ratio: auto; height: 100%; }
+  /* Guarantees the bottom-left headline box regardless of what lands in the
+     media slot: near-solid left third, strong bottom. Verified against a pure
+     white test image — see README. */
+  /* Three layers, each guarding a specific text block. Verified against a
+     pure-white image — the worst case any photo can present. See README. */
+  .hero-scrim {
+    background:
+      /* pool behind the right-hand subhead */
+      radial-gradient(ellipse 34% 30% at 86% 50%,
+        rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.80) 50%, rgba(0,0,0,0.45) 80%, rgba(0,0,0,0) 100%),
+      /* left column, under the headline */
+      linear-gradient(to right,
+        rgba(0,0,0,1) 0%, rgba(0,0,0,0.97) 34%, rgba(0,0,0,0.90) 52%,
+        rgba(0,0,0,0.76) 64%, rgba(0,0,0,0.42) 76%, rgba(0,0,0,0) 90%),
+      /* bottom band, under the button and partner strip */
+      linear-gradient(to top,
+        rgba(0,0,0,1) 0%, rgba(0,0,0,0.96) 18%, rgba(0,0,0,0.74) 32%,
+        rgba(0,0,0,0.32) 48%, rgba(0,0,0,0) 64%);
+  }
+  .hero-inner {
+    display: flex; flex-direction: column; justify-content: flex-end;
+    width: 100%; min-height: 100svh;
+    padding-block: calc(var(--head-h) + 1.5rem) clamp(2rem, 4vw, 3.25rem);
+  }
+  .hero-headline { font-size: clamp(3.75rem, 7.4vw, 7.5rem); max-width: 15ch; }
+  .hero-ph { align-items: flex-end; justify-content: flex-start; text-align: right; padding: calc(var(--head-h) + 2rem) var(--gut) 2rem; }
+  .hero-sub {
+    position: absolute; right: var(--gut); top: 50%; transform: translateY(-50%);
+    width: 30ch; text-align: right; margin-top: 0;
+  }
   .tracks { grid-template-columns: repeat(3, 1fr); }
   .fnd-list { columns: 3; }
-  .head-nav { display: flex; margin-right: auto; }
-  .head-logos { margin-right: 2.5rem; }
-  .logo-cy { height: 14px; }
-  .logo-mms { height: 22px; }
-  .logo-f-cy { height: 28px; } .logo-f-mms { height: 43px; }
   .tl-hint { display: none; }
 }
 
-/* timeline stops scrolling once it fits */
 @media (min-width: 1400px) {
   :root { --week-w: 1fr; }
   .tl { width: 100%; min-width: 0; }
@@ -740,10 +656,8 @@ a { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    transition-delay: 0ms !important;
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; transition-delay: 0ms !important;
   }
   .js .anim, .js .reveal { opacity: 1 !important; transform: none !important; }
   .js .tl-armed .blk { clip-path: none !important; }

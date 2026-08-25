@@ -1,4 +1,4 @@
-# The Film and Content School — landing page
+# TFCS.AFRIC — The Film & Content School Africa
 
 Static single-page site. No framework, no build step, no dependencies.
 Deploy by dragging this folder to Netlify, Vercel or GitHub Pages.
@@ -8,6 +8,58 @@ Local preview: `python3 -m http.server 8000`
 ---
 
 ## 🔴 LAUNCH BLOCKERS
+
+### 0a. Mezzotint CF ampersand — BLOCKED ON LICENCE
+
+The `&` in the hero headline is specified as Mezzotint CF. **It has not been
+implemented, and nothing was extracted.**
+
+Mezzotint CF is present on the build machine only as an **Adobe Fonts /
+Creative Cloud activated font** (`~/Library/Application Support/Adobe/CoreSync/
+plugins/livetype/`), by The Type Founders. That licence covers desktop use in
+design apps and Adobe's own web CDN. It does **not** permit pulling the `.otf`
+out and self-hosting a subset, which is what the spec asks for. Extracting it
+would have been a licence violation, so the `&` currently renders in Delight.
+
+To unblock, either buy a webfont licence for Mezzotint CF from The Type
+Founders, or use an Adobe Fonts web project (a CDN `<link>`, not self-hosted —
+which trades the self-hosting requirement for a third-party request).
+
+Once a licensed file exists: subset it to `U+0026` only (2–4KB), save as
+`assets/fonts/mezzotint-amp.woff2`, and uncomment the block at the top of
+`styles.css`. The `@font-face`, the `unicode-range`, `font-display: block` and
+starting optical values are all written out there. **Tune the size and baseline
+by eye against the comp** — a serif ampersand in a heavy sans line reads small
+and floats high at its natural size.
+
+### 0b. Hero media — RIGHTS
+
+`assets/media/` is empty and the hero shows a labelled placeholder.
+
+**The reference comp must not be used.** It is a publicity still of a
+recognisable actor (Giancarlo Esposito). The slot needs original or properly
+licensed material: a portrait of one person, dramatically lit against a dark
+ground, looking to camera, subject centre-right, left third falling to
+near-black.
+
+Wire to `assets/media/hero-media.jpg` (3:2 desktop, 4:5 mobile crop) and
+optionally `hero-media.mp4`, both with a poster. The commented markup is in
+`index.html`; `script.js` already gates playback — no autoplay below 1024px,
+and none under `prefers-reduced-motion`.
+
+The scrim does not depend on the image being dark. It was verified against a
+**pure white** image — the worst case any photo can present — with the
+background sampled under every white glyph pixel at 1024, 1280 and 1440. Worst
+result 17.2:1, zero pixels below 4.5:1. Any conforming image will be safe. If
+you change the scrim, re-run that test rather than eyeballing it.
+
+### Partner logos
+
+The four partners currently render as **text wordmarks**, not logos. Only Clan
+Yujo and Multimudia Studios have supplied SVGs; CoLAB and KayKav Academy have
+not. Mixing two logos with two text labels would break the "all four at equal
+weight" requirement, so all four are text until the other two land.
+
 
 The page no longer shows placeholders for missing facts — it simply omits
 them. That keeps it from looking broken, but it also means **nothing on the
@@ -77,32 +129,26 @@ first byte of font CSS arrives.
 
 ## Notes for whoever picks this up
 
-- **Warm dark palette, one accent.** Tokens are defined once at the top of
-  `styles.css`. Four brand colours are in play; **Sky Blue `#7BB1CF`, Carrot
-  Light `#FF8638` and Warm Beige `#FDE6D8` are held back deliberately** — Sky
-  Blue reads cold against carrot on a dark ground. If a moment seems to need
-  one, solve it with fill weight instead.
-- **Carrot appears in exactly two places** and means the same thing in both:
-  *this is where you're going, act here.* They are (1) the Apply CTA — the
-  header button and the submit button — and (2) the PREMIERE block in the
-  timeline. Foundation and Production stay `--paper` so carrot marks the
-  destination. **If carrot shows up in a third place it stops meaning
-  anything.** Not in headings, rules, link hovers, track panels or the nav.
-- **Never white on carrot.** `#FCFCFA` on `#F3681A` is 3.00:1 and fails AA.
-  Every carrot fill takes `--on-accent` `#2E1E1C`, which is 5.16:1.
-  `--accent-hover` `#D54A00` is a **rim only, never a fill behind a label** —
-  even `--on-accent` on it is only 3.65:1. The focus ring stays `--paper`.
-- **Serif weight follows size.** Bodoni runs at 400 from 24px up and 500 below,
-  because its hairlines go fragile at small sizes even on the warmer ground.
+- **Black, white, one yellow.** `--ground #000000`, `--paper #FFFFFF`,
+  `--accent #FFEA33` (sampled from the supplied comp), `--on-accent #000000`.
+  A supporting grey ladder (`--body --mute --rule --surface --sunk`) is derived
+  against pure black and documented inline in `styles.css`.
+- **Yellow appears in exactly one place: the Apply CTA** — the header pill and
+  the submit button. It is referenced once in the whole stylesheet
+  (`.btn-apply`). If it shows up in a second place it stops meaning anything.
+  The PREMIERE block in the timeline is `--paper` like the other whole-school
+  blocks; it no longer carries an accent.
+- **Never white on yellow.** `#FFFFFF` on `#FFEA33` is **1.23:1** — effectively
+  invisible. Black on it is 17.07:1. The focus ring stays white and carries a
+  black halo so it survives landing on the yellow pill or on the hero image.
+- **Type is Delight** (400 / 700 / 900), self-hosted. `fsType=0`, i.e. the font
+  files carry no technical embedding restriction — **but that is not the EULA.
+  Confirm the webfont licence separately before this goes public.**
 - **Anchor links re-aim after fonts load.** Loading `#faq` scrolls using
-  fallback-font metrics, then the real fonts swap in and sections shift up to
-  ~120px. `script.js` re-scrolls on `document.fonts.ready`. If you add
-  sections, add their IDs to the `scroll-margin-top` rule in `styles.css`.
-- **The four display-face pull lines** in the tracks section ("I hit record,
-  but all I see are shadows", etc.) are real class titles from the curriculum.
-  They were promoted out of the class lists, so they appear once each. Don't
-  reintroduce them into the lists.
-- Copy comes from `content.md`. Two deliberate trims: "the part nobody teaches
-  properly" was cut from the Content track paragraph because it now runs as
-  that panel's pull line, and the two Foundation pull lines were removed from
-  the Foundation class list for the same reason.
+  fallback metrics, then the real fonts swap in and sections shift. `script.js`
+  re-scrolls on `document.fonts.ready`.
+- **The header is transparent only while the hero media is behind it.**
+  `script.js` observes `.hero-media`, which covers both layouts: inset on
+  desktop, the 4:5 block on mobile.
+- Copy comes from `content.md`. The subhead is sentence case in the source —
+  there is no `text-transform` on it.
