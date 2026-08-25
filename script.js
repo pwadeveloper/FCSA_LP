@@ -22,6 +22,28 @@ var FORM_ENDPOINT = null; /* e.g. 'https://formspree.io/f/xxxxxxxx' */
     requestAnimationFrame(function () { root.classList.add('ready'); });
   });
 
+  /* ---------- 1b. anchor landing ----------
+     Loading with a hash scrolls using fallback-font metrics, then the real
+     fonts swap in and every section shifts up to ~120px. The browser does not
+     re-scroll, so you land on the wrong section. Re-aim once fonts settle. */
+  function reaim() {
+    if (!location.hash) return;
+    var t;
+    try { t = document.querySelector(location.hash); } catch (e) { return; }
+    if (!t) return;
+    t.scrollIntoView({ block: 'start', behavior: 'auto' });
+  }
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () {
+      reaim();
+      /* one more after layout settles, for slow connections */
+      setTimeout(reaim, 120);
+    });
+  } else {
+    window.addEventListener('load', reaim);
+  }
+
   /* ---------- 2. section reveals ---------- */
   var reveals = document.querySelectorAll('.reveal');
 
@@ -142,7 +164,7 @@ var FORM_ENDPOINT = null; /* e.g. 'https://formspree.io/f/xxxxxxxx' */
     }
 
     if (!FORM_ENDPOINT) {
-      msg.textContent = 'Form endpoint not connected yet — set FORM_ENDPOINT at the top of script.js. [TO CONFIRM]';
+      msg.textContent = 'This form is not connected yet. Set FORM_ENDPOINT at the top of script.js.';
       msg.setAttribute('data-state', 'err');
       msg.hidden = false;
       return;
@@ -164,7 +186,7 @@ var FORM_ENDPOINT = null; /* e.g. 'https://formspree.io/f/xxxxxxxx' */
         msg.hidden = false;
       })
       .catch(function () {
-        msg.textContent = 'That didn’t send. Check your connection and try again, or message us on [TO CONFIRM].';
+        msg.textContent = 'That didn’t send. Check your connection and try again.';
         msg.setAttribute('data-state', 'err');
         msg.hidden = false;
       })
