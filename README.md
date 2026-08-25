@@ -46,8 +46,10 @@ back into that string in `script.js` once there is one.
 
 ### 4. Open Graph image
 
-1200×630, black, both logos, headline. Add at `assets/og-image.png`, then
-uncomment the block in `<head>` and set the live domain. This link will be
+1200×630 on Soft Black `#2E1E1C`, both logos, headline. Add at
+`assets/og-image.png`, then uncomment the block in `<head>` and set the live
+domain. Carrot `#F3681A` is allowed on the card only if it carries the same
+meaning it does on the page — the action, or the destination. Not decoration. This link will be
 shared on WhatsApp far more than it will be found in search, so the preview
 card matters more than the SEO.
 
@@ -75,11 +77,23 @@ first byte of font CSS arrives.
 
 ## Notes for whoever picks this up
 
-- **Monochrome is deliberate and total.** Seven greys, defined once as custom
-  properties at the top of `styles.css`. There is no accent colour and adding
-  one would break the identity. Emphasis comes from fill weight, scale and
-  spacing — the timeline's `--paper` / `--surface` / `--sunk` ladder is how it
-  signals intensity without colour.
+- **Warm dark palette, one accent.** Tokens are defined once at the top of
+  `styles.css`. Four brand colours are in play; **Sky Blue `#7BB1CF`, Carrot
+  Light `#FF8638` and Warm Beige `#FDE6D8` are held back deliberately** — Sky
+  Blue reads cold against carrot on a dark ground. If a moment seems to need
+  one, solve it with fill weight instead.
+- **Carrot appears in exactly two places** and means the same thing in both:
+  *this is where you're going, act here.* They are (1) the Apply CTA — the
+  header button and the submit button — and (2) the PREMIERE block in the
+  timeline. Foundation and Production stay `--paper` so carrot marks the
+  destination. **If carrot shows up in a third place it stops meaning
+  anything.** Not in headings, rules, link hovers, track panels or the nav.
+- **Never white on carrot.** `#FCFCFA` on `#F3681A` is 3.00:1 and fails AA.
+  Every carrot fill takes `--on-accent` `#2E1E1C`, which is 5.16:1.
+  `--accent-hover` `#D54A00` is a **rim only, never a fill behind a label** —
+  even `--on-accent` on it is only 3.65:1. The focus ring stays `--paper`.
+- **Serif weight follows size.** Bodoni runs at 400 from 24px up and 500 below,
+  because its hairlines go fragile at small sizes even on the warmer ground.
 - **Anchor links re-aim after fonts load.** Loading `#faq` scrolls using
   fallback-font metrics, then the real fonts swap in and sections shift up to
   ~120px. `script.js` re-scrolls on `document.fonts.ready`. If you add

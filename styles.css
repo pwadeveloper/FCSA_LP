@@ -22,14 +22,21 @@
 
 /* ---------- TOKENS ---------- */
 :root {
-  /* palette */
-  --ink:     #000000;
-  --paper:   #FFFFFF;
-  --body:    #F2F2F2;
-  --mute:    #A3A3A3;
-  --rule:    #565656;
-  --surface: #2E2E2E;
-  --sunk:    #171717;
+  /* palette — warm dark. Four brand colours in play; Sky Blue,
+     Carrot Light and Warm Beige are deliberately held back. */
+  --ground:  #2E1E1C;  /* Soft Black — page ground */
+  --paper:   #FCFCFA;  /* Paper White — display headings, primary CTA */
+  --body:    #DEDBDA;  /* Soft Gray — running text        11.57:1 on ground */
+  --mute:    #9B8D87;  /* warm mid — captions, lane labels 4.97:1 on ground */
+  --rule:    #5C4A45;  /* hairlines — decorative only, not a control boundary */
+  --surface: #3E2C29;  /* raised fill */
+  --sunk:    #241715;  /* recessed fill */
+
+  /* Action only. Two places on the whole page: the Apply CTA and the
+     PREMIERE block. Both mean the same thing — this is where you're going. */
+  --accent:       #F3681A;  /* Carrot */
+  --accent-hover: #D54A00;  /* Carrot Dark — rim only, never behind a label */
+  --on-accent:    #2E1E1C;  /* 5.16:1 on Carrot. NEVER white — white is 3.00:1 */
 
   /* type */
   --serif: 'Bodoni Moda', Didot, 'Bodoni MT', Georgia, 'Times New Roman', serif;
@@ -67,7 +74,7 @@ html {
 }
 
 body {
-  background: var(--ink);
+  background: var(--ground);
   color: var(--body);
   font-family: var(--sans);
   font-size: var(--t0);
@@ -84,7 +91,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 ul, ol { list-style: none; padding: 0; }
 a { color: inherit; }
 
-/* ---------- FOCUS — white ring. #565656 on black is 2.86:1 and fails 3:1. ---------- */
+/* ---------- FOCUS — stays --paper. Never carrot. 15.50:1 on ground,
+     and still 3.00:1 against a carrot CTA fill. ---------- */
 :focus-visible {
   outline: 2px solid var(--paper);
   outline-offset: 3px;
@@ -95,7 +103,7 @@ a { color: inherit; }
 .skip {
   position: absolute; left: 0; top: 0;
   transform: translateY(-120%);
-  background: var(--paper); color: var(--ink);
+  background: var(--paper); color: var(--ground);
   padding: .75rem 1.25rem; z-index: 100;
   font-size: var(--t-1); font-weight: 600; text-decoration: none;
 }
@@ -129,7 +137,7 @@ a { color: inherit; }
 
 .h2 {
   font-family: var(--serif);
-  font-variation-settings: 'opsz' 60, 'wght' 500;
+  font-variation-settings: 'opsz' 60, 'wght' 400;
   font-size: var(--t4);
   line-height: 1.02;
   letter-spacing: -0.018em;
@@ -140,7 +148,7 @@ a { color: inherit; }
 
 .h3 {
   font-family: var(--serif);
-  font-variation-settings: 'opsz' 36, 'wght' 500;
+  font-variation-settings: 'opsz' 36, 'wght' 400;
   font-size: var(--t2);
   line-height: 1.1;
   letter-spacing: -0.012em;
@@ -168,7 +176,7 @@ a { color: inherit; }
 /* ---------- HEADER ---------- */
 .site-head {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(0,0,0,0.86);
+  background: rgba(46, 30, 28, 0.88);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--rule);
@@ -197,8 +205,16 @@ a { color: inherit; }
   text-decoration: none; border: 1px solid transparent; cursor: pointer;
   transition: background-color .22s var(--ease), color .22s var(--ease), border-color .22s var(--ease);
 }
-.btn-primary { background: var(--paper); color: var(--ink); }
+.btn-primary { background: var(--paper); color: var(--ground); }
 .btn-primary:hover { background: var(--body); }
+
+/* CARROT, PLACE 1 OF 2 — the Apply CTA.
+   The fill never darkens under the label: --on-accent on Carrot Dark is
+   3.65:1 and fails AA. Hover is a Carrot Dark rim instead, so the label
+   holds 5.16:1 in every state. */
+.btn-accent { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.btn-accent:hover { box-shadow: inset 0 0 0 2px var(--accent-hover); }
+.btn-accent:active { box-shadow: inset 0 0 0 3px var(--accent-hover); }
 .btn-ghost { border-color: var(--mute); color: var(--paper); background: transparent; }
 .btn-ghost:hover { border-color: var(--paper); background: var(--sunk); }
 .btn-sm { min-height: 40px; padding: 0 1.1rem; font-size: var(--t-1); }
@@ -234,7 +250,7 @@ a { color: inherit; }
 
 /* ---------- TRACKS ---------- */
 .tracks { display: grid; gap: 1px; background: var(--rule); border-bottom: 1px solid var(--rule); }
-.track { background: var(--ink); display: flex; flex-direction: column; padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem); }
+.track { background: var(--ground); display: flex; flex-direction: column; padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem); }
 .track-n { color: var(--mute); margin-bottom: .85rem; }
 .track-days { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
 .tag {
@@ -403,14 +419,14 @@ a { color: inherit; }
 /* ruler */
 .tl-corner {
   grid-area: 1 / 1 / 2 / 2;
-  position: sticky; left: 0; z-index: 3; background: var(--ink);
+  position: sticky; left: 0; z-index: 3; background: var(--ground);
 }
 /* Sticky cells pin to the padding box, so blocks would otherwise scroll
    through the scroller's left padding. This pseudo extends the black fill
    leftward across it and is clipped by the scroll container. */
 .tl-corner::before, .tl-lane::before {
   content: ''; position: absolute; top: 0; bottom: 0; right: 100%;
-  width: 320px; background: var(--ink);
+  width: 320px; background: var(--ground);
 }
 .tl-rule {
   grid-row: 1 / 2;
@@ -436,7 +452,7 @@ a { color: inherit; }
 .tl-lane {
   grid-column: 1 / 2;
   position: sticky; left: 0; z-index: 3;
-  background: var(--ink);
+  background: var(--ground);
   display: flex; flex-direction: column; justify-content: center; gap: .25rem;
   padding-right: .9rem;
   border-right: 1px solid var(--rule);
@@ -462,11 +478,14 @@ a { color: inherit; }
 }
 
 /* fill ladder: paper = whole school, surface = your track, sunk = quiet */
-.blk-all   { background: var(--paper); color: var(--ink); }
+.blk-all   { background: var(--paper); color: var(--ground); }
+/* CARROT, PLACE 2 OF 2 — PREMIERE, and nothing else in the timeline.
+   Foundation and Production stay --paper so carrot marks the destination. */
+.blk-a-prem { background: var(--accent); color: var(--on-accent); }
 .blk-mid   { background: var(--surface); color: var(--paper); }
 .blk-quiet { background: var(--sunk); color: var(--mute); border: 1px solid var(--rule); }
 .blk-tbc {
-  background: repeating-linear-gradient(135deg, var(--sunk) 0 6px, #000 6px 12px);
+  background: repeating-linear-gradient(135deg, var(--sunk) 0 6px, var(--ground) 6px 12px);
   color: var(--mute); border: 1px dashed var(--rule);
 }
 
@@ -600,7 +619,7 @@ a { color: inherit; }
   transition: background-color .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease);
 }
 .rad:hover span { border-color: var(--mute); color: var(--body); }
-.rad input:checked + span { background: var(--paper); border-color: var(--paper); color: var(--ink); font-weight: 500; }
+.rad input:checked + span { background: var(--paper); border-color: var(--paper); color: var(--ground); font-weight: 500; }
 .rad input:focus-visible + span { outline: 2px solid var(--paper); outline-offset: 3px; }
 
 .chk {
@@ -618,7 +637,7 @@ a { color: inherit; }
 .chk input:checked + span::before {
   background: var(--paper) center/11px 9px no-repeat;
   border-color: var(--paper);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 9'%3E%3Cpath d='M1 4.5 4 7.5 10 1' stroke='%23000' stroke-width='1.8' fill='none' stroke-linecap='square'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 9'%3E%3Cpath d='M1 4.5 4 7.5 10 1' stroke='%232E1E1C' stroke-width='1.8' fill='none' stroke-linecap='square'/%3E%3C/svg%3E");
 }
 .chk input:focus-visible + span::before { outline: 2px solid var(--paper); outline-offset: 3px; }
 
@@ -637,7 +656,7 @@ a { color: inherit; }
 /* ---------- FOOTER ---------- */
 .foot { border-top: 1px solid var(--rule); padding-block: clamp(3rem, 7vw, 5rem); }
 .foot-name {
-  font-family: var(--serif); font-variation-settings: 'opsz' 40, 'wght' 500;
+  font-family: var(--serif); font-variation-settings: 'opsz' 40, 'wght' 400;
   font-size: var(--t2); color: var(--paper); line-height: 1.1; letter-spacing: -0.012em;
 }
 .foot-sub { color: var(--mute); font-size: var(--t-1); margin-top: .6rem; }
