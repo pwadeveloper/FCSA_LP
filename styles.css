@@ -362,12 +362,6 @@ a { color: inherit; }
 }
 .foundation .track-n { color: var(--mute); margin-bottom: .85rem; }
 .foundation .h3 { margin-bottom: clamp(1.5rem, 3vw, 2rem); }
-.fnd-list { column-gap: clamp(1.5rem, 3vw, 3rem); }
-.fnd-list li { break-inside: avoid; }
-.class-list li {
-  padding: .65rem 0; border-bottom: 1px solid var(--rule);
-  font-size: 0.9375rem; line-height: 1.4; color: var(--body); text-wrap: pretty;
-}
 /* ==========================================================================
    CURRICULUM MARQUEE
    Three rows of interlocking chevron tags, one per track, alternating
@@ -382,10 +376,12 @@ a { color: inherit; }
   margin-block: clamp(2rem, 5vw, 3.25rem);
 }
 .marq-row { overflow: clip; }
-/* Uneven vertical rhythm between the three rows, so they read as a band
-   rather than a grid. Second selector is more specific, so row 3 wins. */
-.marq-row + .marq-row { margin-top: 14px; }
-.marq-row + .marq-row + .marq-row { margin-top: 6px; }
+/* Uneven vertical rhythm between the four rows, so they read as a band
+   rather than a grid. Per row, not by sibling depth. */
+.marq-row + .marq-row { margin-top: 10px; }
+.marq-row:nth-child(2) { margin-top: 14px; }
+.marq-row:nth-child(3) { margin-top: 6px; }
+.marq-row:nth-child(4) { margin-top: 12px; }
 
 /* Each row holds the same set twice and shifts by exactly one set width
    (-50% of the pair), so the loop has no seam. */
@@ -856,7 +852,6 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
    ========================================================================== */
 @media (min-width: 560px) {
   .f-row { grid-template-columns: 1fr 1fr; }
-  .fnd-list { columns: 2; }
   .hero-actions { display: flex; gap: .75rem; }
   /* one row from here up; 0.8px per unit at 560 growing to 1px at 1024,
      where every mark sits at its own intrinsic size. */
@@ -931,7 +926,6 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   }
   .partners { margin-top: clamp(3rem, 9vw, 8.5rem); }
   .tracks { grid-template-columns: repeat(3, 1fr); }
-  .fnd-list { columns: 3; }
   .tl-hint { display: none; }
   .slot-strip .slot-box { height: 340px; }
   /* the pull-line band reads cinematic once there is room for it */
