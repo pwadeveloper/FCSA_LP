@@ -49,34 +49,45 @@
 <section class="hero" aria-labelledby="h1">
 
   <div class="hero-media">
-    <!-- MEDIA SLOT — 3:2 desktop / 4:5 mobile, still or loop.
-         A portrait of one person, dramatically lit against a dark ground,
-         looking to camera. Subject centre-right, left third falling to
-         near-black so the headline sits in it.
+    <!-- HERO IMAGE — the LCP element. Full bleed, behind everything, black ground.
+         object-position 65% 50% holds the subject centre-right as the frame
+         narrows, so the left third stays clear for the headline.
 
-         RIGHTS: original or licensed material only. The reference comp is a
-         publicity still of a recognisable actor and must not be used. See README.
+         RIGHTS: the current file is a COMP and must not ship. Any replacement
+         must be framed subject-centre-right with the left third falling
+         near-black — this layout depends on it. See README.
 
-         Wire it here, replacing .hero-ph. script.js already gates playback:
-         no autoplay below 1024px, and none under prefers-reduced-motion.
-
-    <video class="hero-video" muted loop playsinline preload="none"
-           poster="assets/media/hero-media.jpg">
-      <source src="assets/media/hero-media.mp4" type="video/mp4">
-      <img src="assets/media/hero-media.jpg" alt="">
-    </video>
-    -->
-    <div class="hero-ph" role="img" aria-label="Hero media placeholder — awaiting licensed asset">
-      <b>Hero media</b>
-      <span>3:2 desktop · 4:5 mobile · still or loop<br>Awaiting original or licensed asset</span>
-    </div>
+         Widths are 900 / 1440 / 1688. 1688 is the master's native width;
+         a 1920 step would be an upscale with no extra detail. Drop in a
+         >=1920 master and regenerate to add one. -->
+    <picture>
+      <source type="image/avif" sizes="100vw"
+              srcset="assets/media/hero-900.avif 900w,
+                      assets/media/hero-1440.avif 1440w,
+                      assets/media/hero-1688.avif 1688w">
+      <source type="image/webp" sizes="100vw"
+              srcset="assets/media/hero-900.webp 900w,
+                      assets/media/hero-1440.webp 1440w,
+                      assets/media/hero-1688.webp 1688w">
+      <img class="hero-img" src="assets/media/hero-1440.jpg" sizes="100vw"
+           srcset="assets/media/hero-900.jpg 900w,
+                   assets/media/hero-1440.jpg 1440w,
+                   assets/media/hero-1688.jpg 1688w"
+           width="1688" height="1031" alt=""
+           fetchpriority="high" loading="eager" decoding="async">
+    </picture>
     <div class="hero-scrim" aria-hidden="true"></div>
   </div>
 
   <div class="wrap hero-inner">
-    <h1 id="h1" class="hero-headline anim" data-anim="1">The Film <span class="hero-amp">&amp;</span><br>Content<br>School Africa</h1>
+    <!-- The subhead is positioned against the HEADLINE, not the viewport: at
+         >=1024 .hero-lede is a two-column grid and align-items:center puts the
+         subhead on the optical middle of the headline block. -->
+    <div class="hero-lede">
+      <h1 id="h1" class="hero-headline anim" data-anim="1">The Film <span class="hero-amp">&amp;</span><br>Content<br>School Africa</h1>
 
-    <p class="hero-sub anim" data-anim="3">A hands-on film and content school. Learn to write, shoot, light, cut and finish real work — then screen it in front of an audience.</p>
+      <p class="hero-sub anim" data-anim="3">A hands-on film and content school. Learn to write, shoot, light, cut and finish real work — then screen it in front of an audience.</p>
+    </div>
 
     <div class="hero-actions anim" data-anim="2">
       <a class="btn btn-outline" href="#tracks">See all tracks
@@ -86,13 +97,15 @@
       </a>
     </div>
 
+    <!-- SUPPORTED BY. The comp carries no visible label above the strip, so the
+         wording lives in the accessible name here; the footer prints it. -->
     <div class="partners anim" data-anim="4">
-      <p class="partners-label">Founded by</p>
+      <h2 class="partners-label sr-only">Supported by</h2>
       <ul class="partner-list">
-        <li class="partner">Multimudia Studios</li>
-        <li class="partner">Clan Yujo</li>
-        <li class="partner">CoLAB</li>
-        <li class="partner">KayKav Academy</li>
+        <li class="partner"><img class="partner-logo" style="--h:39" src="assets/logos/multimudia-studios.svg" alt="Multimudia Studios" width="125" height="39" loading="lazy" decoding="async"></li>
+        <li class="partner"><img class="partner-logo" style="--h:24" src="assets/logos/clan-yujo.svg" alt="Clan Yujo" width="192" height="24" loading="lazy" decoding="async"></li>
+        <li class="partner"><img class="partner-logo" style="--h:24" src="assets/logos/colab.svg" alt="CoLAB" width="95" height="24" loading="lazy" decoding="async"></li>
+        <li class="partner"><img class="partner-logo" style="--h:29" src="assets/logos/kaykav-academy.svg" alt="KayKav Academy" width="86" height="29" loading="lazy" decoding="async"></li>
       </ul>
     </div>
   </div>
@@ -654,12 +667,12 @@
     </div>
 
     <div class="foot-founded">
-      <p class="partners-label" style="opacity:.6;color:var(--paper)">Founded by</p>
-      <ul class="partner-list" style="margin-top:.9rem">
-        <li class="partner">Multimudia Studios</li>
-        <li class="partner">Clan Yujo</li>
-        <li class="partner">CoLAB</li>
-        <li class="partner">KayKav Academy</li>
+      <h2 class="partners-label">Supported by</h2>
+      <ul class="partner-list" style="margin-top:1.35rem">
+        <li class="partner"><img class="partner-logo" style="--h:39" src="assets/logos/multimudia-studios.svg" alt="Multimudia Studios" width="125" height="39" loading="lazy" decoding="async"></li>
+        <li class="partner"><img class="partner-logo" style="--h:24" src="assets/logos/clan-yujo.svg" alt="Clan Yujo" width="192" height="24" loading="lazy" decoding="async"></li>
+        <li class="partner"><img class="partner-logo" style="--h:24" src="assets/logos/colab.svg" alt="CoLAB" width="95" height="24" loading="lazy" decoding="async"></li>
+        <li class="partner"><img class="partner-logo" style="--h:29" src="assets/logos/kaykav-academy.svg" alt="KayKav Academy" width="86" height="29" loading="lazy" decoding="async"></li>
       </ul>
     </div>
   </div>

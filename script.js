@@ -52,34 +52,35 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     window.addEventListener('load', reaim);
   }
 
-  /* ---------- 1c. header: transparent only while the media is behind it ----------
-     Watching .hero-media rather than the hero section covers both layouts: on
-     desktop the media is inset:0 so its bottom is the hero's bottom; on mobile
-     it is the 4:5 block, so the header goes solid as soon as that scrolls by
-     and stops colliding with the headline underneath. */
+  /* ---------- 1c. header: never gets a background, only gets smaller ----------
+     The header floats over whatever is beneath it for the whole page. The only
+     thing that changes is scale: full size at rest, compact past 120px.
+
+     Scroll DISTANCE only. Not scroll direction, not which section is in view —
+     the class is a pure function of scrollY, so the header height is always
+     predictable from the scroll position alone. 120 down / 96 up is a dead band
+     so parking on the threshold cannot flutter the 200ms transition.
+
+     Nothing here reads --head-h; that token is gone. The header's height is
+     derived in CSS from --head-pad-top + --head-mark-compact + --edge, so
+     scroll-margin-top on the anchor targets cannot go stale when this fires. */
   var head = document.getElementById('site-head');
-  var media = document.querySelector('.hero-media');
-  if (head && media && 'IntersectionObserver' in window) {
-    var headH = function () {
-      return parseInt(getComputedStyle(document.documentElement)
-        .getPropertyValue('--head-h'), 10) || 76;
+  if (head) {
+    var COMPACT_ON = 120, COMPACT_OFF = 96;
+    var compact = false, ticking = false;
+    var apply = function () {
+      ticking = false;
+      var y = window.scrollY || window.pageYOffset || 0;
+      if (!compact && y >= COMPACT_ON) { compact = true; head.classList.add('is-compact'); }
+      else if (compact && y < COMPACT_OFF) { compact = false; head.classList.remove('is-compact'); }
     };
-    var mkObserver = function () {
-      return new IntersectionObserver(function (entries) {
-        head.classList.toggle('is-solid', !entries[0].isIntersecting);
-      }, { rootMargin: '-' + headH() + 'px 0px 0px 0px', threshold: 0 });
+    var onScroll = function () {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(apply);
     };
-    var mo = mkObserver();
-    mo.observe(media);
-    /* --head-h changes at the 1024 breakpoint, so rebuild the observer */
-    var wideMq = window.matchMedia('(min-width: 1024px)');
-    if (wideMq.addEventListener) {
-      wideMq.addEventListener('change', function () {
-        mo.disconnect(); mo = mkObserver(); mo.observe(media);
-      });
-    }
-  } else if (head) {
-    head.classList.add('is-solid');
+    window.addEventListener('scroll', onScroll, { passive: true });
+    apply();   /* restored scroll position on reload must not start at rest */
   }
 
   /* ---------- 1d. hero video: no autoplay below 1024px, none if reduced ---------- */
