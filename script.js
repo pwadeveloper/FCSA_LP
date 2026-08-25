@@ -9,6 +9,14 @@
    ========================================================================== */
 var FORM_ENDPOINT = null; /* e.g. 'https://formspree.io/f/xxxxxxxx' */
 
+/* ==========================================================================
+   LAUNCH GATE — do not ship dashed boxes to a live page.
+   Set this false before launch. Every slot that still has no real <img> or
+   <video> is removed from the DOM, and the layout closes up around it.
+   Four real assets beat sixteen briefs.
+   ========================================================================== */
+var SHOW_MEDIA_PLACEHOLDERS = true;
+
 (function () {
   'use strict';
 
@@ -85,6 +93,69 @@ var FORM_ENDPOINT = null; /* e.g. 'https://formspree.io/f/xxxxxxxx' */
     syncHero();
     if (wide.addEventListener) wide.addEventListener('change', syncHero);
   }
+
+  /* ---------- 1e. media slots ---------- */
+
+  /* Strip empty slots when the launch gate is closed. A slot counts as filled
+     only if it actually holds an <img> or <video>. */
+  if (!SHOW_MEDIA_PLACEHOLDERS) {
+    Array.prototype.forEach.call(document.querySelectorAll('.slot'), function (fig) {
+      if (fig.querySelector('img, video')) return;
+      var host = fig.parentNode;
+      fig.parentNode.removeChild(fig);
+      /* drop a wrapper that exists only to hold slots */
+      if (host && /slot-pair|why-media/.test(host.className) && !host.querySelector('.slot')) {
+        host.parentNode.removeChild(host);
+      }
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.showcase-scroll, .prod-scroll'), function (w) {
+      if (!w.querySelector('.slot')) {
+        var sec = w.closest('section');
+        if (sec) sec.parentNode.removeChild(sec);
+      }
+    });
+  }
+
+  /* Loop playback, wherever a real <video> lands.
+     No autoplay below 1024px and none under prefers-reduced-motion — this
+     audience is on mobile data. Those cases get the poster and a play button. */
+  var wideMq = window.matchMedia('(min-width: 1024px)');
+  var vids = document.querySelectorAll('.slot video');
+
+  function wireSlotVideo(v) {
+    var fig = v.closest('.slot');
+    var box = v.closest('.slot-box') || fig;   /* the positioned ratio box */
+    var btn = fig.querySelector('.slot-play');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'slot-play';
+      box.appendChild(btn);
+    }
+    var label = function () {
+      var playing = !v.paused && !v.ended;
+      btn.textContent = playing ? 'Pause' : 'Play';
+      btn.setAttribute('aria-label', (playing ? 'Pause' : 'Play') + ' this clip');
+    };
+    btn.addEventListener('click', function () {
+      if (v.paused) { v.play().catch(function () {}); } else { v.pause(); }
+      label();
+    });
+    v.addEventListener('play', label);
+    v.addEventListener('pause', label);
+
+    var sync = function () {
+      var mayAutoplay = wideMq.matches && !reduced;
+      fig.classList.toggle('has-control', !mayAutoplay);
+      if (mayAutoplay) { v.play().catch(function () {}); }
+      else { v.pause(); v.currentTime = 0; }
+      label();
+    };
+    sync();
+    if (wideMq.addEventListener) wideMq.addEventListener('change', sync);
+  }
+
+  Array.prototype.forEach.call(vids, wireSlotVideo);
 
   /* ---------- 2. section reveals ---------- */
   var reveals = document.querySelectorAll('.reveal');

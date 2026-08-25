@@ -305,6 +305,109 @@ a { color: inherit; }
   color: var(--paper); letter-spacing: -0.026em; max-width: 26ch;
 }
 
+/* ==========================================================================
+   MEDIA SLOTS
+   Every slot holds its ratio with aspect-ratio, so nothing shifts when a real
+   asset lands. Placeholders never carry the accent — a page of yellow dashed
+   boxes would burn it. Each slot is a self-contained <figure>: delete it and
+   the layout closes up. See SHOW_MEDIA_PLACEHOLDERS in script.js.
+   ========================================================================== */
+.slot { width: 100%; }
+/* the ratio box. Kept separate from the <figure> so a caption can sit
+   outside the clipped area. */
+.slot-box {
+  position: relative;
+  aspect-ratio: var(--ar, 16/9);
+  width: 100%;
+  overflow: hidden;
+  background: #0A0A0A;
+}
+.slot-box > img, .slot-box > video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.slot-ph {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .5rem; text-align: center; padding: 1rem;
+  background: #0A0A0A;
+  border: 1px dashed #444;
+}
+.slot-meta {
+  font-size: 12px; line-height: 1.35; color: #888;
+  text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
+}
+.slot-desc { font-size: 12px; line-height: 1.45; color: #888; max-width: 34ch; font-weight: 400; }
+.slot-path { font-size: 12px; line-height: 1.35; color: #888; font-weight: 400; opacity: .8; }
+
+/* very small slots drop the description rather than overflow */
+.slot-ph { container-type: inline-size; }
+@container (max-width: 240px) { .slot-desc { display: none; } }
+
+.slot-cap { margin-top: .6rem; font-size: 12px; line-height: 1.4; color: #888; }
+
+/* play control — mobile and reduced-motion get the poster plus this */
+.slot-play {
+  position: absolute; left: 50%; bottom: .75rem; transform: translateX(-50%);
+  display: none; align-items: center; gap: .45rem;
+  min-height: 40px; padding: 0 1rem;
+  background: rgba(0,0,0,.72); border: 1px solid var(--paper); border-radius: 999px;
+  color: var(--paper); font-size: var(--t-2); font-weight: 700; cursor: pointer;
+  text-transform: uppercase; letter-spacing: .1em;
+}
+.slot.has-control .slot-play { display: inline-flex; }
+
+/* ---------- pull line: loop behind the copy ----------
+   This is the one slot used as a cover backdrop rather than a ratio-locked
+   block: 21:9 is the shooting spec, the display crops to the band. Layout
+   shift is zero by construction — the media is absolutely positioned, so the
+   section height never depends on it. */
+.sec-why { position: relative; overflow: hidden; display: grid; align-items: center; }
+.why-media { position: absolute; inset: 0; z-index: 0; }
+.why-media .slot, .why-media .slot-box { height: 100%; aspect-ratio: auto; }
+.why-media .slot-ph { border: 0; }
+/* 75% ground over the loop. Over a pure-white frame that leaves #404040,
+   which carries white text at 9.74:1. */
+.why-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.75); }
+.sec-why .wrap { position: relative; z-index: 1; }
+
+/* ---------- foundation pair ---------- */
+.slot-pair {
+  display: grid; gap: clamp(.75rem, 1.5vw, 1rem);
+  align-items: start;   /* the two ratios differ; do not stretch either */
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
+}
+
+/* ---------- track panels ---------- */
+.slot-track { margin-top: 1.25rem; }
+/* The vertical track slot holds 9:16 exactly, but at full column width that is
+   ~660px tall — it would dictate the height of all three panels. Capping the
+   height and letting width follow keeps the ratio exact and the row balanced. */
+.slot-track[data-slot="track-content"] .slot-box { height: min(380px, 96vw); width: fit-content; max-width: 100%; }
+
+/* ---------- showcase ---------- */
+.sec-showcase { border-top: 1px solid var(--rule); }
+.showcase-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
+.showcase-scroll::-webkit-scrollbar { height: 6px; }
+.showcase-scroll::-webkit-scrollbar-thumb { background: var(--rule); }
+.showcase { display: flex; gap: 1rem; width: max-content; align-items: start; }
+.showcase .slot { width: 62vw; max-width: 340px; }
+.showcase .sc-02, .showcase .sc-05 { width: 42vw; max-width: 230px; }
+
+/* ---------- production strip ---------- */
+.sec-prod { border-top: 1px solid var(--rule); }
+.prod-scroll {
+  overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
+  padding-inline: max(var(--gut), calc((100% - 1320px) / 2 + var(--gut)));
+  scrollbar-width: thin; scrollbar-color: var(--rule) transparent;
+}
+.prod-scroll::-webkit-scrollbar { height: 6px; }
+.prod-scroll::-webkit-scrollbar-thumb { background: var(--rule); }
+.prod-strip { display: flex; gap: 1rem; width: max-content; align-items: stretch; }
+.slot-strip { width: auto; }
+.slot-strip .slot-box { height: 240px; width: auto; aspect-ratio: var(--ar); }
+
+/* ---------- apply ---------- */
+.slot-apply { margin-bottom: clamp(2rem, 4vw, 2.75rem); }
+
 /* ---------- FAQ kit lists ---------- */
 .kit { margin-top: 0; }
 .kit li {
@@ -598,6 +701,8 @@ a { color: inherit; }
 
 @media (min-width: 768px) {
   :root { --lane-w: 116px; --week-w: 92px; --lane-h: 128px; }
+  .slot-pair { grid-template-columns: 1.7fr 1fr; }
+  .slot-strip .slot-box { height: 300px; }
   .fnd-pulls { grid-template-columns: repeat(2, 1fr); }
   .tl-foot { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
   .foot-top { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 1rem; }
@@ -644,6 +749,25 @@ a { color: inherit; }
   .tracks { grid-template-columns: repeat(3, 1fr); }
   .fnd-list { columns: 3; }
   .tl-hint { display: none; }
+  .slot-strip .slot-box { height: 340px; }
+  /* the pull-line band reads cinematic once there is room for it */
+  .sec-why { min-height: min(46vw, 560px); }
+
+  /* showcase becomes an asymmetric 12-column grid, no scrolling */
+  .showcase-scroll { overflow: visible; }
+  .showcase {
+    display: grid; width: auto;
+    grid-template-columns: repeat(12, 1fr);
+    gap: clamp(1rem, 2vw, 1.75rem);
+    align-items: start;
+  }
+  .showcase .slot { width: 100%; max-width: none; }
+  .sc-01 { grid-column: span 5; }
+  .sc-02 { grid-column: span 3; }
+  .sc-03 { grid-column: span 4; }
+  .sc-04 { grid-column: span 4; }
+  .sc-05 { grid-column: span 3; }
+  .sc-06 { grid-column: span 5; }
 }
 
 @media (min-width: 1400px) {

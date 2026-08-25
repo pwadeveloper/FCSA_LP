@@ -109,6 +109,91 @@ An analytics slot sits commented in `<head>`. Nothing is loaded.
 
 ---
 
+## MEDIA MANIFEST
+
+Twenty slots. Nineteen render on the page as labelled placeholders; `og-image`
+is the social card and is built, not photographed. **Every slot needs original
+or licensed material.** The hero reference comp must not ship — it is a
+publicity still of a recognisable actor.
+
+Drop assets in at the exact paths below and they appear with no code change.
+Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the same name.
+
+| Slot | Section | Path | Ratio | Dimensions | Type | What it is | Status |
+|---|---|---|---|---|---|---|---|
+| `pullquote-loop` | Pull line | `assets/media/pullquote-loop.mp4` | 21:9 | 1920×823 | LOOP | Ambient, near-abstract. A light being flagged, a lens turning, dust in a beam. No faces. 6–8s, silent. |  |
+| `foundation-wide` | Foundation | `assets/media/foundation-wide.jpg` | 16:9 | 1920×1080 | STILL | A class in progress. Phones and cameras out, people leaning in. |  |
+| `foundation-vertical` | Foundation | `assets/media/foundation-vertical.jpg` | 4:5 | 1080×1350 | STILL | One student at work, close. Portrait orientation. |  |
+| `track-film` | Track 1 | `assets/media/track-film.jpg` | 2.39:1 | 1920×803 | STILL | A frame from a finished short. |  |
+| `track-content` | Track 2 | `assets/media/track-content.mp4` | 9:16 | 1080×1920 | LOOP | Phone-shot content as it appears in feed. 5–8s. |  |
+| `track-finishers` | Track 3 | `assets/media/track-finishers.jpg` | 16:9 | 1600×900 | STILL | An NLE timeline mid-cut, or a grade before/after. |  |
+| `showcase-01` | Showcase | `assets/media/showcase-01.mp4` | 16:9 | 1920×1080 | LOOP | Tutor work. |  |
+| `showcase-02` | Showcase | `assets/media/showcase-02.jpg` | 9:16 | 1080×1920 | STILL | Tutor work. |  |
+| `showcase-03` | Showcase | `assets/media/showcase-03.jpg` | 4:5 | 1080×1350 | STILL | Tutor work. |  |
+| `showcase-04` | Showcase | `assets/media/showcase-04.jpg` | 16:9 | 1920×1080 | STILL | Tutor work. |  |
+| `showcase-05` | Showcase | `assets/media/showcase-05.mp4` | 9:16 | 1080×1920 | LOOP | Tutor work. |  |
+| `showcase-06` | Showcase | `assets/media/showcase-06.jpg` | 1:1 | 1200×1200 | STILL | Tutor work. |  |
+| `production-01` | Production | `assets/media/production-01.jpg` | 16:9 | 1920×1080 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
+| `production-02` | Production | `assets/media/production-02.jpg` | 9:16 | 1080×1920 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
+| `production-03` | Production | `assets/media/production-03.jpg` | 16:9 | 1920×1080 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
+| `production-04` | Production | `assets/media/production-04.jpg` | 9:16 | 1080×1920 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
+| `production-05` | Production | `assets/media/production-05.jpg` | 16:9 | 1920×1080 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
+| `production-06` | Production | `assets/media/production-06.jpg` | 9:16 | 1080×1920 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
+| `apply-still` | Apply | `assets/media/apply-still.jpg` | 3:2 | 1800×1200 | STILL | A premiere audience, or a room watching a screen. Warm, full of people. |  |
+| `og-image` | Social | `assets/media/og-image.jpg` | 1.91:1 | 1200×630 | STILL | Black ground, TFCS.AFRIC mark, headline. Built, not photographed. |  |
+
+### The 500KB problem
+
+The page budget is 500KB and the audience is on mobile data in Nigeria. The
+page is currently **~146KB** with no media at all. Sixteen images at even 80KB
+each is 1.3MB — nearly triple the budget.
+
+So these twenty slots are a shot list, not a shipping list. Pick the four or
+five that carry the most weight, compress hard (WebP/AVIF with JPEG fallback,
+sized to the actual rendered box, not the source dimensions), and delete the
+rest. **Four real assets beat sixteen briefs.**
+
+### Before launch: close the gate
+
+`script.js` has a constant at the top:
+
+```js
+var SHOW_MEDIA_PLACEHOLDERS = true;
+```
+
+Set it to `false` and every slot still holding a placeholder is removed from
+the DOM. Sections that exist only to hold media — the showcase band and the
+production strip — are removed entirely when empty. This has been tested at
+375 and 1440: the page reads correctly with all twenty slots absent, no gaps
+and no orphaned headings.
+
+**Do not ship dashed boxes to a live page.**
+
+### How the slots behave
+
+- Every slot holds its ratio with CSS `aspect-ratio`, so nothing shifts when an
+  asset lands. Verified: 18 of 19 measure exact. The exception is
+  `pullquote-loop`, which is a cover backdrop by design — 21:9 is the shooting
+  spec, the display crops to the band, and layout shift is zero because the
+  media is absolutely positioned.
+- `<video>` is `muted`, `loop`, `playsinline`, with a required poster.
+- **No autoplay below 1024px, and none under `prefers-reduced-motion`** — those
+  cases get the poster and a play/pause control instead. `script.js` wires this
+  automatically for any `<video>` inside a slot.
+- Everything below the fold carries `loading="lazy"` and `decoding="async"`.
+- Stills take real alt text. The ambient pullquote loop takes empty `alt`.
+- Placeholders never use the accent. A page full of yellow dashed boxes would
+  burn it — yellow stays reserved for the Apply CTA.
+
+### Production strip — NOT YET SHOT
+
+`production-01` through `production-06` are behind-the-scenes from production
+week, **16–21 November**. That is after this page goes live, so those six slots
+cannot be filled at launch. Either close the gate on them and add the section
+back in November, or ship the section with real frames from a previous shoot.
+
+---
+
 ## Files
 
 ```
