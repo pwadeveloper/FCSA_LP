@@ -182,12 +182,167 @@
         <li>Shots: types of shots</li>
         <li>Shotlisting</li>
       </ul>
-
-      <div class="fnd-pulls">
-        <p class="track-pull">Audio is the other half, and it is very important.</p>
-        <p class="track-pull">I hit record, but all I see are shadows.</p>
-      </div>
     </section>
+  </div>
+
+    <!-- ============ CURRICULUM MARQUEE ============
+         Texture, not a ticker. Three rows, one per track, alternating
+         direction, 66-84s a cycle. Full bleed: the cut-off at both edges is
+         the point, so this sits OUTSIDE .wrap.
+
+         Foundation is deliberately NOT in here. Weeks 1-3 are described
+         nowhere else on the page and a marquee cannot be read, so it stays
+         the static hairline list above.
+
+         Each row holds the same set twice and shifts by -50pct, so the loop
+         is seamless. The whole visual band is aria-hidden; the real titles
+         sit in the visually-hidden list above it, which is what screen
+         readers get. -->
+    <div class="marq">
+      <div class="sr-only">
+        <h3>Class titles from week four</h3>
+        <h4 class="marq-sr-h">Film Production Track</h4>
+        <ul>
+          <li>Composition guidelines and basics</li>
+          <li>Master scene technique: coverage, the 180-degree rule, matching action</li>
+          <li>Roles in film production</li>
+          <li>Working with collaborators</li>
+          <li>Navigating rewrites</li>
+          <li>Art direction: production design and props</li>
+          <li>The full rundown of pre-production</li>
+          <li>Script breakdown</li>
+          <li>Budgeting</li>
+          <li>Location and legal: scouting, permits, and IP rights in Nigeria</li>
+          <li>Preparing for production</li>
+          <li>Rehearsals and directing actors</li>
+        </ul>
+        <h4 class="marq-sr-h">Content Creation Track</h4>
+        <ul>
+          <li>What you shoot: case studies and breakdowns</li>
+          <li>The importance of B-roll</li>
+          <li>How you shoot: movement and its importance</li>
+          <li>The editing — how you edit, case studies and breakdowns</li>
+          <li>The Hook Strategy: retention mechanics</li>
+          <li>Sound design for content</li>
+          <li>Lighting people, outdoor filming</li>
+          <li>Lighting products</li>
+          <li>Niche and SEO</li>
+          <li>Monetization</li>
+        </ul>
+        <h4 class="marq-sr-h">The Finisher&#x27;s Track</h4>
+        <ul>
+          <li>Post-production in film — the stages</li>
+          <li>The editor&#x27;s role</li>
+          <li>File organization</li>
+          <li>Basic editing: software, file organization, assembly</li>
+          <li>Cuts, transitions</li>
+          <li>Syncing audio and video</li>
+          <li>The Rule of Six — intention, rhythm</li>
+          <li>Multicam editing, delivery</li>
+          <li>Colour grading</li>
+          <li>Sound editing</li>
+          <li>Titles, motion graphics, and basic VFX</li>
+          <li>Finishing and delivery</li>
+        </ul>
+      </div>
+
+      <div class="marq-rows" aria-hidden="true">
+      <div class="marq-row marq-rtl" style="--dur:78s">
+        <div class="marq-seq">
+          <ul class="marq-set">
+            <li class="chev">Composition guidelines and basics</li>
+            <li class="chev">Master scene technique: coverage, the 180-degree rule, matching action</li>
+            <li class="chev">Roles in film production</li>
+            <li class="chev">Working with collaborators</li>
+            <li class="chev">Navigating rewrites</li>
+            <li class="chev">Art direction: production design and props</li>
+            <li class="chev">The full rundown of pre-production</li>
+            <li class="chev">Script breakdown</li>
+            <li class="chev">Budgeting</li>
+            <li class="chev">Location and legal: scouting, permits, and IP rights in Nigeria</li>
+            <li class="chev">Preparing for production</li>
+            <li class="chev">Rehearsals and directing actors</li>
+          </ul>
+          <ul class="marq-set" data-clone>
+            <li class="chev">Composition guidelines and basics</li>
+            <li class="chev">Master scene technique: coverage, the 180-degree rule, matching action</li>
+            <li class="chev">Roles in film production</li>
+            <li class="chev">Working with collaborators</li>
+            <li class="chev">Navigating rewrites</li>
+            <li class="chev">Art direction: production design and props</li>
+            <li class="chev">The full rundown of pre-production</li>
+            <li class="chev">Script breakdown</li>
+            <li class="chev">Budgeting</li>
+            <li class="chev">Location and legal: scouting, permits, and IP rights in Nigeria</li>
+            <li class="chev">Preparing for production</li>
+            <li class="chev">Rehearsals and directing actors</li>
+          </ul>
+        </div>
+      </div>
+      <div class="marq-row marq-ltr" style="--dur:66s">
+        <div class="marq-seq">
+          <ul class="marq-set">
+            <li class="chev">What you shoot: case studies and breakdowns</li>
+            <li class="chev">The importance of B-roll</li>
+            <li class="chev">How you shoot: movement and its importance</li>
+            <li class="chev">The editing — how you edit, case studies and breakdowns</li>
+            <li class="chev">The Hook Strategy: retention mechanics</li>
+            <li class="chev">Sound design for content</li>
+            <li class="chev">Lighting people, outdoor filming</li>
+            <li class="chev">Lighting products</li>
+            <li class="chev">Niche and SEO</li>
+            <li class="chev">Monetization</li>
+          </ul>
+          <ul class="marq-set" data-clone>
+            <li class="chev">What you shoot: case studies and breakdowns</li>
+            <li class="chev">The importance of B-roll</li>
+            <li class="chev">How you shoot: movement and its importance</li>
+            <li class="chev">The editing — how you edit, case studies and breakdowns</li>
+            <li class="chev">The Hook Strategy: retention mechanics</li>
+            <li class="chev">Sound design for content</li>
+            <li class="chev">Lighting people, outdoor filming</li>
+            <li class="chev">Lighting products</li>
+            <li class="chev">Niche and SEO</li>
+            <li class="chev">Monetization</li>
+          </ul>
+        </div>
+      </div>
+      <div class="marq-row marq-rtl" style="--dur:84s">
+        <div class="marq-seq">
+          <ul class="marq-set">
+            <li class="chev">Post-production in film — the stages</li>
+            <li class="chev">The editor&#x27;s role</li>
+            <li class="chev">File organization</li>
+            <li class="chev">Basic editing: software, file organization, assembly</li>
+            <li class="chev">Cuts, transitions</li>
+            <li class="chev">Syncing audio and video</li>
+            <li class="chev">The Rule of Six — intention, rhythm</li>
+            <li class="chev">Multicam editing, delivery</li>
+            <li class="chev">Colour grading</li>
+            <li class="chev">Sound editing</li>
+            <li class="chev">Titles, motion graphics, and basic VFX</li>
+            <li class="chev">Finishing and delivery</li>
+          </ul>
+          <ul class="marq-set" data-clone>
+            <li class="chev">Post-production in film — the stages</li>
+            <li class="chev">The editor&#x27;s role</li>
+            <li class="chev">File organization</li>
+            <li class="chev">Basic editing: software, file organization, assembly</li>
+            <li class="chev">Cuts, transitions</li>
+            <li class="chev">Syncing audio and video</li>
+            <li class="chev">The Rule of Six — intention, rhythm</li>
+            <li class="chev">Multicam editing, delivery</li>
+            <li class="chev">Colour grading</li>
+            <li class="chev">Sound editing</li>
+            <li class="chev">Titles, motion graphics, and basic VFX</li>
+            <li class="chev">Finishing and delivery</li>
+          </ul>
+        </div>
+      </div>
+      </div>
+    </div>
+
+  <div class="wrap">
 
     <div class="tracks">
 
