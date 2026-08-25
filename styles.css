@@ -24,33 +24,33 @@
   font-weight: 900; font-style: normal; font-display: swap;
 }
 
-/* ---------- THE HEADLINE AMPERSAND — BLOCKED, see README ----------
-   The & in "The Film & Content School Africa" is meant to be Mezzotint CF.
-   Mezzotint CF is Adobe-Fonts-activated on this machine (The Type Founders);
-   that licence covers desktop use and Adobe's own web CDN, NOT self-hosting a
-   subset. Nothing has been extracted. Until a webfont licence lands, the &
-   renders in Delight, which looks correct — just not distinct.
+/* ---------- THE HEADLINE AMPERSAND ----------
+   The & in "The Film & Content School Africa" is Playfair Display Italic,
+   SemiBold — an SIL Open Font Licence face from Google Fonts, self-hosted.
+   It replaces Mezzotint CF, which could not ship: the only copy on the build
+   machine was Adobe-Fonts-activated, a licence that does not permit pulling
+   the .otf out and self-hosting a subset. See README.
 
-   To enable: drop a licensed assets/fonts/mezzotint-amp.woff2 (subset to
-   U+0026 only, 2-4KB) in place and uncomment this whole block.
+   Self-hosted deliberately, NOT the Google Fonts CDN — a CDN link costs an
+   extra DNS lookup and TLS handshake before the CSS that references it can
+   even be parsed, which is the expensive part on 3G.
 
-   @font-face {
-     font-family: 'Mezzotint CF';
-     src: url('assets/fonts/mezzotint-amp.woff2') format('woff2');
-     unicode-range: U+0026;
-     font-display: block;
-   }
-   .hero-amp {
-     font-family: 'Mezzotint CF', var(--sans);
-     font-weight: 400;
-     font-size: 1.12em;
-     vertical-align: -0.015em;
-     letter-spacing: 0.012em;
-   }
-   Those last four are a starting point. A serif ampersand dropped into a
-   heavy sans line reads small and floats high — tune by eye against the
-   comp, not by matching the numeric size.
-   ------------------------------------------------------------------- */
+   The file is subset to U+0026 and nothing else, and instanced at wght 600,
+   so it is 744 bytes and carries exactly one glyph. unicode-range means the
+   browser only fetches it because the headline contains an "&"; every other
+   character in the line stays in Delight and never touches this file. */
+@font-face {
+  font-family: 'Amp';
+  src: url('assets/fonts/amp.woff2') format('woff2');
+  unicode-range: U+0026;
+  font-style: italic;
+  /* Exact match for the 600 that .hero-amp asks for. Without this the
+     descriptor defaults to 400, the request is a mismatch, and the browser is
+     free to synthesise bold — which on a high-contrast italic smears the
+     hairlines it just took a measurement pass to protect. */
+  font-weight: 600;
+  font-display: block;
+}
 
 /* ---------- TOKENS ---------- */
 :root {
@@ -315,8 +315,26 @@ a { color: inherit; }
   line-height: 0.92;
   letter-spacing: -0.035em;
   color: var(--paper);
+  font-family: 'Amp', var(--sans);
 }
-.hero-amp { font-family: var(--sans); }
+/* Tuned by eye against the comp at 1440 and 375, not by matching numbers.
+   Measured first: Playfair's & is already cap-aligned (ink top -1px, bottom
+   +1px against Delight's cap band), so it was never sitting at the wrong
+   HEIGHT — it read small because a high-contrast italic puts far less ink on
+   the page than Delight Black at the same size. Hence 1.18em and w600: the
+   size and the weight are both doing optical-mass work, not height work.
+   The -0.035em is what re-seats it after the scale-up — measured, that lands
+   the &'s ink centroid within 0.7px of the surrounding caps' centroid. At
+   -0.05em it overshot and sat visibly low. letter-spacing returns to normal
+   because the headline's -0.035em tracking closes the swash up against "Film". */
+.hero-amp {
+  font-family: 'Amp', var(--sans);
+  font-weight: 600;
+  font-size: 1.18em;
+  vertical-align: -0.035em;
+  letter-spacing: normal;
+  margin-inline: 0.015em;
+}
 
 .hero-sub {
   margin-top: clamp(1.5rem, 4vw, 2rem);

@@ -9,28 +9,72 @@ Local preview: `python3 -m http.server 8000`
 
 ## 🔴 LAUNCH BLOCKERS
 
-### 0a. Mezzotint CF ampersand — BLOCKED ON LICENCE
+### 0a. ~~Mezzotint CF ampersand~~ — RESOLVED, substituted
 
-The `&` in the hero headline is specified as Mezzotint CF. **It has not been
-implemented, and nothing was extracted.**
+**No longer a blocker.** The `&` is now Playfair Display Italic SemiBold, an
+SIL Open Font Licence face from Google Fonts, self-hosted at
+`assets/fonts/amp.woff2`. Nothing was ever extracted from Mezzotint CF, and
+the `.otf` has been deleted from the working tree and the git index.
 
-Mezzotint CF is present on the build machine only as an **Adobe Fonts /
-Creative Cloud activated font** (`~/Library/Application Support/Adobe/CoreSync/
-plugins/livetype/`), by The Type Founders. That licence covers desktop use in
-design apps and Adobe's own web CDN. It does **not** permit pulling the `.otf`
-out and self-hosting a subset, which is what the spec asks for. Extracting it
-would have been a licence violation, so the `&` currently renders in Delight.
+Mezzotint CF was only ever on the build machine as an Adobe Fonts / Creative
+Cloud activated font (The Type Founders). That licence covers desktop use and
+Adobe's own web CDN; it does not permit self-hosting a subset. Rather than buy
+a webfont licence or accept a third-party CDN request, the glyph was
+substituted. If you later license Mezzotint CF properly, swap the file at
+`assets/fonts/amp.woff2` and re-run the optical tuning below — the CSS needs
+no structural change.
 
-To unblock, either buy a webfont licence for Mezzotint CF from The Type
-Founders, or use an Adobe Fonts web project (a CDN `<link>`, not self-hosted —
-which trades the self-hosting requirement for a third-party request).
+**How it was chosen.** Three Google Fonts italic serifs were set in the real
+headline and compared: Playfair Display, EB Garamond, Bodoni Moda.
 
-Once a licensed file exists: subset it to `U+0026` only (2–4KB), save as
-`assets/fonts/mezzotint-amp.woff2`, and uncomment the block at the top of
-`styles.css`. The `@font-face`, the `unicode-range`, `font-display: block` and
-starting optical values are all written out there. **Tune the size and baseline
-by eye against the comp** — a serif ampersand in a heavy sans line reads small
-and floats high at its natural size.
+- **Bodoni Moda was eliminated on the 375px hairline test.** Browsers apply
+  `font-optical-sizing: auto` by default, which at headline sizes drives
+  Bodoni's `opsz` axis (range 6–96) to the display end, where its hairlines are
+  thinnest. Measured on the rasterised glyph at 375px/50.25px, its thinnest
+  strokes peak at **0.54 luminance** and — the deciding detail — do **not**
+  recover at DPR 2 (still 0.54), so it is a genuinely sub-pixel stroke, not a
+  rasterisation artifact. Playfair measured 0.83/0.96 and EB Garamond 0.94/0.96
+  at DPR 1/2. Forcing `opsz: 6` fixes Bodoni's hairlines (0.91/0.99) but gives
+  up the high-contrast display character that was the reason to consider it.
+- **EB Garamond** survived the hairline test but lost on form: its open
+  double-curl reads as a separate ornament next to Delight's tight geometric
+  bowls, especially at 375 where it degrades into a squiggle.
+- **Playfair Display** has a closed lower bowl and a strong diagonal that
+  counterpoint the sans instead of fighting it.
+
+**Optical tuning — `1.18em / w600 / vertical-align -0.035em`.** Worth knowing
+why, because the obvious diagnosis is wrong. Playfair's `&` is *already*
+cap-aligned against Delight Black (ink top −1px, bottom +1px against the cap
+band, measured in a shared line box). It does **not** float high at its natural
+size. It reads small purely because a high-contrast italic puts far less ink on
+the page than Delight Black at the same height — so `1.18em` and `w600` are
+both doing optical-*mass* work, not height work. The `-0.035em` only re-seats
+it after that scale-up; measured, it lands the `&`'s ink centroid within 0.7px
+of the surrounding caps'. An earlier `-0.05em` overshot and sat visibly low.
+
+**The file.** Subset to `U+0026` and instanced at `wght 600`: **744 bytes**,
+two glyphs (`.notdef` + `ampersand`). Static rather than variable — the
+variable subset was 1276 bytes and would have depended on the browser exposing
+the weight range. `unicode-range: U+0026` means it is only fetched because the
+headline contains an `&`. The `@font-face` declares `font-weight: 600` so
+`.hero-amp`'s request is an exact match and no synthetic bolding is applied.
+
+Self-hosted, not the Google Fonts CDN, deliberately: a CDN `<link>` costs a DNS
+lookup and TLS handshake to a third-party origin before the CSS referencing it
+can be parsed, which is the expensive part on 3G.
+
+To reproduce the subset:
+
+```bash
+# 1. Get the latin italic woff2 URL (modern UA -> woff2)
+curl -A "Mozilla/5.0 ... Chrome/120.0" \
+  "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400..900"
+# 2. Download that .woff2, then pin the weight and subset to one glyph
+fonttools varLib.instancer playfair-italic-full.woff2 wght=600 -o playfair-600.ttf
+pyftsubset playfair-600.ttf --unicodes=U+0026 --flavor=woff2 \
+  --layout-features='' --no-hinting --desubroutinize --name-IDs='' \
+  --output-file=assets/fonts/amp.woff2
+```
 
 ### 0b. Hero media — RIGHTS, and the framing the layout depends on
 
