@@ -578,12 +578,6 @@ a { color: inherit; }
   .hero-scrim { transition: none; }
 }
 
-/* ---------- WHY: one line, standing alone ---------- */
-.pull-standalone {
-  font-size: var(--t3); font-weight: 700; line-height: 1.14;
-  letter-spacing: -0.026em; color: var(--paper); max-width: 30ch; text-wrap: pretty;
-}
-
 /* ---------- TRACKS ---------- */
 .sec-tagline { font-size: var(--t1); font-weight: 700; color: var(--paper); margin-top: .85rem; letter-spacing: -0.015em; }
 
@@ -738,80 +732,157 @@ a { color: inherit; }
 }
 .slot.has-control .slot-play { display: inline-flex; }
 
-/* ---------- pull line ----------
-   Type on black, nothing behind it. The foot of the section is cut short of
-   --sec because the reel answers this line and belongs under it, not a
-   viewport away from it. The head keeps the full --sec. */
-.sec-why { padding-block: var(--sec) clamp(1.5rem, 3.5vw, 2.5rem); }
+/* ---------- REST STATE / REEL ----------
+   Full bleed and full viewport height. Everything inside is absolutely
+   positioned against the section, so the height is known before a byte of
+   still or video arrives — layout shift here is zero by construction.
 
-/* ---------- REEL ----------
-   Full bleed at every width: the frame runs 0 to 0 and ignores the 25px
-   gutter, which is why the player sits outside .wrap and only the caption
-   sits inside it.
+   100svh, not 100vh: on mobile Safari 100vh is the tall viewport including
+   the chrome that retracts on scroll, so a 100vh hero-height block is taller
+   than what you can actually see and the button lands under the URL bar.
 
-   The box is aspect-ratio 16/9 and the media is absolutely positioned inside
-   it, so the height is known before a single byte of poster or video has
-   arrived — layout shift here is zero by construction, not by luck.
-
-   Individual shots in the reel carry their own 2.39:1 bars, baked in at the
-   edit. On a black ground those bars have nothing to land on and simply read
-   as a wider frame, so they are left alone rather than cropped out. */
-.sec-reel { padding-block: 0 var(--sec); }
-
-.reel {
+   THE BLUR IS A FILTER ON A SHARP SOURCE, never baked into the file, so
+   revealing the image later is a stylesheet edit. blur() samples from
+   outside the element box and finds nothing there, which feathers the edges
+   to transparent; scale(1.06) pushes those edges off-screen. 1.06 is the
+   smallest scale that clears an 18px radius at these dimensions. */
+.sec-still {
   position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #000;
+  min-height: 100svh;
   overflow: hidden;
+  background: var(--ground);
+  /* Grid, not flex. The two in-flow children — the content block and the
+     caption — are stacked, not side by side, and the 1fr top row is what
+     vertically centres the content without absolute positioning it (which
+     would take it out of flow and let it overlap the caption on short
+     viewports). */
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-items: center;
 }
-.reel-video,
-.reel-poster,
-.reel-poster-img {
+
+.still-bg, .still-img, .still-video {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover;
 }
-/* The poster is removed, not faded: the video underneath is already showing
-   the same frame by then, so a transition would cross-fade an image with
-   itself. Only the poster goes — never the <video>, because display:none on
-   a playing media element stops it. */
-.reel.is-live .reel-poster,
-.reel.is-live .reel-play { display: none; }
+/* The backdrop fills the frame — it is texture, and cropping it costs
+   nothing. */
+.still-bg, .still-img { object-fit: cover; }
+/* The reel does NOT. This box is the whole viewport, so its aspect follows
+   the window: cover would crop a 16:9 reel to a narrow centre strip on a
+   portrait phone (375x812 is 0.46:1 against the video's 1.78:1) and throw
+   away most of every shot. contain letterboxes onto the black ground
+   instead, which is what a showreel wants — the framing is the work. */
+.still-video { object-fit: contain; }
+.still-img {
+  filter: blur(18px);
+  transform: scale(1.06);
+  transition: filter .6s var(--ease), transform .6s var(--ease);
+}
 
-.reel-play {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  display: grid; place-items: center;
-  width: clamp(64px, 8vw, 92px); aspect-ratio: 1;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.45);
-  border: 2px solid var(--paper);
-  color: var(--paper);
-  cursor: pointer;
+/* --ground at 55%, over the blur and under the type. Raising THIS is the
+   lever for contrast, not dimming the image further: the image also has to
+   survive being revealed at full strength in the play state. */
+.still-veil {
+  position: absolute; inset: 0;
+  background: var(--ground);
+  opacity: .55;
+  transition: opacity .6s var(--ease);
+  pointer-events: none;
+}
+
+/* The video sits above the still and below the content, hidden until asked
+   for. Opacity rather than display: display:none on a playing media element
+   stops it dead. */
+.still-video {
+  opacity: 0;
+  pointer-events: none;
+  background: #000;
+  transition: opacity .6s var(--ease);
+}
+
+.still-content {
+  position: relative;                       /* above the veil */
+  z-index: 2;
+  grid-row: 1;
+  align-self: center;
+  justify-self: stretch;                    /* fill the row, do not shrink to text */
+  width: 100%;
+  padding-inline: var(--edge-l) var(--edge-r);
+  padding-block: var(--sec);
+  transition: opacity .45s var(--ease);
+}
+
+/* ~24ch is what breaks the line into the tall left column the comp shows.
+   WHITE, not yellow: yellow is reserved for Apply and the Premiere block,
+   and a third use dilutes it. */
+.still-pull {
+  font-size: var(--t3); font-weight: 900; line-height: 1.14;
+  letter-spacing: -0.026em; color: var(--paper);
+  max-width: 24ch; text-wrap: pretty;
+  text-shadow: 0 1px 20px rgb(0 0 0 / .45);
+}
+
+.still-play {
+  display: inline-flex; align-items: center; gap: .7rem;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  min-height: 44px; padding: .7rem 1.4rem .7rem .7rem;
+  border: 1px solid var(--paper); border-radius: 999px;
+  background: transparent; color: var(--paper);
+  font-family: var(--sans); font-size: var(--t0); font-weight: 700;
+  letter-spacing: -0.01em; cursor: pointer;
   transition: background-color .18s var(--ease), transform .18s var(--ease);
 }
-.reel-play:hover { background: rgba(0,0,0,0.72); }
-.reel-play:active { transform: translate(-50%, -50%) scale(.95); }
+.still-play:hover { background: rgb(255 255 255 / .14); }
+.still-play:active { transform: scale(.98); }
+.still-play-ring {
+  display: grid; place-items: center;
+  width: 34px; aspect-ratio: 1; flex: none;
+  border: 1px solid currentColor; border-radius: 50%;
+}
 /* A triangle's optical centre sits left of its bounding box, so it is nudged
    right by a fraction of its own width to look centred in the ring. */
-.reel-play svg { width: 34%; height: auto; margin-left: 7%; }
+.still-play-ring svg { width: 42%; height: auto; margin-left: 8%; }
 
-.reel-sound {
-  position: absolute; top: .75rem; right: .75rem;
-  display: none; align-items: center;
-  min-height: 44px; padding: 0 1rem;
-  background: rgba(0,0,0,0.72); border: 1px solid var(--paper); border-radius: 999px;
-  color: var(--paper); font-size: var(--t-2); font-weight: 700; cursor: pointer;
-  text-transform: uppercase; letter-spacing: .1em;
+/* Clear of the fixed header: that bar is 94px tall and carries the Apply
+   pill hard right at z-index 100, so a close control at top:1rem sits
+   underneath it and is unclickable where the two overlap. */
+.still-close {
+  position: absolute; top: 6.25rem; right: var(--edge-r); z-index: 3;
+  display: none; place-items: center;
+  width: 44px; height: 44px;
+  border: 1px solid var(--paper); border-radius: 50%;
+  background: rgb(0 0 0 / .55); color: var(--paper); cursor: pointer;
 }
-/* Top-right, clear of the native control bar along the bottom edge — on iOS
-   those controls are drawn by the OS and this button cannot move them. */
-.reel-sound:not([hidden]) { display: inline-flex; }
+.still-close:not([hidden]) { display: grid; }
+.still-close svg { width: 45%; height: auto; }
 
-.reel-cap { margin-top: .8rem; font-size: 12px; line-height: 1.45; color: var(--mute); }
+.still-cap {
+  position: relative; z-index: 2;
+  margin: 0 0 clamp(1rem, 2.5vw, 1.6rem);
+  font-size: 12px; line-height: 1.45; color: var(--mute);
+  transition: opacity .45s var(--ease);
+}
 
+/* ---- play state ---- */
+.sec-still.is-live .still-img   { filter: blur(0); transform: scale(1); }
+.sec-still.is-live .still-veil  { opacity: 0; }
+.sec-still.is-live .still-video { opacity: 1; pointer-events: auto; }
+.sec-still.is-live .still-content,
+.sec-still.is-live .still-cap   { opacity: 0; pointer-events: none; }
+
+@media (max-width: 1023.98px) {
+  /* Narrower measure, and a button that fills the gutter rather than
+     floating at its own intrinsic width. */
+  .still-pull { max-width: 18ch; }
+  .still-play { width: 100%; justify-content: center; padding-inline: 1rem; }
+}
+
+/* Cut straight between the two states. The reel still plays on press —
+   there is no motion to reduce in a video somebody asked for. */
 @media (prefers-reduced-motion: reduce) {
-  .reel-play { transition: none; }
+  .still-img, .still-veil, .still-video, .still-content, .still-cap,
+  .still-play { transition: none; }
 }
 
 /* ---------- foundation pair ---------- */

@@ -95,23 +95,33 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     if (wide.addEventListener) wide.addEventListener('change', syncHero);
   }
 
-  /* ---------- 1e. the reel ----------
+  /* ---------- 1e. rest state / reel ----------
+     Two states over one full-viewport section. REST is a blurred, darkened
+     still with the pull line and a button over it. PLAY clears the blur,
+     fades the text out and runs the reel in place.
+
      Fifty-seven seconds with a music bed, so the rules are the opposite of
      the hero's: it never autoplays, at any width, on any connection. It
      plays because someone pressed the button.
 
      The markup ships the <video> with preload="none" and NO src, so nothing
-     but the poster is on the wire until that press. The rendition is chosen
+     but the still is on the wire until that press. The rendition is chosen
      here, at press time, for two reasons: <source media> is read once at
      load and never re-evaluated by any shipping browser, and the connection
      is worth measuring when it is about to be used rather than during parse.
+
+     IT PLAYS WITH SOUND. That is a deliberate reversal of the muted-start
+     the old inline player used: this is a full-viewport takeover somebody
+     explicitly asked for, not a panel they scrolled past, and the press is a
+     real user gesture so autoplay policy allows audio. The native control
+     bar carries the mute switch if they want it back.
   */
-  (function reelSection() {
-    var box = document.querySelector('[data-reel]');
+  (function stillReel() {
+    var box = document.querySelector('[data-still]');
     if (!box) return;
-    var vid  = box.querySelector('.reel-video');
-    var play = box.querySelector('.reel-play');
-    var snd  = box.querySelector('.reel-sound');
+    var vid   = box.querySelector('.still-video');
+    var play  = box.querySelector('.still-play');
+    var close = box.querySelector('.still-close');
     if (!vid || !play) return;
 
     /* 720p below 1024px, on Save-Data, and on 2g/3g. Pushing 1080p into a
@@ -129,55 +139,55 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
       vid.src = box.getAttribute(thin() ? 'data-src-720' : 'data-src-1080');
     }
 
-    /* Starts muted and STAYS muted until asked otherwise — a tap on a phone
-       in a public place must not blast a minute of music at the room. Once
-       they ask, the choice sticks for the rest of the visit: replaying does
-       not silently re-mute them. */
-    var wantSound = false;
-
-    function syncSound() {
-      vid.muted = !wantSound;
-      if (snd) snd.hidden = !(box.classList.contains('is-live') && !wantSound);
-    }
-
-    play.addEventListener('click', function () {
+    function enter() {
       load();
       box.classList.add('is-live');
+      if (close) close.hidden = false;
       /* Native controls from here, and no custom player. Scrub, volume,
          captions, PiP, AirPlay and the OS fullscreen affordance are all
          things the platform already does better than a bespoke bar. */
       vid.controls = true;
-      syncSound();
-      vid.play().catch(function () {
-        /* Refused — rare off a real gesture, but hand the poster back rather
-           than leaving a dead black frame with controls on it. */
-        box.classList.remove('is-live');
-        vid.controls = false;
-        syncSound();
-      });
-    });
-
-    if (snd) {
-      snd.addEventListener('click', function () {
-        wantSound = true;
-        syncSound();
+      vid.muted = false;
+      vid.play().then(function () {
+        vid.focus();
+      }).catch(function () {
+        /* Refused — rare off a real gesture, but a browser that will not
+           start unmuted is worth one retry muted before giving the still
+           back, because silent playback beats no playback. */
+        vid.muted = true;
+        vid.play().then(function () { vid.focus(); }).catch(exit);
       });
     }
 
-    /* The native control bar has its own mute toggle. It is the same switch,
-       so mirror it — otherwise unmuting there, replaying, and being re-muted
-       by our own state would look like a bug. */
-    vid.addEventListener('volumechange', function () {
-      wantSound = !vid.muted;
-      if (snd) snd.hidden = !(box.classList.contains('is-live') && !wantSound);
+    function exit() {
+      if (!box.classList.contains('is-live')) return;
+      box.classList.remove('is-live');
+      if (close) close.hidden = true;
+      vid.pause();
+      vid.controls = false;
+      /* Unload rather than just pause: removeAttribute + load() drops the
+         buffered bytes and stops the network fetch. Setting src to '' would
+         make the element resolve the empty string against the document URL
+         and re-request the page itself. */
+      vid.removeAttribute('src');
+      vid.load();
+      loaded = false;
+      play.focus();
+    }
+
+    play.addEventListener('click', enter);
+    if (close) close.addEventListener('click', exit);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' || e.key === 'Esc') exit();
     });
 
-    /* Scrolled out of view: pause. Deliberately does NOT resume on the way
-       back — audio starting again because a thumb drifted is worse than
-       finding it where you left it. */
+    /* Scrolled out of view: leave the play state entirely. Audio continuing
+       from a section nobody can see is worse than losing your place in a
+       57-second reel. */
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (es) {
-        if (!es[0].isIntersecting && !vid.paused) vid.pause();
+        if (!es[0].isIntersecting) exit();
       }, { threshold: 0.25 }).observe(box);
     }
   })();

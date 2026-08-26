@@ -224,103 +224,90 @@
   </div>
 </section>
 
-<!-- ============ WHY ============ -->
-<section class="sec sec-why reveal" aria-label="Why this exists">
-  <div class="wrap">
-    <p class="pull-standalone">There have never been more people making things. There have never been fewer places to learn how.</p>
-  </div>
-</section>
+<!-- ============ REST STATE / REEL ============
+     Full-bleed, full viewport height. The rest state is a single still,
+     blurred and darkened in CSS, with the pull line and one button over it.
+     Pressing the button clears the blur, fades the text out and plays the
+     reel in place; Escape or the close control puts it back.
 
-<!-- ============ REEL ============
-     Fifty-seven seconds of finished work, sitting directly under the line
-     about there being nowhere to learn. It answers that line, so it wants to
-     be near it — see the padding on .sec-why, which is cut short at the foot
-     for exactly this reason.
+     NOTHING BUT THE STILL CROSSES THE WIRE AT REST. The <video> ships with
+     no src at all and preload="none" — script.js assigns a URL on the first
+     press. A media element cannot preload what it has no URL for, which is
+     belt and braces against the one behaviour that would blow the page
+     budget. The still itself is 43KB at 1440 in the worst format.
 
-     IT NEVER AUTOPLAYS, at any width. It is a minute long and it carries a
-     music bed; it plays because somebody pressed the button, not because
-     they scrolled past it. That is also why prefers-reduced-motion has no
-     rule here — there is no motion to reduce until it is asked for.
+     THE STILL IS NOT PRE-BLURRED. The blur is a CSS filter over a sharp
+     source, so revealing it later is a stylesheet change, not a re-encode.
+     scale(1.06) hides the transparent edge that blur() pulls in from outside
+     the element box.
 
-     NOTHING BUT THE POSTER CROSSES THE WIRE. preload="none", and the <video>
-     ships with no src at all: script.js assigns one on the first press. A
-     media element cannot preload what it has no URL for, so this is belt and
-     braces against the one behaviour that would blow a 500KB page budget.
+     THE LADDER STOPS AT 1440 because the master is 1508px wide; a 1920 step
+     would be an upscale. Same per-image cap rule as the hero — see
+     tools/section-still.py.
 
      The two renditions live in data attributes rather than <source media>
      because no shipping browser re-evaluates that media attribute — it is
      read once and never again. Choosing in JS at press time also means the
-     connection is measured when it matters rather than during parse.
+     connection is measured when it matters rather than during parse. -->
+<section class="sec-still" id="reel" data-still aria-labelledby="still-h"
+         data-src-1080="assets/media/reel-1080.mp4"
+         data-src-720="assets/media/reel-720.mp4">
+  <h2 id="still-h" class="sr-only">The reel</h2>
 
-     THE POSTER IS A <picture>, not the video's poster attribute: that
-     attribute takes exactly one URL, so it can carry neither AVIF nor a
-     width ladder. It is a real frame of the reel rather than a designed
-     card — 42.5s, see tools/reel-poster.py.
+  <picture class="still-bg">
+    <source type="image/avif" sizes="100vw"
+            srcset="assets/media/section-still-900.avif 900w,
+                    assets/media/section-still-1440.avif 1440w">
+    <source type="image/webp" sizes="100vw"
+            srcset="assets/media/section-still-900.webp 900w,
+                    assets/media/section-still-1440.webp 1440w">
+    <!-- alt="" deliberately: it is a blurred backdrop carrying no information
+         the pull line over it does not already say. -->
+    <img class="still-img" alt="" width="1508" height="639" sizes="100vw"
+         src="assets/media/section-still-1440.jpg"
+         srcset="assets/media/section-still-900.jpg 900w,
+                 assets/media/section-still-1440.jpg 1440w"
+         loading="lazy" decoding="async">
+  </picture>
 
-     That timestamp is not arbitrary. Most shots in this reel carry their own
-     2.35:1 mattes, baked in at the edit; a matted still inside an honest
-     16:9 box strands the caption ~100px below the last visible pixel. 42.5s
-     is one of the frames that fills the frame, and it is dark enough at dead
-     centre to carry a white play ring. Run the script with --check before
-     swapping it for another. -->
-<section class="sec sec-reel reveal" aria-labelledby="reel-h">
-  <h2 id="reel-h" class="sr-only">The reel</h2>
+  <div class="still-veil" aria-hidden="true"></div>
 
-  <div class="reel" data-reel
-       data-src-1080="assets/media/reel-1080.mp4"
-       data-src-720="assets/media/reel-720.mp4">
+  <video class="still-video" preload="none" playsinline webkit-playsinline
+         width="1920" height="1080" tabindex="-1"></video>
 
-    <video class="reel-video" preload="none" playsinline webkit-playsinline
-           width="1920" height="1080"></video>
+  <div class="still-content">
+    <p class="still-pull">There have never been more people making things. There have never been fewer places to learn how.</p>
 
-    <picture class="reel-poster">
-      <source type="image/avif" sizes="100vw"
-              srcset="assets/media/reel/reel-poster-900.avif 900w,
-                      assets/media/reel/reel-poster-1440.avif 1440w,
-                      assets/media/reel/reel-poster-1920.avif 1920w">
-      <source type="image/webp" sizes="100vw"
-              srcset="assets/media/reel/reel-poster-900.webp 900w,
-                      assets/media/reel/reel-poster-1440.webp 1440w,
-                      assets/media/reel/reel-poster-1920.webp 1920w">
-      <!-- alt="" deliberately: the still is the button's backdrop, and the
-           caption under the frame already says whose work this is. A prose
-           description of one frame read out inside a play control is noise. -->
-      <img class="reel-poster-img" alt="" width="1920" height="1080" sizes="100vw"
-           src="assets/media/reel/reel-poster-1440.jpg"
-           srcset="assets/media/reel/reel-poster-900.jpg 900w,
-                   assets/media/reel/reel-poster-1440.jpg 1440w,
-                   assets/media/reel/reel-poster-1920.jpg 1920w"
-           loading="lazy" decoding="async">
-    </picture>
-
-    <button class="reel-play" type="button" aria-label="Play the reel">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M8 5.2v13.6L19 12z" fill="currentColor"></path>
-      </svg>
+    <button class="still-play" type="button" aria-label="Play the reel">
+      <span class="still-play-ring" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M8 5.2v13.6L19 12z" fill="currentColor"></path></svg>
+      </span>
+      <span>Watch our experts in action</span>
     </button>
-
-    <!-- Muted start, always, so a tap in a public place does not blast a
-         minute of music at the room. This is the way back out; it appears
-         only while the reel is running and still silent. -->
-    <button class="reel-sound" type="button" hidden>Unmute</button>
-
-    <!-- No JS: the custom control cannot work, so hand over the native one.
-         The <style> lives in here rather than in styles.css on purpose —
-         keyed off the .js class instead, it would apply for the moment
-         between paint and script.js running, and flash the poster away. -->
-    <noscript>
-      <style>.reel-poster, .reel-play { display: none; }</style>
-      <video class="reel-video" controls muted preload="none" playsinline
-             poster="assets/media/reel/reel-poster-1440.jpg"
-             width="1920" height="1080">
-        <source src="assets/media/reel-720.mp4" type="video/mp4">
-      </video>
-    </noscript>
   </div>
+
+  <button class="still-close" type="button" hidden aria-label="Close the reel">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+    </svg>
+  </button>
 
   <div class="wrap">
-    <p class="reel-cap">Work from Multimudia Studios, Clan Yujo, CoLAB and KayKav Academy. Music only, no speech — there is nothing to caption.</p>
+    <p class="still-cap">Work from Multimudia Studios, Clan Yujo, CoLAB and KayKav Academy. Music only, no speech &mdash; there is nothing to caption.</p>
   </div>
+
+  <!-- No JS: the custom control cannot work, so hand over the native one.
+       The <style> lives in here rather than in styles.css on purpose — keyed
+       off a .js class instead, it would apply for the moment between paint
+       and script.js running and flash the still away. -->
+  <noscript>
+    <style>.still-bg, .still-veil, .still-play { display: none; }
+           .still-video { position: static; opacity: 1; }</style>
+    <video class="still-video" controls muted preload="none" playsinline
+           width="1920" height="1080">
+      <source src="assets/media/reel-720.mp4" type="video/mp4">
+    </video>
+  </noscript>
 </section>
 
 <!-- ============ TRACKS ============ -->
