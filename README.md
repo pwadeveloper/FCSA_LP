@@ -351,8 +351,9 @@ a bug to fix elsewhere.
 
 ## MEDIA MANIFEST
 
-Twenty slots. Nineteen render on the page as labelled placeholders; `og-image`
-is the social card and is built, not photographed. **Every slot needs original
+Nineteen slots. Eighteen render on the page as labelled placeholders;
+`og-image` is the social card and is built, not photographed. The reel is not
+in this table — it is shot, cut and delivered, and has its own section below. **Every slot needs original
 or licensed material.** The hero reference comp must not ship — it is a
 publicity still of a recognisable actor.
 
@@ -361,7 +362,6 @@ Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the same name.
 
 | Slot | Section | Path | Ratio | Dimensions | Type | What it is | Status |
 |---|---|---|---|---|---|---|---|
-| `pullquote-loop` | Pull line | `assets/media/pullquote-loop.mp4` | 21:9 | 1920×823 | LOOP | Ambient, near-abstract. A light being flagged, a lens turning, dust in a beam. No faces. 6–8s, silent. |  |
 | `foundation-wide` | Foundation | `assets/media/foundation-wide.jpg` | 16:9 | 1920×1080 | STILL | A class in progress. Phones and cameras out, people leaning in. |  |
 | `foundation-vertical` | Foundation | `assets/media/foundation-vertical.jpg` | 4:5 | 1080×1350 | STILL | One student at work, close. Portrait orientation. |  |
 | `track-film` | Track 1 | `assets/media/track-film.jpg` | 2.39:1 | 1920×803 | STILL | A frame from a finished short. |  |
@@ -382,6 +382,84 @@ Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the same name.
 | `apply-still` | Apply | `assets/media/apply-still.jpg` | 3:2 | 1800×1200 | STILL | A premiere audience, or a room watching a screen. Warm, full of people. |  |
 | `og-image` | Social | `assets/media/og-image.jpg` | 1.91:1 | 1200×630 | STILL | Black ground, TFCS.AFRIC mark, headline. Built, not photographed. |  |
 
+### The reel — the one piece of media that is actually finished
+
+Under the pull line, full bleed, 16:9. Fifty-seven seconds of work from the
+four founding partners, with a music bed and no speech.
+
+| | |
+|---|---|
+| Source master | `assets/media/clan_yujo_showreel_23_24 (1080p).mp4` — 33MB, **gitignored** |
+| 1080p rendition | `assets/media/reel-1080.mp4` — 16.4MB, 2.17 Mbps video / 128 kbps audio |
+| 720p rendition | `assets/media/reel-720.mp4` — 8.3MB, 1.06 Mbps video / 96 kbps audio |
+| Poster ladder | `assets/media/reel/reel-poster-{900,1440,1920}.{avif,webp,jpg}` |
+
+**It never autoplays**, at any width, on any connection. `preload="none"` and
+the `<video>` ships with no `src` at all — `script.js` assigns one on the first
+press, so the only reel byte on the wire before that is the poster (56KB AVIF
+at 1440, lazy-loaded, below the fold). It starts muted with an Unmute pill;
+that choice then sticks for the visit. Native controls take over once it is
+running. Scrolling it out of view pauses it and does not resume it.
+
+720p is served below 1024px, on Save-Data, and on `effectiveType` 2g/3g. The
+choice is made in JS at press time rather than with `<source media>`, because
+no shipping browser re-evaluates that attribute after load.
+
+Rebuild the renditions:
+
+```bash
+ffmpeg -i "assets/media/clan_yujo_showreel_23_24 (1080p).mp4" \
+  -c:v libx264 -profile:v high -level 4.0 -preset slow \
+  -b:v 2500k -maxrate 3000k -bufsize 5000k -pix_fmt yuv420p -g 48 \
+  -c:a aac -b:a 128k -ac 2 -movflags +faststart assets/media/reel-1080.mp4
+
+ffmpeg -i "assets/media/clan_yujo_showreel_23_24 (1080p).mp4" \
+  -vf "scale=1280:720:flags=lanczos" \
+  -c:v libx264 -profile:v main -level 3.1 -preset slow \
+  -b:v 1200k -maxrate 1500k -bufsize 2400k -pix_fmt yuv420p -g 48 \
+  -c:a aac -b:a 96k -ac 2 -movflags +faststart assets/media/reel-720.mp4
+```
+
+`+faststart` is not optional — it moves `moov` ahead of `mdat` so playback can
+begin before the file has finished arriving. Verify with
+`ffprobe -show_entries format_tags` or just check the box order.
+
+Rebuild the poster:
+
+```bash
+python3 tools/reel-poster.py 42.5          # timestamp is optional, 42.5 is the default
+python3 tools/reel-poster.py 31.5 --check  # audition a frame without writing the ladder
+```
+
+`--check` exists because most shots in this reel carry their own 2.35:1 mattes,
+baked in at the edit. A matted still inside an honest 16:9 box strands the
+caption ~100px below the last visible pixel, so the poster has to come from one
+of the frames that fills the frame — and it has to be dark enough at dead
+centre to carry a white play ring. `--check` reports both.
+
+#### ⚠ 25MB of video is sitting in git
+
+The two renditions are committed; only the 33MB master is ignored. That is a
+deliberate placeholder, not a decision — it keeps the page working today at the
+cost of a repo that grows by 25MB and can never shrink, because git keeps
+history forever.
+
+Before this gets committed more than a couple of times, move both renditions to
+Vercel Blob, R2, or any CDN, and point the two data attributes at the new URLs:
+
+```html
+<div class="reel" data-reel
+     data-src-1080="https://cdn.example/reel-1080.mp4"
+     data-src-720="https://cdn.example/reel-720.mp4">
+```
+
+That is the whole change — no JS edit, because the URLs were never in the JS.
+Then add `assets/media/reel-*.mp4` to `.gitignore` and purge them from history.
+
+Whatever host you pick **must serve HTTP Range requests**, or the native
+controls cannot scrub. Vercel, Netlify, Cloudflare and nginx all do; Python's
+`http.server` does not, which is worth knowing if you test locally.
+
 ### The 500KB problem
 
 The page budget is 500KB and the audience is on mobile data in Nigeria.
@@ -395,10 +473,14 @@ Measured on disk, first view:
 | hero (AVIF) | 36 KB | 80 KB |
 | **total** | **~226 KB** | **~270 KB** |
 
+The reel poster is not in that table because it is `loading="lazy"` and sits
+below the fold — it costs nothing until someone scrolls to it, then 29KB at
+375 and 56KB at 1440 (AVIF). The video itself costs nothing until pressed.
+
 That leaves roughly 230–270KB for everything else. Sixteen more images at even
 80KB each is 1.3MB — five times what is left.
 
-So these twenty slots are a shot list, not a shipping list. Pick the four or
+So these nineteen slots are a shot list, not a shipping list. Pick the four or
 five that carry the most weight, compress hard (WebP/AVIF with JPEG fallback,
 sized to the actual rendered box, not the source dimensions), and delete the
 rest. **Four real assets beat sixteen briefs.**
@@ -414,24 +496,26 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
 Set it to `false` and every slot still holding a placeholder is removed from
 the DOM. Sections that exist only to hold media — the showcase band and the
 production strip — are removed entirely when empty. This has been tested at
-375 and 1440: the page reads correctly with all twenty slots absent, no gaps
-and no orphaned headings.
+375 and 1440: the page reads correctly with all nineteen slots absent, no gaps
+and no orphaned headings. The reel is exempt — it holds a real asset, so the
+gate never touches it.
 
 **Do not ship dashed boxes to a live page.**
 
 ### How the slots behave
 
 - Every slot holds its ratio with CSS `aspect-ratio`, so nothing shifts when an
-  asset lands. Verified: 18 of 19 measure exact. The exception is
-  `pullquote-loop`, which is a cover backdrop by design — 21:9 is the shooting
-  spec, the display crops to the band, and layout shift is zero because the
-  media is absolutely positioned.
+  asset lands. All 18 measure exact. The reel is not a slot but follows the
+  same rule: the box is `aspect-ratio: 16/9` and both the poster and the video
+  are absolutely positioned inside it, so its height is known before a byte of
+  either arrives.
 - `<video>` is `muted`, `loop`, `playsinline`, with a required poster.
 - **No autoplay below 1024px, and none under `prefers-reduced-motion`** — those
   cases get the poster and a play/pause control instead. `script.js` wires this
   automatically for any `<video>` inside a slot.
 - Everything below the fold carries `loading="lazy"` and `decoding="async"`.
-- Stills take real alt text. The ambient pullquote loop takes empty `alt`.
+- Stills take real alt text. The reel poster takes empty `alt` — it is the
+  play button's backdrop, and the caption beneath already names the work.
 - Placeholders never use the accent. A page full of yellow dashed boxes would
   burn it — yellow stays reserved for the Apply CTA.
 
@@ -463,6 +547,13 @@ assets/
   logos/kaykav-academy.svg
   media/hero.png                   1.5MB master — NOT deployed
   media/hero-{900,1440,1688}.{avif,webp,jpg}
+  media/reel-1080.mp4              16.4MB — see "25MB of video is sitting in git"
+  media/reel-720.mp4               8.3MB
+  media/reel/reel-poster-{900,1440,1920}.{avif,webp,jpg}
+  media/reel/reel-poster-master.png   frame 42.5, build input — gitignored
+tools/
+  hero-derivatives.py              regenerates the hero ladder + stamps index.html
+  reel-poster.py                   regenerates the reel poster ladder
 ```
 
 Fonts are self-hosted rather than called from Google Fonts: the audience is on

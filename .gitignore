@@ -1,2 +1,13 @@
 .DS_Store
 .gstack/
+
+# Media masters — build inputs, not deliverables. The renditions and the
+# poster ladder are generated from these by tools/reel-poster.py and the
+# ffmpeg lines in README; the masters themselves are tens of megabytes and
+# have no business in git history.
+assets/media/*.mp4
+!assets/media/reel-720.mp4
+!assets/media/reel-1080.mp4
+assets/media/reel/reel-poster-master.png
+assets/media/hero-0*.jpg
+__pycache__/

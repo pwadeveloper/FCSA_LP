@@ -1,0 +1,48 @@
+[
+  {
+    "id": "hero-01-crimson",
+    "scrim": 0.93,
+    "pos": "60% 45%",
+    "alt": "A young man with bleached curls lies back against deep crimson ground, an embroidered collar at his shoulder, looking straight up into the lens.",
+    "usable": true,
+    "measured": "4.5:1 at 375/768/1440, lightest pixel under glyph ink",
+    "reach": 1.0
+  },
+  {
+    "id": "hero-02-lagoon",
+    "scrim": 0.46,
+    "pos": "55% 40%",
+    "alt": "Two people with red-dyed locs, seen from behind, sitting still at the edge of a grey lagoon.",
+    "usable": true,
+    "measured": "4.5:1 at 375/768/1440, lightest pixel under glyph ink",
+    "reach": 1.3
+  },
+  {
+    "id": "hero-03-lightpaint",
+    "scrim": 0.76,
+    "pos": "55% 50%",
+    "alt": "A long-exposure light painting: a burning red streak arcs across a dark wall and knots into a bright flare at its centre.",
+    "usable": true,
+    "measured": "4.5:1 at 375/768/1440, lightest pixel under glyph ink",
+    "reach": 1.0
+  },
+  {
+    "id": "hero-04-procession",
+    "scrim": 0.61,
+    "pos": "55% 45%",
+    "alt": "A figure in white robes walks away up a grass path between tall hedges, carrying a wooden cross.",
+    "usable": true,
+    "measured": "4.5:1 at 375/768/1440, lightest pixel under glyph ink",
+    "reach": 1.2
+  },
+  {
+    "id": "hero-05-hilltop",
+    "scrim": 0.79,
+    "pos": "55% 55%",
+    "alt": "A man in a dark coat stands on a hilltop looking out over forested ridges under a wide, pale sky.",
+    "usable": true,
+    "measured": "4.5:1 at 375/768/1440, lightest pixel under glyph ink",
+    "reach": 1.1,
+    "note": "Clears 4.5:1 only because of reach. At reach 1.0 the headline peaked at 3.94:1 at any --scrim: its last line runs onto open sky at 49% across, where the 100deg wedge had already decayed to 35% of --scrim. Stretching the wedge to 1.1x rather than darkening it is what closed the gap. This is the tightest of the five - re-measure if the crop changes."
+  }
+]

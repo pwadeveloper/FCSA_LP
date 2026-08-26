@@ -281,36 +281,161 @@ a { color: inherit; }
    as it does on desktop, and every piece of content sits over it. The >=1024
    query below only RETUNES this layout (crop, scrim shape, headline scale,
    the subhead grid) — it no longer switches a stacked block into an overlay. */
-.hero { position: relative; background: var(--ground); min-height: 100svh; display: flex; }
+.hero {
+  position: relative; background: var(--ground); min-height: 100svh; display: flex;
+  /* ONE knob for the crossfade. The frames' opacity, the frames' visibility
+     delay and the scrim's --scrim interpolation all read it, so image and
+     density can never drift out of step. hero-shader.js hard-codes the same
+     800ms for its in-shader mix; change both together. */
+  --hero-fade: 800ms;
+}
 
 .hero-media { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--ground); }
-.hero-media picture { display: block; width: 100%; height: 100%; }
-.hero-media img, .hero-media video { width: 100%; height: 100%; object-fit: cover; }
-/* Mobile crops much tighter than desktop: the portrait frame throws away the
-   sides and fills with head and shoulders. 60% holds the face just left of
-   the crop's centre so it clears the bottom stack; the 30% is a no-op on tall
-   phone viewports (the landscape master never overflows vertically there) but
-   keeps the intent explicit and takes effect on shorter/landscape frames.
-   Desktop restores 65% 50% in the >=1024 block. */
-.hero-img { object-position: 60% 30%; }
 
-/* Bottom-anchored scrim — a floor the type stands on, not a full-frame dim.
-   The whole lower half of the frame is the subject's LIT gray jacket (sampled
-   maxL ~0.52, rgb ~199) — white type over it measured ~1.9:1 raw, so the
-   plain to-top/0.85/0.6/0 wedge the brief sketched was not enough. This holds
-   density right through the headline / subhead / button / strip band, then
-   fades out across the near-black gap under the chin (30–45% from the top,
-   sampled maxL ~0.02) and is fully gone by 72% up — so the face and the
-   header both sit on untouched image. Measured composited ratios are in the
-   commit message; every element clears 4.5:1. Re-tune if the image changes. */
+/* ---------- THE FIVE FRAMES ----------
+   All five stack on the same grid cell. Crossfade is opacity only — no slide,
+   no zoom, no filter — so the compositor has one property to animate and the
+   whole transition stays off the main thread.
+
+   visibility rides the same 800ms so a faded-out frame is not a hit target and
+   is not read out, but it is delayed to the END of the fade (the `visibility
+   0s linear 800ms` step) so the outgoing frame stays paintable while it fades.
+   Without that delay the old image vanishes on frame one and you get a black
+   flash instead of a crossfade. */
+/* Stacked by absolute positioning, NOT by a one-cell grid. Measured: with
+   display:grid the implicit auto track takes its automatic minimum size from
+   the item, and a replaced <img> with a definite height and an aspect ratio
+   transfers a min-width of height x ratio — 950 x 1512/982 = 1462.7px. The
+   track grew to 1462.7 inside a 1440 box, so object-fit had a 1462.7-wide
+   box to fit and there was nothing left to crop: the image rendered
+   left-anchored and clipped at the frame edge, and object-position was doing
+   nothing at all. Absolute positioning has no intrinsic-size feedback loop,
+   so the box is exactly 1440x950 and cover/object-position behave. */
+.hero-frames { position: absolute; inset: 0; }
+.hero-frame {
+  position: absolute; inset: 0; display: block; width: 100%; height: 100%;
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--hero-fade, 800ms) linear,
+              visibility 0s linear var(--hero-fade, 800ms);
+}
+.hero-frame.is-on { opacity: 1; visibility: visible; transition-delay: 0s, 0s; }
+.hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.hero-media video { width: 100%; height: 100%; object-fit: cover; }
+
+/* Per-frame crop. hero.js writes --hero-pos from the manifest's "pos" on each
+   change; the fallback keeps the subject centre-right if the manifest never
+   loads. Mobile pulls the crop tighter in the >=1024 pair of rules below. */
+.hero-img { object-position: var(--hero-pos, 60% 45%); }
+
+/* ---------- THE SHADER CANVAS ----------
+   Sits between the image and the scrim: it draws OVER the frames and UNDER
+   the scrim and every piece of type. It is inserted by hero-shader.js and
+   removed again on any failure, so its absence is the normal state, not an
+   error state. pointer-events:none — it must never eat a click on a dot. */
+.hero-fx {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  display: block; pointer-events: none;
+  opacity: 0; transition: opacity 320ms var(--ease);
+}
+.hero-fx.is-live { opacity: 1; }
+
+/* ---------- THE ADAPTIVE SCRIM ----------
+   One fixed scrim cannot serve five images: three of the five are light
+   exactly where the headline sits. So the alpha is a variable, --scrim, set
+   per image from assets/media/hero/hero-manifest.json and measured rather
+   than guessed (the measured ratios are in the commit message).
+
+   TWO LAYERS, both pure black, so compositing them is just
+   1-(1-a1)(1-a2) and the maths stays predictable:
+     1. a left-anchored 100deg wedge, at full --scrim, for the headline and
+        the subhead;
+     2. a bottom-anchored wash at 0.6x --scrim, for the partner strip and the
+        dots, which sit below where the wedge has already faded out.
+
+   @property is what makes --scrim ANIMATABLE. Registered as <number> it
+   interpolates; left as a plain custom property it would jump at the halfway
+   point of the crossfade and the type would flash. The transition is the same
+   800ms as the frames, so density and image move together and the scrim never
+   lags the picture. Browsers without @property still get the right value,
+   just switched rather than eased. */
+@property --scrim {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0.45;
+}
+@property --scrim-reach {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
 .hero-scrim { position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(to top,
-    rgb(0 0 0 / 0.90)  0%,
-    rgb(0 0 0 / 0.80) 22%,
-    rgb(0 0 0 / 0.68) 38%,
-    rgb(0 0 0 / 0.55) 52%,
-    rgb(0 0 0 / 0.28) 60%,
-    rgb(0 0 0 / 0)    72%);
+  --scrim: 0.45;
+  --scrim-reach: 1;
+  transition: --scrim var(--hero-fade, 800ms) linear,
+              --scrim-reach var(--hero-fade, 800ms) linear;
+  background:
+    /* --scrim-reach stretches the wedge's stops without changing its peak.
+       Density and REACH are separate problems: a bright image whose headline
+       runs onto sky at 49% across does not need a darker left edge, it needs
+       the falloff to still be alive when it gets there. Raising --scrim alone
+       multiplies whatever the wedge has left at that point, which on hero-05
+       is 35% of it — so --scrim 1.76 would have been needed, off the scale.
+       Default 1 keeps every other image exactly where it was measured. */
+    linear-gradient(100deg,
+      rgb(0 0 0 / calc(var(--scrim) * 1.0))    0%,
+      rgb(0 0 0 / calc(var(--scrim) * 0.75))  calc(34% * var(--scrim-reach, 1)),
+      rgb(0 0 0 / 0)                          calc(62% * var(--scrim-reach, 1))),
+    linear-gradient(to top,
+      rgb(0 0 0 / calc(var(--scrim) * 0.60))   0%,
+      rgb(0 0 0 / calc(var(--scrim) * 0.42))  16%,
+      rgb(0 0 0 / calc(var(--scrim) * 0.18))  30%,
+      rgb(0 0 0 / 0)                          44%),
+    /* ---------- THE THIRD LAYER, AND WHY IT EXISTS ----------
+       Measured, not designed in. At >=1024 the subhead is not under the
+       headline — it is pinned to the RIGHT gutter, and it measured at 80-98%
+       across the frame. The 100deg wedge above is at zero alpha from 62%
+       across, so it never reaches the subhead at all: at --scrim 0.80 over
+       hero-05 the subhead measured 2.05:1, and raising --scrim to 0.95 left
+       it at 2.05:1, because the multiplier was being applied to nothing.
+       That is a geometry gap, not a density problem, and no per-image number
+       could have closed it.
+
+       So: the same wedge mirrored (260deg is 100deg reflected), keyed to the
+       same single --scrim, tight enough to sit under the subhead column and
+       gone by 40% so it never touches the middle of the frame where the
+       subject is. Measured cost to subject brightness is in the report.
+
+       This layer is DESKTOP ONLY. Below 1024 the subhead is back under the
+       headline on the left and the bottom wash already carries it; adding
+       this there would darken the right edge for nothing. */
+    linear-gradient(260deg,
+      rgb(0 0 0 / calc(var(--scrim) * 0.85))   0%,
+      rgb(0 0 0 / calc(var(--scrim) * 0.55))  20%,
+      rgb(0 0 0 / 0)                          40%);
+}
+
+/* MOBILE re-weights the two layers rather than changing --scrim. At 375 the
+   whole content stack — headline, subhead, button, strip — is compressed into
+   the bottom ~55% of the frame, where the 100deg wedge has already run out
+   horizontally. So the bottom layer carries the type here and is pushed to
+   full --scrim and much further up the frame; the wedge stays as a left-edge
+   reinforcement. The per-image --scrim value is unchanged, which is the point:
+   one measured number per image, three viewports. */
+@media (max-width: 1023.98px) {
+  .hero-scrim {
+    background:
+      linear-gradient(100deg,
+        rgb(0 0 0 / calc(var(--scrim) * 0.72))   0%,
+        rgb(0 0 0 / calc(var(--scrim) * 0.34))  40%,
+        rgb(0 0 0 / 0)                          78%),
+      linear-gradient(to top,
+        rgb(0 0 0 / calc(var(--scrim) * 1.0))    0%,
+        rgb(0 0 0 / calc(var(--scrim) * 0.94))  30%,
+        rgb(0 0 0 / calc(var(--scrim) * 0.78))  46%,
+        rgb(0 0 0 / calc(var(--scrim) * 0.40))  60%,
+        rgb(0 0 0 / 0)                          76%);
+  }
 }
 
 /* Content hugs the bottom over the image. 40px at the foot, not 25 — the
@@ -380,7 +505,15 @@ a { color: inherit; }
    intrinsic height (--h, set inline) times --logo-u, a shared px-per-unit
    scale — so the four keep their relative optical weight at every width
    instead of being force-fitted to one box height. */
+/* The strip is now a row that ends in the carousel dots. align-items:center
+   is what puts the dots on the strip's optical baseline; the row's right edge
+   is .wrap's 25px gutter, so "25px from the right" is inherited, not restated.
+   Below 560 the four marks already spread the full width with space-between,
+   so the dots would land on top of KayKav — they drop to their own line above
+   the strip there, still hard right on the same 25px line. */
 .partners { margin-top: clamp(2.25rem, 6vw, 3.5rem); }
+.partners { display: flex; flex-direction: column; align-items: flex-end; gap: .9rem; }
+.partners .partner-list { width: 100%; }
 .partners-label { color: var(--paper); opacity: .6; margin-bottom: .9rem; }
 .partner-list {
   /* Four marks on ONE row, gutter to gutter, as the comp shows — a credit
@@ -397,6 +530,52 @@ a { color: inherit; }
   display: block; width: auto; max-width: 100%;
   height: calc(var(--h, 24) * var(--logo-u));
   object-fit: contain; object-position: left center;
+}
+
+/* ---------- CAROUSEL DOTS ----------
+   9px of ink inside a 44px tap target: the visible dot is a ::before, the
+   button itself is the minimum touch size the rest of the page uses. The
+   negative margin pulls the padding back out of the layout so five 44px
+   buttons do not push a 220px block into the strip — the row measures as the
+   dots look. -webkit-tap-highlight-color kills the grey flash on iOS.
+
+   Active is --accent, at full opacity, and 1.5x the area; resting dots are
+   white at 34%, which is the comp. Colour is not the only signal — the size
+   step carries it too, and aria-current carries it for screen readers. */
+.hero-dots {
+  display: flex; align-items: center; flex: none;
+  margin: -14px calc(-1 * var(--dot-pad)) -14px 0;
+}
+.hero-dots[hidden] { display: none; }
+.hero-dot {
+  --dot-pad: 6px;
+  appearance: none; border: 0; background: none; padding: 14px var(--dot-pad);
+  margin: 0; cursor: pointer; line-height: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.hero-dot::before {
+  content: ''; display: block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--paper); opacity: .34;
+  transition: background-color 220ms var(--ease), opacity 220ms var(--ease),
+              transform 220ms var(--ease);
+}
+.hero-dot.is-on::before { background: var(--accent); opacity: 1; transform: scale(1.34); }
+.hero-dot:hover::before { opacity: .7; }
+.hero-dot.is-on:hover::before { opacity: 1; }
+.hero-dot:focus-visible { outline: 2px solid var(--paper); outline-offset: -8px; border-radius: 4px; }
+
+@media (min-width: 560px) {
+  /* Room on the row from here up, so the dots sit ON the strip baseline as
+     the comps show, hard right against the same 25px line. */
+  .partners { flex-direction: row; align-items: center; justify-content: space-between; gap: 1.5rem; }
+  .partners .partner-list { width: auto; flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-frame { transition: none; }
+  .hero-fx { transition: none; }
+  .hero-dot::before { transition: none; }
+  .hero-scrim { transition: none; }
 }
 
 /* ---------- WHY: one line, standing alone ---------- */
@@ -559,19 +738,81 @@ a { color: inherit; }
 }
 .slot.has-control .slot-play { display: inline-flex; }
 
-/* ---------- pull line: loop behind the copy ----------
-   This is the one slot used as a cover backdrop rather than a ratio-locked
-   block: 21:9 is the shooting spec, the display crops to the band. Layout
-   shift is zero by construction — the media is absolutely positioned, so the
-   section height never depends on it. */
-.sec-why { position: relative; overflow: hidden; display: grid; align-items: center; }
-.why-media { position: absolute; inset: 0; z-index: 0; }
-.why-media .slot, .why-media .slot-box { height: 100%; aspect-ratio: auto; }
-.why-media .slot-ph { border: 0; }
-/* 75% ground over the loop. Over a pure-white frame that leaves #404040,
-   which carries white text at 9.74:1. */
-.why-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.75); }
-.sec-why .wrap { position: relative; z-index: 1; }
+/* ---------- pull line ----------
+   Type on black, nothing behind it. The foot of the section is cut short of
+   --sec because the reel answers this line and belongs under it, not a
+   viewport away from it. The head keeps the full --sec. */
+.sec-why { padding-block: var(--sec) clamp(1.5rem, 3.5vw, 2.5rem); }
+
+/* ---------- REEL ----------
+   Full bleed at every width: the frame runs 0 to 0 and ignores the 25px
+   gutter, which is why the player sits outside .wrap and only the caption
+   sits inside it.
+
+   The box is aspect-ratio 16/9 and the media is absolutely positioned inside
+   it, so the height is known before a single byte of poster or video has
+   arrived — layout shift here is zero by construction, not by luck.
+
+   Individual shots in the reel carry their own 2.39:1 bars, baked in at the
+   edit. On a black ground those bars have nothing to land on and simply read
+   as a wider frame, so they are left alone rather than cropped out. */
+.sec-reel { padding-block: 0 var(--sec); }
+
+.reel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  overflow: hidden;
+}
+.reel-video,
+.reel-poster,
+.reel-poster-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+/* The poster is removed, not faded: the video underneath is already showing
+   the same frame by then, so a transition would cross-fade an image with
+   itself. Only the poster goes — never the <video>, because display:none on
+   a playing media element stops it. */
+.reel.is-live .reel-poster,
+.reel.is-live .reel-play { display: none; }
+
+.reel-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: grid; place-items: center;
+  width: clamp(64px, 8vw, 92px); aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.45);
+  border: 2px solid var(--paper);
+  color: var(--paper);
+  cursor: pointer;
+  transition: background-color .18s var(--ease), transform .18s var(--ease);
+}
+.reel-play:hover { background: rgba(0,0,0,0.72); }
+.reel-play:active { transform: translate(-50%, -50%) scale(.95); }
+/* A triangle's optical centre sits left of its bounding box, so it is nudged
+   right by a fraction of its own width to look centred in the ring. */
+.reel-play svg { width: 34%; height: auto; margin-left: 7%; }
+
+.reel-sound {
+  position: absolute; top: .75rem; right: .75rem;
+  display: none; align-items: center;
+  min-height: 44px; padding: 0 1rem;
+  background: rgba(0,0,0,0.72); border: 1px solid var(--paper); border-radius: 999px;
+  color: var(--paper); font-size: var(--t-2); font-weight: 700; cursor: pointer;
+  text-transform: uppercase; letter-spacing: .1em;
+}
+/* Top-right, clear of the native control bar along the bottom edge — on iOS
+   those controls are drawn by the OS and this button cannot move them. */
+.reel-sound:not([hidden]) { display: inline-flex; }
+
+.reel-cap { margin-top: .8rem; font-size: 12px; line-height: 1.45; color: var(--mute); }
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-play { transition: none; }
+}
 
 /* ---------- foundation pair ---------- */
 .slot-pair {
@@ -930,36 +1171,12 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 @media (min-width: 1024px) {
   .hero { min-height: 100svh; display: flex; }
   .hero-media { position: absolute; inset: 0; aspect-ratio: auto; height: 100%; }
-  /* Desktop frames wider and centres the subject vertically — the tight mobile
-     head-and-shoulders crop (60% 30%) is undone here. 65% keeps the subject
-     centre-right so the left third stays clear for the headline. */
-  .hero-img { object-position: 65% 50%; }
-  /* ---------- THE SCRIM ----------
-     Left-anchored, not a frame-wide dim. The type all sits lower-left while
-     the subject sits upper-middle, so an ellipse anchored off the bottom-left
-     corner builds density exactly where the type is and falls away before it
-     reaches the face. Measured against the real image at 1440x950, white type,
-     glyph boxes sampled pixel by pixel with the type hidden:
-
-       treatment                    headline   strip    subject brightness
-       no scrim                       1.62 X    2.57 X   0.0519  (100%)
-       linear 100deg wedge            4.16 X   14.69     0.0222  ( 43%)
-       denser linear wedge            6.80     17.39     0.0132  ( 25%)
-       THIS (elliptical, e6)          8.12     18.71     0.0492  ( 95%)
-
-     8.12:1 is 1.8x the 4.5 floor and costs the subject 5% of its brightness;
-     the linear wedge could not clear the floor without halving it. Worst pixel
-     is x=529 y=448 (37% across) — the lit shoulder under line 2.
-
-     RETUNE THESE STOPS if the image is replaced. Nothing here is generic. */
-  .hero-scrim {
-    background: radial-gradient(110% 100% at -5% 82%,
-      rgb(0 0 0 / 0.96)  0%,
-      rgb(0 0 0 / 0.87) 31%,
-      rgb(0 0 0 / 0.50) 53%,
-      rgb(0 0 0 / 0.12) 71%,
-      rgb(0 0 0 / 0)    85%);
-  }
+  /* The crop is per-image now and comes from the manifest's "pos" — hero.js
+     writes it to --hero-pos on every change. The one hard-coded 65% 50% that
+     used to live here belonged to a single image and could not serve five.
+     The scrim is likewise not overridden at this breakpoint: the base rule's
+     100deg wedge IS the desktop treatment, and the max-width:1023.98 block
+     above is what re-weights it for the stacked mobile layout. */
   .hero-inner {
     display: flex; flex-direction: column; justify-content: flex-end;
     width: 100%; min-height: 100svh;
@@ -992,8 +1209,6 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   .tracks { grid-template-columns: repeat(3, 1fr); }
   .tl-hint { display: none; }
   .slot-strip .slot-box { height: 340px; }
-  /* the pull-line band reads cinematic once there is room for it */
-  .sec-why { min-height: min(46vw, 560px); }
 
   /* showcase becomes an asymmetric 12-column grid, no scrolling — so it takes
      the frame on both sides again rather than bleeding right */

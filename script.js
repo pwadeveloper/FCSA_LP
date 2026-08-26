@@ -95,7 +95,94 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     if (wide.addEventListener) wide.addEventListener('change', syncHero);
   }
 
-  /* ---------- 1e. media slots ---------- */
+  /* ---------- 1e. the reel ----------
+     Fifty-seven seconds with a music bed, so the rules are the opposite of
+     the hero's: it never autoplays, at any width, on any connection. It
+     plays because someone pressed the button.
+
+     The markup ships the <video> with preload="none" and NO src, so nothing
+     but the poster is on the wire until that press. The rendition is chosen
+     here, at press time, for two reasons: <source media> is read once at
+     load and never re-evaluated by any shipping browser, and the connection
+     is worth measuring when it is about to be used rather than during parse.
+  */
+  (function reelSection() {
+    var box = document.querySelector('[data-reel]');
+    if (!box) return;
+    var vid  = box.querySelector('.reel-video');
+    var play = box.querySelector('.reel-play');
+    var snd  = box.querySelector('.reel-sound');
+    if (!vid || !play) return;
+
+    /* 720p below 1024px, on Save-Data, and on 2g/3g. Pushing 1080p into a
+       900px-wide box is twice the bytes for pixels that box cannot show. */
+    function thin() {
+      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (c && (c.saveData === true || /^(slow-2g|2g|3g)$/.test(c.effectiveType || ''))) return true;
+      return !window.matchMedia('(min-width: 1024px)').matches;
+    }
+
+    var loaded = false;
+    function load() {
+      if (loaded) return;
+      loaded = true;
+      vid.src = box.getAttribute(thin() ? 'data-src-720' : 'data-src-1080');
+    }
+
+    /* Starts muted and STAYS muted until asked otherwise — a tap on a phone
+       in a public place must not blast a minute of music at the room. Once
+       they ask, the choice sticks for the rest of the visit: replaying does
+       not silently re-mute them. */
+    var wantSound = false;
+
+    function syncSound() {
+      vid.muted = !wantSound;
+      if (snd) snd.hidden = !(box.classList.contains('is-live') && !wantSound);
+    }
+
+    play.addEventListener('click', function () {
+      load();
+      box.classList.add('is-live');
+      /* Native controls from here, and no custom player. Scrub, volume,
+         captions, PiP, AirPlay and the OS fullscreen affordance are all
+         things the platform already does better than a bespoke bar. */
+      vid.controls = true;
+      syncSound();
+      vid.play().catch(function () {
+        /* Refused — rare off a real gesture, but hand the poster back rather
+           than leaving a dead black frame with controls on it. */
+        box.classList.remove('is-live');
+        vid.controls = false;
+        syncSound();
+      });
+    });
+
+    if (snd) {
+      snd.addEventListener('click', function () {
+        wantSound = true;
+        syncSound();
+      });
+    }
+
+    /* The native control bar has its own mute toggle. It is the same switch,
+       so mirror it — otherwise unmuting there, replaying, and being re-muted
+       by our own state would look like a bug. */
+    vid.addEventListener('volumechange', function () {
+      wantSound = !vid.muted;
+      if (snd) snd.hidden = !(box.classList.contains('is-live') && !wantSound);
+    });
+
+    /* Scrolled out of view: pause. Deliberately does NOT resume on the way
+       back — audio starting again because a thumb drifted is worse than
+       finding it where you left it. */
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) {
+        if (!es[0].isIntersecting && !vid.paused) vid.pause();
+      }, { threshold: 0.25 }).observe(box);
+    }
+  })();
+
+  /* ---------- 1f. media slots ---------- */
 
   /* Strip empty slots when the launch gate is closed. A slot counts as filled
      only if it actually holds an <img> or <video>. */
@@ -105,7 +192,7 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
       var host = fig.parentNode;
       fig.parentNode.removeChild(fig);
       /* drop a wrapper that exists only to hold slots */
-      if (host && /slot-pair|why-media/.test(host.className) && !host.querySelector('.slot')) {
+      if (host && /slot-pair/.test(host.className) && !host.querySelector('.slot')) {
         host.parentNode.removeChild(host);
       }
     });
