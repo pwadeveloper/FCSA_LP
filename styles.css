@@ -741,11 +741,9 @@ a { color: inherit; }
    the chrome that retracts on scroll, so a 100vh hero-height block is taller
    than what you can actually see and the button lands under the URL bar.
 
-   THE BLUR IS A FILTER ON A SHARP SOURCE, never baked into the file, so
-   revealing the image later is a stylesheet edit. blur() samples from
-   outside the element box and finds nothing there, which feathers the edges
-   to transparent; scale(1.06) pushes those edges off-screen. 1.06 is the
-   smallest scale that clears an 18px radius at these dimensions. */
+   THE STILL SHOWS SHARP. No blur, and therefore no scale() compensation for
+   the transparent edge blur() used to pull in. The only treatment is the
+   --ground overlay below, held as low as the contrast measurements allow. */
 .sec-still {
   position: relative;
   min-height: 100svh;
@@ -774,19 +772,16 @@ a { color: inherit; }
    away most of every shot. contain letterboxes onto the black ground
    instead, which is what a showreel wants — the framing is the work. */
 .still-video { object-fit: contain; }
-.still-img {
-  filter: blur(18px);
-  transform: scale(1.06);
-  transition: filter .6s var(--ease), transform .6s var(--ease);
-}
+.still-img { /* sharp, as supplied */ }
 
-/* --ground at 55%, over the blur and under the type. Raising THIS is the
-   lever for contrast, not dimming the image further: the image also has to
-   survive being revealed at full strength in the play state. */
+/* --ground over the still and under the type, purely for contrast. This is
+   the ONLY contrast lever — the brief rules out going back to blur — so it is
+   set from the per-line measurements rather than by eye, and kept as low as
+   those allow so the image stays legible. */
 .still-veil {
   position: absolute; inset: 0;
   background: var(--ground);
-  opacity: .55;
+  opacity: .25;
   transition: opacity .6s var(--ease);
   pointer-events: none;
 }
@@ -810,21 +805,31 @@ a { color: inherit; }
   width: 100%;
   padding-inline: var(--edge-l) var(--edge-r);
   padding-block: var(--sec);
+  text-align: center;
   transition: opacity .45s var(--ease);
 }
 
-/* ~24ch is what breaks the line into the tall left column the comp shows.
-   WHITE, not yellow: yellow is reserved for Apply and the Premiere block,
-   and a third use dilutes it. */
+/* Centred block, ~28ch measure, per the comp.
+
+   THE INDENT IS text-indent, never literal spaces or &nbsp;, so it survives
+   reflow and never leaves a stranded gap when the first line rewraps.
+   0.688em is measured, not guessed: Delight's space advance is 0.172em, so
+   four of them is 0.688em. (That is within 2% of 1ch in this face, which is
+   a coincidence of Delight's proportions, not a rule — hence the em.)
+
+   text-wrap is left alone here. `pretty` pulls words down to even the last
+   line, which fights a fixed six-line target. */
 .still-pull {
   font-size: var(--t3); font-weight: 900; line-height: 1.14;
-  letter-spacing: -0.026em; color: var(--paper);
-  max-width: 24ch; text-wrap: pretty;
+  letter-spacing: -0.026em; color: var(--accent);
+  max-width: 28ch; margin-inline: auto;
+  text-indent: 0.688em;
   text-shadow: 0 1px 20px rgb(0 0 0 / .45);
 }
 
 .still-play {
   display: inline-flex; align-items: center; gap: .7rem;
+  /* inline-flex centres on the parent's text-align: center */
   margin-top: clamp(1.5rem, 3vw, 2.25rem);
   min-height: 44px; padding: .7rem 1.4rem .7rem .7rem;
   border: 1px solid var(--paper); border-radius: 999px;
@@ -835,14 +840,9 @@ a { color: inherit; }
 }
 .still-play:hover { background: rgb(255 255 255 / .14); }
 .still-play:active { transform: scale(.98); }
-.still-play-ring {
-  display: grid; place-items: center;
-  width: 34px; aspect-ratio: 1; flex: none;
-  border: 1px solid currentColor; border-radius: 50%;
-}
-/* A triangle's optical centre sits left of its bounding box, so it is nudged
-   right by a fraction of its own width to look centred in the ring. */
-.still-play-ring svg { width: 42%; height: auto; margin-left: 8%; }
+/* The supplied glyph draws its own ring, so there is no CSS circle here any
+   more — a border-radius ring around it would double the stroke. */
+.still-play-glyph { width: 34px; height: 34px; flex: none; display: block; }
 
 /* Clear of the fixed header: that bar is 94px tall and carries the Apply
    pill hard right at z-index 100, so a close control at top:1rem sits
@@ -857,32 +857,23 @@ a { color: inherit; }
 .still-close:not([hidden]) { display: grid; }
 .still-close svg { width: 45%; height: auto; }
 
-.still-cap {
-  position: relative; z-index: 2;
-  margin: 0 0 clamp(1rem, 2.5vw, 1.6rem);
-  font-size: 12px; line-height: 1.45; color: var(--mute);
-  transition: opacity .45s var(--ease);
-}
-
 /* ---- play state ---- */
 .sec-still.is-live .still-img   { filter: blur(0); transform: scale(1); }
 .sec-still.is-live .still-veil  { opacity: 0; }
 .sec-still.is-live .still-video { opacity: 1; pointer-events: auto; }
-.sec-still.is-live .still-content,
-.sec-still.is-live .still-cap   { opacity: 0; pointer-events: none; }
+.sec-still.is-live .still-content { opacity: 0; pointer-events: none; }
 
 @media (max-width: 1023.98px) {
   /* Narrower measure, and a button that fills the gutter rather than
      floating at its own intrinsic width. */
-  .still-pull { max-width: 18ch; }
+  .still-pull { max-width: 20ch; }
   .still-play { width: 100%; justify-content: center; padding-inline: 1rem; }
 }
 
 /* Cut straight between the two states. The reel still plays on press —
    there is no motion to reduce in a video somebody asked for. */
 @media (prefers-reduced-motion: reduce) {
-  .still-img, .still-veil, .still-video, .still-content, .still-cap,
-  .still-play { transition: none; }
+  .still-veil, .still-video, .still-content, .still-play { transition: none; }
 }
 
 /* ---------- foundation pair ---------- */

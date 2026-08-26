@@ -236,10 +236,8 @@
      belt and braces against the one behaviour that would blow the page
      budget. The still itself is 43KB at 1440 in the worst format.
 
-     THE STILL IS NOT PRE-BLURRED. The blur is a CSS filter over a sharp
-     source, so revealing it later is a stylesheet change, not a re-encode.
-     scale(1.06) hides the transparent edge that blur() pulls in from outside
-     the element box.
+     THE STILL SHOWS SHARP, as supplied. The only treatment is a --ground
+     overlay for type contrast, held as low as the measurements allow.
 
      THE LADDER STOPS AT 1440 because the master is 1508px wide; a 1920 step
      would be an upscale. Same per-image cap rule as the hero — see
@@ -276,12 +274,13 @@
          width="1920" height="1080" tabindex="-1"></video>
 
   <div class="still-content">
-    <p class="still-pull">There have never been more people making things. There have never been fewer places to learn how.</p>
+    <p class="still-pull">There’s never been a better time to be a visual storyteller, and our team brings decades of industry expertise to show you exactly how to bring your vision to life</p>
 
     <button class="still-play" type="button" aria-label="Play the reel">
-      <span class="still-play-ring" aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false"><path d="M8 5.2v13.6L19 12z" fill="currentColor"></path></svg>
-      </span>
+      <svg class="still-play-glyph" viewBox="0 0 40 40" fill="none" aria-hidden="true" focusable="false">
+        <path d="M20.0002 36.6668C29.2049 36.6668 36.6668 29.2049 36.6668 20.0002C36.6668 10.7954 29.2049 3.3335 20.0002 3.3335C10.7954 3.3335 3.3335 10.7954 3.3335 20.0002C3.3335 29.2049 10.7954 36.6668 20.0002 36.6668Z" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M26.5755 20.6578C26.281 21.7023 24.8888 22.4405 22.1048 23.9168C19.4133 25.3438 18.0677 26.0575 16.9832 25.7707C16.5348 25.652 16.1263 25.4268 15.7969 25.1167C15 24.3662 15 22.9107 15 19.9998C15 17.089 15 15.6335 15.7969 14.8831C16.1263 14.5729 16.5348 14.3476 16.9832 14.2291C18.0677 13.9422 19.4133 14.6558 22.1048 16.0829C24.8888 17.5592 26.281 18.2973 26.5755 19.3418C26.697 19.773 26.697 20.2267 26.5755 20.6578Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
       <span>Watch our experts in action</span>
     </button>
   </div>
@@ -291,10 +290,6 @@
       <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
     </svg>
   </button>
-
-  <div class="wrap">
-    <p class="still-cap">Work from Multimudia Studios, Clan Yujo, CoLAB and KayKav Academy. Music only, no speech &mdash; there is nothing to caption.</p>
-  </div>
 
   <!-- No JS: the custom control cannot work, so hand over the native one.
        The <style> lives in here rather than in styles.css on purpose — keyed
