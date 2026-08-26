@@ -225,46 +225,58 @@
 </section>
 
 <!-- ============ REST STATE / REEL ============
-     Full-bleed, full viewport height. The rest state is a single still,
-     blurred and darkened in CSS, with the pull line and one button over it.
-     Pressing the button clears the blur, fades the text out and plays the
-     reel in place; Escape or the close control puts it back.
+     Full-bleed, full viewport height. The rest state is an AMBIENT VIDEO
+     LOOP with the pull line and one button over it. Pressing the button
+     stops the loop, fades the text out and plays the REEL in its place;
+     Escape or the close control puts the loop back.
 
-     NOTHING BUT THE STILL CROSSES THE WIRE AT REST. The <video> ships with
-     no src at all and preload="none" — script.js assigns a URL on the first
-     press. A media element cannot preload what it has no URL for, which is
-     belt and braces against the one behaviour that would blow the page
-     budget. The still itself is 43KB at 1440 in the worst format.
+     TWO SEPARATE VIDEOS, and they never overlap. BackgroundLoop is 9.6s of
+     silent, muted, decorative wallpaper. The reel is a minute with a music
+     bed that only ever starts from a press.
 
-     THE STILL SHOWS SHARP, as supplied. The only treatment is a --ground
-     overlay for type contrast, held as low as the measurements allow.
+     THE POSTER IS THE FLOOR OF THIS SECTION. It is the first paint, the
+     handoff frame while the loop decodes, and the WHOLE background in every
+     case where the loop is suppressed — under 1024px, on Save-Data or
+     2g/3g, and under prefers-reduced-motion. In all three the section looks
+     identical, just still, and the play button still plays the reel. It is
+     frame zero of the loop, so the handoff is a continuation, not a cut.
 
-     THE LADDER STOPS AT 1440 because the master is 1508px wide; a 1920 step
-     would be an upscale. Same per-image cap rule as the hero — see
-     tools/section-still.py.
+     THE LOOP <video> IS NOT IN THIS MARKUP. script.js constructs it, and
+     only after the three gates above pass — that is the only way "no video
+     element created on mobile" is literally true. A media element in the
+     document with a src is a fetch the browser may start on its own terms.
+     The reel <video> is here but ships with NO src and preload="none" for
+     the same reason: nothing about it crosses the wire until the press.
 
-     The two renditions live in data attributes rather than <source media>
-     because no shipping browser re-evaluates that media attribute — it is
-     read once and never again. Choosing in JS at press time also means the
-     connection is measured when it matters rather than during parse. -->
+     BOTH LADDERS STOP AT THE MASTER'S NATIVE 1280. The supplied loop is
+     1280x720, so a 1920 rung would be an upscale — the same per-asset cap
+     rule as the hero. See tools/background-loop.py.
+
+     Renditions live in data attributes rather than <source media> because no
+     shipping browser re-evaluates that media attribute — it is read once and
+     never again. Choosing in JS also means the connection and the device
+     pixel ratio are read when they matter rather than during parse. -->
 <section class="sec-still" id="reel" data-still aria-labelledby="still-h"
          data-src-1080="assets/media/reel-1080.mp4"
-         data-src-720="assets/media/reel-720.mp4">
+         data-src-720="assets/media/reel-720.mp4"
+         data-loop-720="assets/media/loop/background-loop-720.mp4"
+         data-loop-540="assets/media/loop/background-loop-540.mp4">
   <h2 id="still-h" class="sr-only">The reel</h2>
 
   <picture class="still-bg">
     <source type="image/avif" sizes="100vw"
-            srcset="assets/media/section-still-900.avif 900w,
-                    assets/media/section-still-1440.avif 1440w">
+            srcset="assets/media/loop/loop-poster-900.avif 900w,
+                    assets/media/loop/loop-poster-1280.avif 1280w">
     <source type="image/webp" sizes="100vw"
-            srcset="assets/media/section-still-900.webp 900w,
-                    assets/media/section-still-1440.webp 1440w">
-    <!-- alt="" deliberately: it is a blurred backdrop carrying no information
-         the pull line over it does not already say. -->
-    <img class="still-img" alt="" width="1508" height="639" sizes="100vw"
-         src="assets/media/section-still-1440.jpg"
-         srcset="assets/media/section-still-900.jpg 900w,
-                 assets/media/section-still-1440.jpg 1440w"
+            srcset="assets/media/loop/loop-poster-900.webp 900w,
+                    assets/media/loop/loop-poster-1280.webp 1280w">
+    <!-- alt="" deliberately: it is a backdrop carrying no information the
+         pull line over it does not already say. The loop over it is
+         aria-hidden for the same reason. -->
+    <img class="still-img" alt="" width="1280" height="720" sizes="100vw"
+         src="assets/media/loop/loop-poster-1280.jpg"
+         srcset="assets/media/loop/loop-poster-900.jpg 900w,
+                 assets/media/loop/loop-poster-1280.jpg 1280w"
          loading="lazy" decoding="async">
   </picture>
 
@@ -296,6 +308,9 @@
        off a .js class instead, it would apply for the moment between paint
        and script.js running and flash the still away. -->
   <noscript>
+    <!-- No JS means no loop either — it is script-constructed — so the
+         poster is already the background and only the reel handover
+         changes. -->
     <style>.still-bg, .still-veil, .still-play { display: none; }
            .still-video { position: static; opacity: 1; }</style>
     <video class="still-video" controls muted preload="none" playsinline
@@ -710,6 +725,7 @@
       </figure>
     </div>
   </div>
+  <div class="wrap"><p class="tl-hint showcase-hint" aria-hidden="true">Scroll sideways &rarr;</p></div>
 </section>
 
 <!-- ============ TIMELINE ============ -->
@@ -1053,6 +1069,53 @@
      screen. Both are deferred so neither can block the LCP paint. -->
 <script src="hero.js" defer></script>
 <script src="hero-shader.js" defer></script>
+
+<!-- ============ ON-DEVICE WIDTH READOUT ============
+     Opt-in only: append ?widthcheck to the URL. Nothing renders, and nothing
+     is measured, without it — this costs a single querystring test on a normal
+     load, so it is safe to leave in production.
+
+     It exists because the bug it checks for is INVISIBLE to desktop tooling.
+     Chrome contains the four horizontal scrollers and reports document width
+     == viewport width; iOS Safari widens the layout viewport to ~3x and drags
+     the fixed header off screen. A desktop browser, at any emulated size, will
+     never reproduce it — so the measurement has to happen on the real phone,
+     and Safari on iOS has no console without a Mac and a cable. This prints
+     the two numbers into the page instead.
+
+     GREEN means document width == viewport width. RED means it does not, and
+     the delta is the amount the header will be dragged off screen.
+
+     Read it on filmschool.africa/?widthcheck on the actual device. -->
+<script>
+(function () {
+  if (!/[?&]widthcheck\b/.test(location.search)) return;
+  var box = document.createElement('div');
+  box.setAttribute('role', 'status');
+  box.style.cssText =
+    'position:fixed;left:8px;bottom:8px;z-index:2147483647;' +
+    'font:700 12px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;' +
+    'padding:8px 10px;border-radius:6px;color:#000;white-space:pre;' +
+    'pointer-events:none;box-shadow:0 2px 10px rgb(0 0 0 / .5)';
+  document.body.appendChild(box);
+  function read() {
+    var de = document.documentElement;
+    var doc = Math.max(document.body.scrollWidth, de.scrollWidth);
+    var vp = de.clientWidth;
+    var ok = doc === vp;
+    box.style.background = ok ? '#63e6a8' : '#ff5c5c';
+    box.textContent =
+      (ok ? 'OK  document == viewport' : 'FAIL  document > viewport') +
+      '\ndocument ' + doc + '   viewport ' + vp +
+      '\nbody.scrollWidth ' + document.body.scrollWidth +
+      '\nhtml.scrollWidth ' + de.scrollWidth +
+      (ok ? '' : '\noverhang ' + (doc - vp) + 'px');
+  }
+  read();
+  addEventListener('resize', read);
+  addEventListener('orientationchange', function () { setTimeout(read, 300); });
+})();
+</script>
 
 </body>
 </html>

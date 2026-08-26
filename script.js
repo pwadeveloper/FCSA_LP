@@ -96,25 +96,36 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
   }
 
   /* ---------- 1e. rest state / reel ----------
-     Two states over one full-viewport section. REST is a blurred, darkened
-     still with the pull line and a button over it. PLAY clears the blur,
-     fades the text out and runs the reel in place.
+     Two states over one full-viewport section, and TWO ENTIRELY SEPARATE
+     VIDEOS. Confusing them is the one thing that would make this section
+     expensive.
 
-     Fifty-seven seconds with a music bed, so the rules are the opposite of
-     the hero's: it never autoplays, at any width, on any connection. It
-     plays because someone pressed the button.
+     REST is BackgroundLoop: 9.6 seconds, silent, muted, decorative, and it
+     starts on its own. PLAY is the reel: a minute with a music bed, which
+     never starts without a press. Pressing stops and hides the loop before
+     the reel is even given a URL; exiting unloads the reel and brings the
+     loop back.
 
-     The markup ships the <video> with preload="none" and NO src, so nothing
-     but the still is on the wire until that press. The rendition is chosen
-     here, at press time, for two reasons: <source media> is read once at
-     load and never re-evaluated by any shipping browser, and the connection
-     is worth measuring when it is about to be used rather than during parse.
+     THE LOOP IS CONSTRUCTED HERE, not shipped in the markup, because the
+     brief's suppression rules are absolute — under 1024px, on Save-Data or
+     2g/3g, and under prefers-reduced-motion there is to be no video element
+     at all. An element that exists with a src is a fetch the browser is
+     entitled to start on its own schedule; an element that was never created
+     is a guarantee. In all three cases the poster in the markup is already
+     the background and the section looks identical, just still.
 
-     IT PLAYS WITH SOUND. That is a deliberate reversal of the muted-start
-     the old inline player used: this is a full-viewport takeover somebody
-     explicitly asked for, not a panel they scrolled past, and the press is a
-     real user gesture so autoplay policy allows audio. The native control
-     bar carries the mute switch if they want it back.
+     THE REEL, conversely, is in the markup but with preload="none" and NO
+     src — a media element cannot preload what it has no URL for. The
+     rendition is chosen at press time for two reasons: <source media> is
+     read once at load and never re-evaluated by any shipping browser, and
+     the connection is worth measuring when it is about to be used rather
+     than during parse.
+
+     THE REEL PLAYS WITH SOUND. That is a deliberate reversal of the loop
+     next to it: this is a full-viewport takeover somebody explicitly asked
+     for, not wallpaper they scrolled past, and the press is a real user
+     gesture so autoplay policy allows audio. The native control bar carries
+     the mute switch if they want it back.
   */
   (function stillReel() {
     var box = document.querySelector('[data-still]');
@@ -122,14 +133,25 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     var vid   = box.querySelector('.still-video');
     var play  = box.querySelector('.still-play');
     var close = box.querySelector('.still-close');
+    var veil  = box.querySelector('.still-veil');
     if (!vid || !play) return;
+
+    var wideMq    = window.matchMedia('(min-width: 1024px)');
+    var reducedMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /* Save-Data as a HEADER is not readable from script; navigator.connection
+       .saveData is the client-side half of the same signal and is what a
+       browser sets when the user turns the setting on. Both halves point at
+       the same preference, so honouring this one honours the header. */
+    function frugal() {
+      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      return !!(c && (c.saveData === true || /^(slow-2g|2g|3g)$/.test(c.effectiveType || '')));
+    }
 
     /* 720p below 1024px, on Save-Data, and on 2g/3g. Pushing 1080p into a
        900px-wide box is twice the bytes for pixels that box cannot show. */
     function thin() {
-      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      if (c && (c.saveData === true || /^(slow-2g|2g|3g)$/.test(c.effectiveType || ''))) return true;
-      return !window.matchMedia('(min-width: 1024px)').matches;
+      return frugal() || !wideMq.matches;
     }
 
     var loaded = false;
@@ -139,8 +161,131 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
       vid.src = box.getAttribute(thin() ? 'data-src-720' : 'data-src-1080');
     }
 
+    /* ---------- the ambient loop ----------
+       Three gates, all of which also mean "leave the poster showing". */
+    var loop = null;
+    var near  = false;            /* within lead distance — worth constructing */
+    var shown = false;            /* actually on screen — worth decoding */
+
+    function loopAllowed() {
+      return wideMq.matches && !reducedMq.matches && !frugal();
+    }
+
+    /* Rendition by DEVICE pixels, not CSS pixels. The <1024 rung in the brief
+       has no consumer once the loop is suppressed below 1024 outright, so the
+       small rung earns its place on the axis that is still live: a 1280-wide
+       file is already an upscale into any full-viewport box on a retina
+       screen, and 960 is only honest where the display cannot resolve the
+       difference. dpr is capped at 2 because past that nothing on this page
+       is being resolved anyway. */
+    function loopSrc() {
+      var px = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
+      return box.getAttribute(px >= 1280 ? 'data-loop-720' : 'data-loop-540');
+    }
+
+    function makeLoop() {
+      if (loop) return;
+      var v = document.createElement('video');
+      v.className = 'still-loop';
+      /* Property AND attribute on the three that matter. The property is what
+         the autoplay gate reads; the attribute is what iOS reads and what
+         survives load(). defaultMuted is the one that keeps it muted across a
+         reload of the resource — muted alone does not. */
+      v.muted = true; v.defaultMuted = true; v.setAttribute('muted', '');
+      v.loop = true;  v.setAttribute('loop', '');
+      v.playsInline = true;
+      v.setAttribute('playsinline', '');
+      v.setAttribute('webkit-playsinline', '');
+      v.preload = 'metadata';
+      /* Decorative. It carries nothing the pull line over it does not say,
+         and it must never be a tab stop or a PiP offer. */
+      v.setAttribute('aria-hidden', 'true');
+      v.tabIndex = -1;
+      v.disablePictureInPicture = true;
+      v.setAttribute('disablepictureinpicture', '');
+      v.width = 1280; v.height = 720;
+      /* No poster attribute: the <picture> underneath is already showing this
+         exact frame in AVIF at a third of the JPEG's bytes. Fade in only once
+         a real frame exists, so a decoder that paints black before its first
+         frame cannot flash over the poster. */
+      var ready = function () { v.classList.add('is-ready'); };
+      v.addEventListener('loadeddata', ready);
+      v.addEventListener('playing', ready);
+      v.src = loopSrc();
+      box.insertBefore(v, veil || vid);
+      loop = v;
+    }
+
+    function dropLoop() {
+      if (!loop) return;
+      var v = loop;
+      loop = null;
+      v.pause();
+      /* Same unload as the reel below: removeAttribute + load() drops the
+         buffered bytes and cancels the fetch. src = '' would resolve the
+         empty string against the document URL and re-request the page. */
+      v.removeAttribute('src');
+      v.load();
+      if (v.parentNode) v.parentNode.removeChild(v);
+    }
+
+    function resume() {
+      if (!loop || !shown || document.hidden) return;
+      if (box.classList.contains('is-live')) return;
+      var p = loop.play();
+      if (p && p.catch) p.catch(function () {});
+    }
+    function suspend() { if (loop) loop.pause(); }
+
+    function syncLoop() {
+      if (!loopAllowed()) { dropLoop(); return; }
+      if (near) { makeLoop(); resume(); }
+    }
+
+    if (wideMq.addEventListener) {
+      wideMq.addEventListener('change', syncLoop);
+      reducedMq.addEventListener('change', syncLoop);
+    }
+    /* A backgrounded tab keeps decoding video in some engines. Nothing is
+       watching it, so stop. */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) suspend(); else resume();
+    });
+
+    /* TWO observers over the loop, because "worth downloading" and "worth
+       decoding" are different distances and one rootMargin cannot be both.
+       The lead observer runs 20% of a viewport early, so the first frame has
+       a moment to decode behind the poster instead of arriving after the
+       section does. The second is the viewport exactly: off screen is off,
+       with no margin, because a loop nobody can see must not be holding a
+       decoder open. Collapsing these into one observer is what makes a loop
+       keep running while the reader sits on the hero. */
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) {
+        near = es[es.length - 1].isIntersecting;
+        if (near) syncLoop();
+      }, { rootMargin: '20% 0px' }).observe(box);
+      /* -1px, not 0. The hero above is exactly 100svh, so at the top of the
+         page this section's first pixel row sits exactly ON the fold, and a
+         zero-height intersection is one Chromium reports as intersecting.
+         Left at 0 the loop plays, and buffers, for every reader who lands and
+         does not scroll — with none of it on screen. Shrinking the root by a
+         pixel means at least one row has to be genuinely inside the viewport,
+         which is what "out of view" was meant to say. */
+      new IntersectionObserver(function (es) {
+        shown = es[es.length - 1].isIntersecting;
+        if (shown) resume(); else suspend();
+      }, { rootMargin: '-1px 0px' }).observe(box);
+    } else {
+      near = shown = true;
+      syncLoop();
+    }
+
     function enter() {
       load();
+      /* Stop the wallpaper before the film starts. CSS takes it to opacity 0
+         in the same class flip; this is what stops it decoding. */
+      suspend();
       box.classList.add('is-live');
       if (close) close.hidden = false;
       /* Native controls from here, and no custom player. Scrub, volume,
@@ -173,6 +318,7 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
       vid.load();
       loaded = false;
       play.focus();
+      resume();
     }
 
     play.addEventListener('click', enter);
@@ -184,7 +330,8 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
 
     /* Scrolled out of view: leave the play state entirely. Audio continuing
        from a section nobody can see is worse than losing your place in a
-       57-second reel. */
+       57-second reel. Separate from the loop observer above — this one wants
+       a quarter of the section gone before it acts, and no lead time. */
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (es) {
         if (!es[0].isIntersecting) exit();

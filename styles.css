@@ -125,6 +125,68 @@
 
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 
+/* ---------- THE DOCUMENT-WIDTH GUARD — read this before touching it ----------
+   INVARIANT: document width == viewport width, at every breakpoint, in both
+   motion states. There is a check for it in the README. Breaking it does not
+   look like an overflow bug, which is what makes it expensive.
+
+   WHY IT IS ON html AND body, AND WHY hidden COMES BEFORE clip.
+
+   This page has four deliberate horizontal scrollers — .tl-scroll (1124px of
+   timeline), .prod-scroll (1765px), .showcase-scroll (1400px) and .marq-row
+   (9368px of marquee). All four are far wider than any phone, and all four
+   are correctly contained by their own overflow. Chrome honours that: measured
+   on the deployed build at 390, body.scrollWidth is 390.
+
+   iOS SAFARI DOES NOT. It widens the LAYOUT viewport to the widest of them —
+   measured at 2.84x the frame on a real device — and `overflow-x: clip` on
+   body alone did not stop it, because clip is Safari 16+ and, where it is not
+   understood, the whole declaration is dropped and body falls back to visible.
+
+   That is not a cosmetic overflow. .site-head is position:fixed, and a fixed
+   element resolves against the LAYOUT viewport, so the header stretches to the
+   document width and carries the Apply pill off the right of the screen. The
+   content lays out in a narrow left column beside it.
+
+   So: BOTH elements (no reliance on body -> viewport propagation, which is the
+   step that fails), and TWO declarations. Old Safari parses `hidden` and drops
+   `clip`; modern engines take `clip`, which clips without making the root a
+   scroll container. Do not collapse these to one line.
+
+   Only overflow-X is constrained. overflow-y is left alone so vertical
+   scrolling, scroll-behavior and the sticky timeline lanes are untouched. */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;   /* fallback — older iOS Safari, and it propagates */
+  overflow-x: clip;     /* modern — clips without creating a scroll container */
+}
+
+/* ---------- AND THE PART THAT ACTUALLY FIXES IT ----------
+   The guard above is a net, not the fix, and on its own it is NOT ENOUGH.
+   Measured: with it in place body.scrollWidth is 390 at a 390 frame — and
+   documentElement.scrollWidth is still 1108.
+
+   THAT GAP IS THE WHOLE BUG. body.scrollWidth is the number that looks right
+   and means nothing here; html.scrollWidth is the one the layout viewport is
+   built from, and 1108/390 = 2.84x is exactly the ratio measured on the
+   device. Anything checking this invariant must read
+   documentElement.scrollWidth. Checking body alone passes before and after
+   the fix and tells you nothing.
+
+   A scroll container clips its content but its content still counts toward
+   the ROOT's scrollable overflow. Only containment takes it out of that sum.
+   `contain: paint` is the smallest value that does it — layout/content/strict
+   all work and all promise more than is needed here.
+
+   Applies to every horizontal scroller on the page. A new one MUST be added
+   to this list, or the invariant breaks again the day it ships. */
+.tl-scroll,
+.prod-scroll,
+.showcase-scroll,
+.marq-row {
+  contain: paint;
+}
+
 body {
   background: var(--ground);
   color: var(--body);
@@ -134,7 +196,6 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: clip;
 }
 
 img, svg, video { display: block; max-width: 100%; }
@@ -205,7 +266,17 @@ a { color: inherit; }
      running underneath it. The two real controls opt back in. */
   pointer-events: none;
 }
-.head-inner { display: flex; align-items: flex-start; gap: 1rem; min-height: var(--head-mark-h); }
+/* position:relative so the mark and the pill paint ABOVE .site-head::before,
+   the mobile compact scrim. The scrim is absolutely positioned and therefore
+   paints in the positioned-descendants phase; .head-inner in static flow
+   paints earlier, so without this the gradient lands on top of its own
+   header — measurably dimming the yellow pill, which is the one place the
+   accent appears. Positioned and later in DOM order, it wins by source. */
+.head-inner {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 1rem;
+  min-height: var(--head-mark-h);
+}
 .head-mark, .site-head .btn { pointer-events: auto; }
 .head-mark { margin-right: auto; display: block; line-height: 0; }
 .head-logo { height: var(--head-mark-h); width: auto; }
@@ -244,6 +315,41 @@ a { color: inherit; }
 .head-mark { transition: filter .2s var(--ease); }
 /* prefers-reduced-motion zeroes every transition-duration globally further
    down, so under that setting the header simply snaps between the two states. */
+
+/* ---------- THE COMPACT SCRIM — mobile only, scrolled state only ----------
+   The mark's own drop-shadow protects the MARK where it crosses a light
+   image. It does nothing for the type underneath it, and on a phone that
+   type is the whole page: one narrow column running the full frame width, so
+   the mark and the pill sit on top of every h2 in turn. Measured at 375 —
+   "The 12 weeks", "Questions", "Work from the people teaching you" and "Then
+   your work on a screen" were each struck through by the mark. On desktop the
+   same mark lands in empty gutter beside a narrow column and there is no
+   collision, which is why this is scoped to <1024 and not applied globally.
+
+   A SCRIM, NOT A BAR. No fill, no blur, no border, no edge — the same device
+   the hero already uses for the same reason, a gradient that fades to nothing
+   before it ends. The header rule above stays true: there is no bar in
+   either state.
+
+   Off over the hero. It is keyed to .is-compact, which only exists after
+   120px of scroll, so the resting header over the hero is exactly as
+   designed — completely clean — and the scrim only arrives once there is
+   content behind it to protect. */
+@media (max-width: 1023.98px) {
+  .site-head::before {
+    content: '';
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom,
+      rgb(0 0 0 / 0.88)  0%,
+      rgb(0 0 0 / 0.72) 46%,
+      rgb(0 0 0 / 0.34) 74%,
+      rgb(0 0 0 / 0)   100%);
+    opacity: 0;
+    transition: opacity .2s var(--ease);
+  }
+  .site-head.is-compact::before { opacity: 1; }
+}
 
 /* ---------- BUTTONS ---------- */
 .btn {
@@ -533,28 +639,56 @@ a { color: inherit; }
 }
 
 /* ---------- CAROUSEL DOTS ----------
-   9px of ink inside a 44px tap target: the visible dot is a ::before, the
+   7px of ink inside a 44px tap target: the visible dot is a ::before, the
    button itself is the minimum touch size the rest of the page uses. The
    negative margin pulls the padding back out of the layout so five 44px
    buttons do not push a 220px block into the strip — the row measures as the
    dots look. -webkit-tap-highlight-color kills the grey flash on iOS.
 
+   --dot-pad LIVES ON THE CONTAINER, not on the button. It used to be declared
+   on .hero-dot and referenced from .hero-dots, which is the one direction a
+   custom property does not travel: the parent cannot read a child's variable,
+   so `margin: -14px calc(-1 * var(--dot-pad)) ...` was invalid at computed-
+   value time and fell back to 0. The compensation the comment describes had
+   never actually applied. Declared here it resolves for both.
+
+   The padding is DERIVED from the two numbers that matter — the ink and the
+   44px floor — instead of being a hand-kept literal that has to be re-derived
+   whenever either moves. The old 14px/6px pair measured 19x35, which was
+   under the floor on both axes.
+
    Active is --accent, at full opacity, and 1.5x the area; resting dots are
    white at 34%, which is the comp. Colour is not the only signal — the size
    step carries it too, and aria-current carries it for screen readers. */
 .hero-dots {
+  --dot-ink: 7px;
+  --dot-hit: 44px;
+  /* The two axes are separately adjustable because they are separately
+     constrained. HEIGHT is free — the strip has vertical room at every size,
+     so it stays at the full 44px floor everywhere and is never overridden.
+     WIDTH is contested: five 44px dots is a 220px block sharing one row with
+     the partner strip from 560 up, so the short-viewport block at the end of
+     this file narrows --dot-hit-x (and only x) to buy the strip its row back
+     without giving up any of the vertical target. */
+  --dot-hit-x: var(--dot-hit);
+  --dot-pad-y: calc((var(--dot-hit)   - var(--dot-ink)) / 2);
+  --dot-pad-x: calc((var(--dot-hit-x) - var(--dot-ink)) / 2);
   display: flex; align-items: center; flex: none;
-  margin: -14px calc(-1 * var(--dot-pad)) -14px 0;
+  /* Right and both verticals only. The row is right-anchored against the
+     25px gutter, so pulling the left edge in would drag the whole cluster
+     off its own line for nothing. */
+  margin: calc(-1 * var(--dot-pad-y)) calc(-1 * var(--dot-pad-x)) calc(-1 * var(--dot-pad-y)) 0;
 }
 .hero-dots[hidden] { display: none; }
 .hero-dot {
-  --dot-pad: 6px;
-  appearance: none; border: 0; background: none; padding: 14px var(--dot-pad);
+  appearance: none; border: 0; background: none;
+  padding: var(--dot-pad-y) var(--dot-pad-x);
   margin: 0; cursor: pointer; line-height: 0;
   -webkit-tap-highlight-color: transparent;
 }
 .hero-dot::before {
-  content: ''; display: block; width: 7px; height: 7px; border-radius: 50%;
+  content: ''; display: block;
+  width: var(--dot-ink); height: var(--dot-ink); border-radius: 50%;
   background: var(--paper); opacity: .34;
   transition: background-color 220ms var(--ease), opacity 220ms var(--ease),
               transform 220ms var(--ease);
@@ -599,6 +733,23 @@ a { color: inherit; }
   --chev: 24px;      /* depth of the point, and of the notch that receives it */
   --chev-gap: 6px;   /* daylight left between a point and the notch it sits in */
   margin-block: clamp(2rem, 5vw, 3.25rem);
+  /* ---------- CONTAINMENT GUARD — NOT motion-scoped, do not remove ----------
+     The rows below clip themselves, and under reduced motion the tags wrap so
+     nothing needs clipping at all. This is the backstop behind both of those.
+
+     The hazard is structural, not stylistic: .chev is `white-space: nowrap`
+     and `flex: none`, so a single curriculum tag measures whatever its text
+     measures — up to 581px against a 375px frame. The moment any row variant
+     stops clipping, that escapes to the document and DOCUMENT WIDTH STOPS
+     EQUALLING VIEWPORT WIDTH. That is not a cosmetic overflow: .site-head is
+     position:fixed, and on iOS Safari a fixed element resolves against the
+     LAYOUT viewport, which widens to the document. The header then spans 606px
+     on a 375px screen and takes the Apply pill 231px off the right edge.
+
+     Measured, twice, in two separate sessions. Keep this rule.
+     overflow-y stays visible so wrapped rows can still grow. */
+  overflow-x: clip;
+  overflow-y: visible;
 }
 .marq-row { overflow: clip; }
 /* Uneven vertical rhythm between the four rows, so they read as a band
@@ -735,15 +886,21 @@ a { color: inherit; }
 /* ---------- REST STATE / REEL ----------
    Full bleed and full viewport height. Everything inside is absolutely
    positioned against the section, so the height is known before a byte of
-   still or video arrives — layout shift here is zero by construction.
+   poster or video arrives — layout shift here is zero by construction.
 
    100svh, not 100vh: on mobile Safari 100vh is the tall viewport including
    the chrome that retracts on scroll, so a 100vh hero-height block is taller
    than what you can actually see and the button lands under the URL bar.
 
-   THE STILL SHOWS SHARP. No blur, and therefore no scale() compensation for
-   the transparent edge blur() used to pull in. The only treatment is the
-   --ground overlay below, held as low as the contrast measurements allow. */
+   THREE LAYERS, painted in DOM order because all three are absolute and none
+   of them sets z-index: the POSTER (always present, and the entire backdrop
+   wherever the loop is suppressed), the LOOP over it, and the scrim over
+   both. The reel and the content sit above that.
+
+   IT SHOWS SHARP. No blur on either the poster or the loop, and therefore no
+   scale() compensation for the transparent edge blur() leaves. The only
+   treatment is the --ground scrim below, held as low as the contrast
+   measurements allow. */
 .sec-still {
   position: relative;
   min-height: 100svh;
@@ -774,14 +931,75 @@ a { color: inherit; }
 .still-video { object-fit: contain; }
 .still-img { /* sharp, as supplied */ }
 
-/* --ground over the still and under the type, purely for contrast. This is
-   the ONLY contrast lever — the brief rules out going back to blur — so it is
-   set from the per-line measurements rather than by eye, and kept as low as
-   those allow so the image stays legible. */
+/* THE AMBIENT LOOP. Same box as the poster, cover-fit like it, and directly
+   over it so the handoff is a frame replacing an identical frame.
+
+   IT FADES IN, and starts at zero opacity, for one specific reason: a
+   <video> with no poster attribute paints nothing until its first frame is
+   decoded, and some engines paint that nothing as opaque black. Holding it
+   transparent until script.js has seen a real frame means the worst case is
+   the poster staying up a beat longer, never a black flash over it. The
+   poster attribute is deliberately NOT set — the <picture> underneath is
+   already showing the same frame in AVIF at a third of the JPEG's bytes, and
+   setting it would download that frame a second time.
+
+   No transition under reduced motion — but the loop is not constructed at
+   all under that setting, so this is only reachable if it is turned on
+   mid-session. */
+.still-loop {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .5s var(--ease);
+  pointer-events: none;
+}
+.still-loop.is-ready { opacity: 1; }
+
+/* --ground over the backdrop and under the type, purely for contrast. This is
+   the ONLY contrast lever — the brief rules out blur and rules out grading the
+   video down — so it is set from the per-line measurements rather than by eye.
+
+   IT IS A BAND NOW, NOT A FLAT WASH, because the backdrop moved. A still has
+   one luminance; this loop has eight cuts and swings 25x between them, from a
+   near-black close-up at 5.0-5.3s to a blown white sky at 0.9s and again at
+   8.6s. Tuned against the brightest frame, a FLAT scrim has to be 53.2% to
+   carry the type — and 53.2% flat is measured to leave 19.6% of the loop's
+   mean luminance, which puts the dark half of the montage below the floor of
+   what a screen shows. The band clears the same floors at 31.1%: 1.6x the
+   picture for the same contrast, because it spends its density only where the
+   type is and gives the top and bottom of the frame back to the film.
+
+   THE GEOMETRY IS THE TYPE'S, not a guess. The pull block plus the button
+   centres on 49% of the section height at every viewport measured — 1920,
+   1440, 1280, 1024, 768 and 375 — and its half-height never exceeds 20.2%
+   (375 is the widest case). So the plateau is 49% +/- 20% and the ramp runs
+   out to 49% +/- 40%, reaching zero at 9% and 89%: a scrim that has faded to
+   nothing well before the frame edge, not a bar with a seam.
+
+   A BAND AND NOT AN ELLIPSE — the opposite call to the hero's, for the
+   opposite reason. The hero's type sits in one corner, so density belongs in
+   a corner. This block is centred and nearly full width: its half-WIDTH runs
+   from 18.7% of the frame at 1920 to 40.1% at 375, so any ellipse wide enough
+   for the phone is most of the frame anyway. The half-HEIGHT, by contrast, is
+   14.0%-20.2% across the same range. Height is the axis that holds still, so
+   height is the axis the scrim is built on.
+
+   28% base is the bottom of the brief's range and the peak is measured, not
+   chosen: 36% over that 28% is 53.9% combined at the centre line, which is
+   what the worst frame needs.
+
+   RE-MEASURE WHEN THE LOOP IS REPLACED. These numbers are tuned to this cut,
+   not to loops in general. Method and the full per-viewport table are under
+   "Section 2 contrast" in README. */
 .still-veil {
   position: absolute; inset: 0;
-  background: var(--ground);
-  opacity: .25;
+  background-color: rgb(0 0 0 / .28);
+  background-image: linear-gradient(to bottom,
+    rgb(0 0 0 / 0)    9%,
+    rgb(0 0 0 / .36) 29%,
+    rgb(0 0 0 / .36) 69%,
+    rgb(0 0 0 / 0)   89%);
   transition: opacity .6s var(--ease);
   pointer-events: none;
 }
@@ -857,8 +1075,12 @@ a { color: inherit; }
 .still-close:not([hidden]) { display: grid; }
 .still-close svg { width: 45%; height: auto; }
 
-/* ---- play state ---- */
+/* ---- play state ----
+   The loop goes out with the scrim and the type. script.js pauses it in the
+   same breath, so what is left under the letterboxed reel is the black
+   section ground, not a second film playing behind the first. */
 .sec-still.is-live .still-img   { filter: blur(0); transform: scale(1); }
+.sec-still.is-live .still-loop  { opacity: 0; }
 .sec-still.is-live .still-veil  { opacity: 0; }
 .sec-still.is-live .still-video { opacity: 1; pointer-events: auto; }
 .sec-still.is-live .still-content { opacity: 0; pointer-events: none; }
@@ -873,7 +1095,7 @@ a { color: inherit; }
 /* Cut straight between the two states. The reel still plays on press —
    there is no motion to reduce in a video somebody asked for. */
 @media (prefers-reduced-motion: reduce) {
-  .still-veil, .still-video, .still-content, .still-play { transition: none; }
+  .still-veil, .still-video, .still-content, .still-play, .still-loop { transition: none; }
 }
 
 /* ---------- foundation pair ---------- */
@@ -892,6 +1114,11 @@ a { color: inherit; }
 
 /* ---------- showcase ---------- */
 .sec-showcase { border-top: 1px solid var(--rule); }
+/* Same affordance the timeline and the production strip carry. The showcase
+   is a horizontal scroller below 1024 and was the only one of the three with
+   nothing telling you so; at >=1024 it becomes a grid and .tl-hint's own
+   display:none in that block switches this off with it. */
+.showcase-hint { margin-top: 1rem; }
 .showcase-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
 .showcase-scroll::-webkit-scrollbar { height: 6px; }
 .showcase-scroll::-webkit-scrollbar-thumb { background: var(--rule); }
@@ -1075,7 +1302,10 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   text-transform: uppercase; letter-spacing: .08em;
 }
 
-.tl-hint { color: var(--rule); margin-top: 1rem; font-size: 0.625rem; }
+/* --rule is a HAIRLINE token — decorative only, 1.59:1 on black. This is the
+   only affordance telling a phone user the timeline scrolls sideways, so it
+   has to be readable: --mute is the same ladder's text-safe step at 6.92:1. */
+.tl-hint { color: var(--mute); margin-top: 1rem; font-size: 0.625rem; }
 .tl-foot {
   display: grid; gap: 1.25rem;
   margin-top: 1.75rem; padding-top: 1.5rem;
@@ -1157,7 +1387,27 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 .rad input:checked + span { background: var(--paper); border-color: var(--paper); color: var(--ground); font-weight: 700; }
 .rad input:focus-visible + span { outline: 2px solid var(--paper); outline-offset: 3px; box-shadow: 0 0 0 6px rgba(0,0,0,.75); }
 
-.chk { display: flex; align-items: flex-start; gap: .85rem; cursor: pointer; font-size: 0.9375rem; line-height: 1.45; color: var(--body); font-weight: 400; }
+/* THE HANGING INDENT NEEDS ROOM RESERVED FOR IT. The box is a floated
+   ::before pulled 1.7rem left of the text so the wrapped lines align on one
+   vertical. Without a matching padding-left on the label there is nothing
+   holding that 1.7rem open, so the box hung outside the label entirely and
+   landed at x = -2.2px against the 25px gutter — clipped off the left edge of
+   the viewport on every phone, and floating in the gutter out of line with
+   the inputs above it on desktop. The padding is the same 1.7rem the margin
+   pulls back, so the box lands exactly on the gutter line the fields share.
+
+   gap is gone with it: the label has one in-flow child, so it never applied. */
+/* .f .chk, NOT .chk. `.f label` above sets font-size, font-weight and
+   padding:0 at specificity (0,1,1), which outranks a bare `.chk` at (0,1,0)
+   however far down the file it sits — so the consent line was rendering at
+   the 13px/700 of a field LABEL rather than the 15px/400 of the body copy it
+   actually is, and the padding-left this indent depends on was being zeroed.
+   (0,2,0) clears it. */
+.f .chk {
+  display: flex; align-items: flex-start; padding-left: 1.7rem;
+  cursor: pointer; font-size: 0.9375rem; line-height: 1.45;
+  color: var(--body); font-weight: 400;
+}
 .chk input { position: absolute; opacity: 0; width: 0; height: 0; }
 .chk span { flex: 1; padding-top: .1rem; }
 .chk span::before {
@@ -1218,6 +1468,20 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
     gap: clamp(1.1rem, 3.5vw, 1.75rem) clamp(1.5rem, 3.6vw, 3rem);
     --logo-u: clamp(0.8px, 0.0431vw + 0.5586px, 1px);
   }
+}
+
+/* The dots share the partner strip's row from 560 up (see the .partners rule
+   in that breakpoint), and between 560 and 1023 that row is the tightest it
+   ever gets: the four marks are near their full scale but the frame has not
+   grown enough to carry them plus a 220px dot block. Measured at 768 the
+   strip wrapped to a second row, which costs 50px and reads as a broken
+   credit line rather than a deliberate two-row strip.
+
+   Only the X axis yields, and only in this band. The 44px vertical target is
+   untouched here and the full 44x44 is restored at >=1024, where the frame is
+   wide enough to carry both at full size. */
+@media (min-width: 560px) and (max-width: 1023.98px) {
+  .hero-dots { --dot-hit-x: 32px; }
 }
 
 @media (min-width: 768px) {
@@ -1298,6 +1562,73 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   .tl-scroll { overflow-x: visible; padding-inline: var(--edge-l) var(--edge-r); }
 }
 
+/* ---------- SHORT AND TALL — the small portrait phones ----------
+   320x568 and 360x640 are still in service, and the hero stack is tuned for
+   the ~812px phone: at 568 the partner strip finished 11px under the fold.
+   Too small a miss to justify the full short-and-wide retune below — that
+   would drop a 320px-wide headline to 26px, and the big headline is the
+   design on a phone. Two margins give up a rem each instead, which is 20px
+   and enough. Portrait only: the landscape case is handled below. */
+@media (orientation: portrait) and (max-height: 640px) {
+  .hero-actions { margin-top: 1rem; }
+  .partners { margin-top: 1.5rem; }
+}
+
+/* ---------- SHORT AND WIDE — landscape phones, and any stumpy window ----------
+   The hero sizes its headline off viewport WIDTH alone (13vw below 1024,
+   7.4vw above). Turn a phone on its side and width is suddenly the ABUNDANT
+   axis and height is the scarce one, so that clamp reads 812px of width and
+   sets a 105px headline into a 375px-tall viewport. Measured at 812x375: the
+   stack needed 743px against 375 available and overflowed by 342px — the
+   subhead, the CTA, the partner strip and the carousel dots were all under
+   the fold, on a hero whose whole job is to show them. 844x390 and 740x360
+   measured the same way.
+
+   Keyed on max-height, NOT on orientation. A 1440x500 desktop window has the
+   identical problem and no orientation query would catch it; a tall narrow
+   phone in portrait has no problem and must not be caught. Height is the
+   thing that is actually scarce, so height is what is tested.
+
+   LAST IN THE FILE, deliberately: it has to win over both the >=1024 hero
+   rules and the base ones, and it is a retune of whichever layout is already
+   in force rather than a third layout — the >=1024 two-column .hero-lede
+   grid still applies underneath it at wide sizes. */
+@media (max-height: 560px) {
+  /* The resting mark is 80px minimum, plus its 25px frame top and bottom —
+     130px, better than a third of a 375px viewport, before any content. This
+     is the one place it drops to the compact size while still at rest. */
+  :root { --head-mark-h: 52px; }
+
+  .hero-headline { font-size: clamp(1.625rem, 4.6vw, 2.75rem); max-width: none; }
+  .hero-sub { margin-top: .5rem; font-size: var(--t-2); max-width: 44ch; }
+  .hero-actions { margin-top: .8rem; }
+  /* Auto width, not the near-full-width mobile bar: at these widths a
+     full-bleed button is a 700px pill, and the height has to come back to the
+     44px floor to buy the strip its room. */
+  .hero-actions .btn-outline { width: auto; min-height: 44px; }
+  .partners { margin-top: .9rem; }
+  /* The strip and the dots share one row from 560 up, and a wrapped strip
+     costs ~50px of a viewport that has 375. Both give a little: the marks
+     drop to the low end of their scale, and the dots narrow on the x axis
+     only — the 44px vertical target is untouched. Measured at 812x375 this
+     is what puts the strip back on one row. */
+  .partner-list { --logo-u: 0.72px; gap: .55rem 1.05rem; }
+  .hero-dots { --dot-hit-x: 34px; }
+  .hero-inner {
+    padding-block: calc(var(--head-pad-top) + var(--head-mark-h) + .6rem)
+                   calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+  /* The reel section is the same full-viewport-height block with the same
+     problem: a 9-line pull quote and a button do not fit in 375px. */
+  .still-content { padding-block: 1.25rem; }
+  .still-pull { font-size: var(--t1); max-width: 46ch; }
+  /* Same reasoning as the hero CTA above: the <1024 rule makes this a
+     full-bleed bar, which at 812 is a 760px pill. Back to intrinsic width. */
+  .still-play { margin-top: .9rem; width: auto; padding-inline: .7rem 1.4rem; }
+  /* Clear of the now-shorter header. */
+  .still-close { top: calc(var(--head-pad-top) + var(--head-mark-h) + .5rem); }
+}
+
 /* ---------- REDUCED MOTION — a static page must still feel finished ---------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -1318,9 +1649,29 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
     transform: none !important;
     width: auto; will-change: auto;
   }
-  .marq-set { flex-wrap: wrap; row-gap: 6px; }
+  /* width:auto is load-bearing. The base rule is `width: max-content`, which
+     sizes the set to every tag laid end to end on ONE line — so flex-wrap
+     alone changes nothing, the line is simply as long as it wants to be.
+     Measured: with max-content left in place the wrap never happens and the
+     document stays 606px wide. */
+  .marq-set { flex-wrap: wrap; row-gap: 6px; width: auto; }
   .marq-set[data-clone] { display: none; }   /* the loop copy is pointless static */
-  .marq-row { overflow: visible; padding-inline: var(--edge-l) var(--edge-r); }
+
+  /* WRAP, DO NOT TRUNCATE. Static, these rows are meant to be READ, and a
+     581px tag clipped to a 375px frame is worse than the overflow it fixes —
+     the sentence just stops. So the tag gives up its single line instead:
+     white-space releases the text, and max-width caps the flex item at the
+     row so `flex: none` cannot hold it open at max-content width. Both are
+     needed — either alone leaves the tag full width.
+
+     .marq .chev, not .chev: the base rule is (0,1,0) and this has to outrank
+     it from inside a media block. */
+  .marq .chev { white-space: normal; max-width: 100%; }
+
+  /* overflow-x stays CLIPPED here even though the wrap above means there is
+     nothing left to clip. Belt and braces, deliberately: it is the row-level
+     half of the guard on .marq, and it costs nothing while the tags fit. */
+  .marq-row { overflow-x: clip; overflow-y: visible; padding-inline: var(--edge-l) var(--edge-r); }
   .marq-row + .marq-row,
   .marq-row + .marq-row + .marq-row { margin-top: 6px; }
 }
