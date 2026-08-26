@@ -277,40 +277,66 @@ a { color: inherit; }
 /* ==========================================================================
    HERO
    ========================================================================== */
-.hero { position: relative; background: var(--ground); }
+/* Mobile is full-bleed too: the image fills the whole viewport height exactly
+   as it does on desktop, and every piece of content sits over it. The >=1024
+   query below only RETUNES this layout (crop, scrim shape, headline scale,
+   the subhead grid) — it no longer switches a stacked block into an overlay. */
+.hero { position: relative; background: var(--ground); min-height: 100svh; display: flex; }
 
-.hero-media { position: relative; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; background: var(--ground); }
+.hero-media { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; background: var(--ground); }
 .hero-media picture { display: block; width: 100%; height: 100%; }
 .hero-media img, .hero-media video { width: 100%; height: 100%; object-fit: cover; }
-/* 65% keeps the subject centre-right as the frame narrows, so the left third
-   stays clear for the headline. Do not centre this. */
-.hero-img { object-position: 65% 50%; }
+/* Mobile crops much tighter than desktop: the portrait frame throws away the
+   sides and fills with head and shoulders. 60% holds the face just left of
+   the crop's centre so it clears the bottom stack; the 30% is a no-op on tall
+   phone viewports (the landscape master never overflows vertically there) but
+   keeps the intent explicit and takes effect on shorter/landscape frames.
+   Desktop restores 65% 50% in the >=1024 block. */
+.hero-img { object-position: 60% 30%; }
 
+/* Bottom-anchored scrim — a floor the type stands on, not a full-frame dim.
+   The whole lower half of the frame is the subject's LIT gray jacket (sampled
+   maxL ~0.52, rgb ~199) — white type over it measured ~1.9:1 raw, so the
+   plain to-top/0.85/0.6/0 wedge the brief sketched was not enough. This holds
+   density right through the headline / subhead / button / strip band, then
+   fades out across the near-black gap under the chin (30–45% from the top,
+   sampled maxL ~0.02) and is fully gone by 72% up — so the face and the
+   header both sit on untouched image. Measured composited ratios are in the
+   commit message; every element clears 4.5:1. Re-tune if the image changes. */
 .hero-scrim { position: absolute; inset: 0; pointer-events: none;
-  /* Below 1024 the header floats over the top of the 4:5 media block, so the
-     mark and the pill need a guaranteed dark band whatever the image is.
-     The stops are in PX, not %, because this band guards the HEADER, not a
-     fraction of the picture: the mark runs 25px to 25 + --head-mark-h (105px
-     at its 80px floor), so density has to hold to ~105 and be gone by ~215.
-     At 375 that lifted the mark from 1.37:1 to 10.48:1 and cost the media
-     block 7% of its mean luminance. The falloff is deliberately steep so the
-     band is gone by 175px — at 375 the block is only 469px tall, and a longer
-     tail buries the subject's face. Re-measure if --head-mark-h changes. */
-  background: linear-gradient(to bottom,
-    rgb(0 0 0 / 0.92)   0px,
-    rgb(0 0 0 / 0.86)  84px,
-    rgb(0 0 0 / 0.50) 118px,
-    rgb(0 0 0 / 0.14) 145px,
-    rgb(0 0 0 / 0)    175px);
+  background: linear-gradient(to top,
+    rgb(0 0 0 / 0.90)  0%,
+    rgb(0 0 0 / 0.80) 22%,
+    rgb(0 0 0 / 0.68) 38%,
+    rgb(0 0 0 / 0.55) 52%,
+    rgb(0 0 0 / 0.28) 60%,
+    rgb(0 0 0 / 0)    72%);
 }
 
-/* 40px at the foot, not 25 — the partner strip is the last child, so this
-   padding IS the strip bottom offset. */
-.hero-inner { position: relative; z-index: 2; padding-block: clamp(2rem, 5vw, 3rem) var(--edge-bottom); }
+/* Content hugs the bottom over the image. 40px at the foot, not 25 — the
+   partner strip is the last child, so this padding IS the strip bottom offset.
+   The top pad clears the resting (non-compact) header; with justify flex-end
+   the stack grows up from the foot and lands its top near ~55% of the frame. */
+.hero-inner {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  width: 100%; min-height: 100svh;
+  /* Foot holds the 40px strip offset ABOVE the home indicator: on a notched
+     device the safe-area inset is added so the strip is never clipped; it is
+     0 elsewhere, so the offset stays a true 40px. */
+  padding-block: calc(var(--head-pad-top) + var(--head-mark-h) + 1.5rem)
+                 calc(var(--edge-bottom) + env(safe-area-inset-bottom, 0px));
+}
 .hero-lede { position: relative; }
 
 .hero-headline {
-  font-size: clamp(2.75rem, 13.4vw, 7.5rem);
+  /* Sized so the longest line, "School Africa", fills the gutter width and
+     stays on ONE line (three lines total), which is what the comp shows. At
+     375 that measured a 50.7px ceiling before it wraps; 13vw lands just under
+     it (~48.7px) with margin for the webfont, and the raised 3rem floor holds
+     the same size below 369px. Bigger than this wraps the third line to four.
+     Desktop overrides this below. */
+  font-size: clamp(3rem, 13vw, 7.5rem);
   font-weight: 900;
   line-height: 0.92;
   letter-spacing: -0.035em;
@@ -337,11 +363,17 @@ a { color: inherit; }
 }
 
 .hero-sub {
-  margin-top: clamp(1.5rem, 4vw, 2rem);
+  /* Sits close under the headline on mobile — tighter than desktop's spacing.
+     ~4 lines at this width. Desktop re-pins it to the headline's optical
+     middle in the grid below (margin-top:0, width 30ch). */
+  margin-top: .85rem;
   font-size: var(--t-1); font-weight: 700; line-height: 1.45;
   color: var(--paper); max-width: 30ch;
 }
-.hero-actions { margin-top: clamp(1.75rem, 4vw, 2.5rem); }
+/* See all tracks runs near full-width inside the gutter on mobile and is
+   noticeably taller than the desktop pill. Desktop restores auto width / 52px. */
+.hero-actions { margin-top: clamp(1.5rem, 4vw, 2rem); display: flex; }
+.hero-actions .btn-outline { width: 100%; min-height: 60px; }
 
 /* ---------- SUPPORTED BY ----------
    Four supplied wordmarks, white on black. Each SVG is drawn at its own
@@ -351,12 +383,14 @@ a { color: inherit; }
 .partners { margin-top: clamp(2.25rem, 6vw, 3.5rem); }
 .partners-label { color: var(--paper); opacity: .6; margin-bottom: .9rem; }
 .partner-list {
-  --logo-u: 0.8px;
-  /* 375 cannot hold four legible marks on one line — two rows of two,
-     equal weight, rather than shrinking below legibility. */
-  display: grid; grid-template-columns: repeat(2, auto); justify-content: start;
-  align-items: center;
-  gap: clamp(1.1rem, 3.5vw, 1.75rem) clamp(1.5rem, 3.6vw, 3rem);
+  /* Four marks on ONE row, gutter to gutter, as the comp shows — a credit
+     line, so they render small and that is correct. --logo-u is floored low
+     enough that all four (widest is Clan Yujo at 192u) plus the gaps clear
+     375's inner width; space-between spreads them and holds the left mark on
+     the 25px line. The >=560 rule below lifts --logo-u back up. */
+  --logo-u: 0.55px;
+  display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;
+  gap: clamp(.5rem, 2.5vw, 1.2rem);
 }
 .partner { display: flex; align-items: center; min-width: 0; }
 .partner-logo {
@@ -872,9 +906,13 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   .f-row { grid-template-columns: 1fr 1fr; }
   .hero-actions { display: flex; gap: .75rem; }
   /* one row from here up; 0.8px per unit at 560 growing to 1px at 1024,
-     where every mark sits at its own intrinsic size. */
+     where every mark sits at its own intrinsic size. From 560 there is room
+     to left-pack the marks with generous gaps — the <560 space-between spread
+     is a mobile-only treatment, so justify-content and the gap are restored
+     here rather than inherited from the base rule. */
   .partner-list {
-    display: flex; flex-wrap: wrap;
+    display: flex; flex-wrap: wrap; justify-content: flex-start;
+    gap: clamp(1.1rem, 3.5vw, 1.75rem) clamp(1.5rem, 3.6vw, 3rem);
     --logo-u: clamp(0.8px, 0.0431vw + 0.5586px, 1px);
   }
 }
@@ -892,6 +930,10 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 @media (min-width: 1024px) {
   .hero { min-height: 100svh; display: flex; }
   .hero-media { position: absolute; inset: 0; aspect-ratio: auto; height: 100%; }
+  /* Desktop frames wider and centres the subject vertically — the tight mobile
+     head-and-shoulders crop (60% 30%) is undone here. 65% keeps the subject
+     centre-right so the left third stays clear for the headline. */
+  .hero-img { object-position: 65% 50%; }
   /* ---------- THE SCRIM ----------
      Left-anchored, not a frame-wide dim. The type all sits lower-left while
      the subject sits upper-middle, so an ellipse anchored off the bottom-left
@@ -923,7 +965,8 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
     width: 100%; min-height: 100svh;
     /* Top clears the RESTING header — the hero is the one place the header is
        never compact. Foot is --edge-bottom, not --edge: the strip sits 40px up. */
-    padding-block: calc(var(--head-pad-top) + var(--head-mark-h) + 1.5rem) var(--edge-bottom);
+    padding-block: calc(var(--head-pad-top) + var(--head-mark-h) + 1.5rem)
+                   calc(var(--edge-bottom) + env(safe-area-inset-bottom, 0px));
   }
   /* The subhead is set against the HEADLINE, not the viewport. A two-column
      grid with align-items:center lands it on the optical middle of the
@@ -942,6 +985,9 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
     grid-column: 2; justify-self: end; position: static;
     width: 30ch; max-width: 30ch; text-align: left; margin-top: 0;
   }
+  /* The desktop See all tracks is the compact auto-width pill again, not the
+     near-full-width mobile bar. */
+  .hero-actions .btn-outline { width: auto; min-height: 52px; }
   .partners { margin-top: clamp(3rem, 9vw, 8.5rem); }
   .tracks { grid-template-columns: repeat(3, 1fr); }
   .tl-hint { display: none; }
