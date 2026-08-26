@@ -307,10 +307,10 @@ a bug to fix elsewhere.
 
 ## MEDIA MANIFEST
 
-Twenty slots. Nineteen render on the page as labelled placeholders; `og-image`
-is the social card and is built, not photographed. **Every slot needs original
-or licensed material.** The hero reference comp must not ship — it is a
-publicity still of a recognisable actor.
+Eighteen slots. Seventeen render on the page as labelled placeholders;
+`og-image` is the social card and is built, not photographed. **Every slot
+needs original or licensed material.** The hero reference comp must not ship —
+it is a publicity still of a recognisable actor.
 
 Drop assets in at the exact paths below and they appear with no code change.
 Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the same name.
@@ -318,8 +318,6 @@ Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the same name.
 | Slot | Section | Path | Ratio | Dimensions | Type | What it is | Status |
 |---|---|---|---|---|---|---|---|
 | `pullquote-loop` | Pull line | `assets/media/pullquote-loop.mp4` | 21:9 | 1920×823 | LOOP | Ambient, near-abstract. A light being flagged, a lens turning, dust in a beam. No faces. 6–8s, silent. |  |
-| `foundation-wide` | Foundation | `assets/media/foundation-wide.jpg` | 16:9 | 1920×1080 | STILL | A class in progress. Phones and cameras out, people leaning in. |  |
-| `foundation-vertical` | Foundation | `assets/media/foundation-vertical.jpg` | 4:5 | 1080×1350 | STILL | One student at work, close. Portrait orientation. |  |
 | `track-film` | Track 1 | `assets/media/track-film.jpg` | 2.39:1 | 1920×803 | STILL | A frame from a finished short. |  |
 | `track-content` | Track 2 | `assets/media/track-content.mp4` | 9:16 | 1080×1920 | LOOP | Phone-shot content as it appears in feed. 5–8s. |  |
 | `track-finishers` | Track 3 | `assets/media/track-finishers.jpg` | 16:9 | 1600×900 | STILL | An NLE timeline mid-cut, or a grade before/after. |  |
@@ -451,3 +449,17 @@ are wired; `fonts/` at the repo root holds the rest of the family, unused.
   mark's own drop-shadow, not a bar and not a scrim.
 - Copy comes from `content.md`. The subhead is sentence case in the source —
   there is no `text-transform` on it.
+- **Horizontal-overflow guard.** The global floor is
+  `html, body { max-width: 100%; overflow-x: clip; }` in `styles.css` — keep it.
+  The confirmed offender was the curriculum marquee: its `.chev` chevron rows
+  were `width: max-content` and contained only by `.marq-row { overflow: clip }`,
+  which iOS Safari honours unreliably — so the row widened the document and
+  carried the fixed Apply pill off-screen. That whole band (marquee + the
+  Foundation panel above it) has been **removed**; the tracks intro now runs
+  straight into the panels. With it gone, the offender sweep at 390px reports
+  `body.scrollWidth === clientWidth` and every element that still extends past
+  the viewport is contained by an `overflow: auto`/`hidden` scroll band (the
+  showcase, the timeline, the production strip) — never by `overflow: clip`.
+  The remaining suspects are the intrinsic-width placeholder boxes inside those
+  bands; they scroll within their own band and do not carry the document. Never
+  reintroduce a `max-content` element guarded by `overflow: clip` alone.

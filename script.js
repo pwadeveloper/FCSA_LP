@@ -105,7 +105,7 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
       var host = fig.parentNode;
       fig.parentNode.removeChild(fig);
       /* drop a wrapper that exists only to hold slots */
-      if (host && /slot-pair|why-media/.test(host.className) && !host.querySelector('.slot')) {
+      if (host && /why-media/.test(host.className) && !host.querySelector('.slot')) {
         host.parentNode.removeChild(host);
       }
     });
