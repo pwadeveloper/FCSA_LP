@@ -85,9 +85,16 @@
      30ch on the subhead), never on the gutter. */
   --edge:        25px;
   --edge-bottom: 40px;
+  /* The side gutter is the one frame value that scales with the viewport: 25px
+     on a phone, easing up to ~54px on a wide desktop so no section's content
+     hugs the screen edge. It is the SINGLE source of horizontal inset for every
+     full-width section — content sections via .wrap, the full-bleed tracks via
+     their own padding — so every section shares one left/right rail. The top
+     and foot frame stay on --edge (25px / 40px); only the sides scale. */
+  --gutter: clamp(25px, 3.6vw, 56px);
   /* landscape notch must never clip content */
-  --edge-l: max(var(--edge), env(safe-area-inset-left, 0px));
-  --edge-r: max(var(--edge), env(safe-area-inset-right, 0px));
+  --edge-l: max(var(--gutter), env(safe-area-inset-left, 0px));
+  --edge-r: max(var(--gutter), env(safe-area-inset-right, 0px));
   --measure: 34rem;   /* body copy cap, independent of the gutter */
 
   --sec:  clamp(3rem, 5.6vw, 5.25rem);
@@ -1548,13 +1555,14 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
      the Apply pill rather than under them. */
   .trk { min-height: 100svh; display: flex; }
   .trk-inner {
-    --trk-gutter: clamp(25px, 5.82vw, 96px);       /* 88px @1512 */
+    /* the full-bleed tracks sit on the same responsive side rail as every
+       other section (--edge-l/--edge-r), not a wider bespoke gutter */
     width: 100%; min-height: 100svh;
     display: grid;
     column-gap: clamp(1.5rem, 3vw, 3rem);
     row-gap: clamp(1.5rem, 3vh, 2.5rem);
     padding: calc(var(--head-pad-top) + var(--head-mark-compact) + clamp(.5rem, 2.5vh, 1.5rem))
-             var(--trk-gutter) clamp(2.5rem, 6vh, 4rem) var(--trk-gutter);
+             var(--edge-r) clamp(2.5rem, 6vh, 4rem) var(--edge-l);
   }
   .trk-h     { margin-bottom: 0; max-width: 18ch; }   /* size comes from the base 64px clamp */
   .trk-sched { grid-area: sched; justify-self: end; text-align: right; align-self: start; margin-bottom: 0; }
