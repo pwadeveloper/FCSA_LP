@@ -48,35 +48,126 @@
 <!-- ============ HERO ============ -->
 <section class="hero" aria-labelledby="h1">
 
+  <!-- ============ HERO MEDIA — FIVE-FRAME CAROUSEL ============
+       All five frames live here stacked; only one is opaque at a time and the
+       crossfade is 800ms of opacity, no slide and no zoom.
+
+       ONLY FRAME 1 CARRIES A REAL src/srcset. Frames 2-5 hold theirs in
+       data-src/data-srcset and are hydrated by hero.js — one frame ahead of
+       where the carousel is. That is not belt-and-braces over loading="lazy":
+       every frame is inside the viewport from the first paint, so lazy would
+       have fetched all five immediately and put ~700KB on the wire before the
+       LCP had painted. No src means no request, full stop.
+
+       Frame 1 is the LCP element: fetchpriority=high, loading=eager, and the
+       shader is forbidden from touching the GPU until after it has painted.
+
+       WIDTHS are 900 / 1440 / 1512. 1512 is the master's native width and
+       stands in for the 1920 the brief asked for — the supplied files are
+       1512x982, so a 1920 step would be an upscale: more bytes, no more
+       detail, against a 500KB page. Drop in a >=1920 master and re-run
+       tools/hero-derivatives.py to add the step. -->
   <div class="hero-media">
-    <!-- HERO IMAGE — the LCP element. Full bleed, behind everything, black ground.
-         object-position 65% 50% holds the subject centre-right as the frame
-         narrows, so the left third stays clear for the headline.
-
-         RIGHTS: the current file is a COMP and must not ship. Any replacement
-         must be framed subject-centre-right with the left third falling
-         near-black — this layout depends on it. See README.
-
-         Widths are 900 / 1440 / 1688. 1688 is the master's native width;
-         a 1920 step would be an upscale with no extra detail. Drop in a
-         >=1920 master and regenerate to add one. -->
-    <picture>
-      <source type="image/avif" sizes="100vw"
-              srcset="assets/media/hero-900.avif 900w,
-                      assets/media/hero-1440.avif 1440w,
-                      assets/media/hero-1688.avif 1688w">
-      <source type="image/webp" sizes="100vw"
-              srcset="assets/media/hero-900.webp 900w,
-                      assets/media/hero-1440.webp 1440w,
-                      assets/media/hero-1688.webp 1688w">
-      <img class="hero-img" src="assets/media/hero-1440.jpg" sizes="100vw"
-           srcset="assets/media/hero-900.jpg 900w,
-                   assets/media/hero-1440.jpg 1440w,
-                   assets/media/hero-1688.jpg 1688w"
-           width="1688" height="1031" alt=""
-           fetchpriority="high" loading="eager" decoding="async">
-    </picture>
-    <div class="hero-scrim" aria-hidden="true"></div>
+    <div class="hero-frames" id="hero-frames">
+      <!-- BEGIN hero-frames (generated) -->
+      <picture class="hero-frame is-on" data-hero="hero-01-crimson" data-scrim="0.93" data-reach="1.0">
+        <source type="image/avif" sizes="100vw"
+                srcset="assets/media/hero/hero-01-crimson-900.avif 900w,
+                        assets/media/hero/hero-01-crimson-1440.avif 1440w,
+                        assets/media/hero/hero-01-crimson-1920.avif 1920w">
+        <source type="image/webp" sizes="100vw"
+                srcset="assets/media/hero/hero-01-crimson-900.webp 900w,
+                        assets/media/hero/hero-01-crimson-1440.webp 1440w,
+                        assets/media/hero/hero-01-crimson-1920.webp 1920w">
+        <img class="hero-img" alt="A young man with bleached curls lies back against deep crimson ground, an embroidered collar at his shoulder, looking straight up into the lens."
+             width="3840" height="2160" sizes="100vw"
+             style="--hero-pos: 60% 45%"
+             src="assets/media/hero/hero-01-crimson-1440.jpg"
+             srcset="assets/media/hero/hero-01-crimson-900.jpg 900w,
+                        assets/media/hero/hero-01-crimson-1440.jpg 1440w,
+                        assets/media/hero/hero-01-crimson-1920.jpg 1920w"
+             fetchpriority="high" loading="eager" decoding="async">
+      </picture>
+      <picture class="hero-frame" data-hero="hero-02-lagoon" data-scrim="0.46" data-reach="1.3" aria-hidden="true">
+        <source type="image/avif" sizes="100vw"
+                data-srcset="assets/media/hero/hero-02-lagoon-900.avif 900w,
+                        assets/media/hero/hero-02-lagoon-1440.avif 1440w,
+                        assets/media/hero/hero-02-lagoon-1920.avif 1920w">
+        <source type="image/webp" sizes="100vw"
+                data-srcset="assets/media/hero/hero-02-lagoon-900.webp 900w,
+                        assets/media/hero/hero-02-lagoon-1440.webp 1440w,
+                        assets/media/hero/hero-02-lagoon-1920.webp 1920w">
+        <img class="hero-img" alt="Two people with red-dyed locs, seen from behind, sitting still at the edge of a grey lagoon."
+             width="3996" height="2160" sizes="100vw"
+             style="--hero-pos: 55% 40%"
+             data-src="assets/media/hero/hero-02-lagoon-1440.jpg"
+             data-srcset="assets/media/hero/hero-02-lagoon-900.jpg 900w,
+                        assets/media/hero/hero-02-lagoon-1440.jpg 1440w,
+                        assets/media/hero/hero-02-lagoon-1920.jpg 1920w"
+             decoding="async">
+      </picture>
+      <picture class="hero-frame" data-hero="hero-03-lightpaint" data-scrim="0.76" data-reach="1.0" aria-hidden="true">
+        <source type="image/avif" sizes="100vw"
+                data-srcset="assets/media/hero/hero-03-lightpaint-900.avif 900w,
+                        assets/media/hero/hero-03-lightpaint-1440.avif 1440w,
+                        assets/media/hero/hero-03-lightpaint-1920.avif 1920w">
+        <source type="image/webp" sizes="100vw"
+                data-srcset="assets/media/hero/hero-03-lightpaint-900.webp 900w,
+                        assets/media/hero/hero-03-lightpaint-1440.webp 1440w,
+                        assets/media/hero/hero-03-lightpaint-1920.webp 1920w">
+        <img class="hero-img" alt="A long-exposure light painting: a burning red streak arcs across a dark wall and knots into a bright flare at its centre."
+             width="3840" height="2160" sizes="100vw"
+             style="--hero-pos: 55% 50%"
+             data-src="assets/media/hero/hero-03-lightpaint-1440.jpg"
+             data-srcset="assets/media/hero/hero-03-lightpaint-900.jpg 900w,
+                        assets/media/hero/hero-03-lightpaint-1440.jpg 1440w,
+                        assets/media/hero/hero-03-lightpaint-1920.jpg 1920w"
+             decoding="async">
+      </picture>
+      <picture class="hero-frame" data-hero="hero-04-procession" data-scrim="0.61" data-reach="1.2" aria-hidden="true">
+        <source type="image/avif" sizes="100vw"
+                data-srcset="assets/media/hero/hero-04-procession-900.avif 900w,
+                        assets/media/hero/hero-04-procession-1440.avif 1440w,
+                        assets/media/hero/hero-04-procession-1920.avif 1920w">
+        <source type="image/webp" sizes="100vw"
+                data-srcset="assets/media/hero/hero-04-procession-900.webp 900w,
+                        assets/media/hero/hero-04-procession-1440.webp 1440w,
+                        assets/media/hero/hero-04-procession-1920.webp 1920w">
+        <img class="hero-img" alt="A figure in white robes walks away up a grass path between tall hedges, carrying a wooden cross."
+             width="3840" height="2160" sizes="100vw"
+             style="--hero-pos: 55% 45%"
+             data-src="assets/media/hero/hero-04-procession-1440.jpg"
+             data-srcset="assets/media/hero/hero-04-procession-900.jpg 900w,
+                        assets/media/hero/hero-04-procession-1440.jpg 1440w,
+                        assets/media/hero/hero-04-procession-1920.jpg 1920w"
+             decoding="async">
+      </picture>
+      <picture class="hero-frame" data-hero="hero-05-hilltop" data-scrim="0.79" data-reach="1.1" aria-hidden="true">
+        <source type="image/avif" sizes="100vw"
+                data-srcset="assets/media/hero/hero-05-hilltop-900.avif 900w,
+                        assets/media/hero/hero-05-hilltop-1440.avif 1440w,
+                        assets/media/hero/hero-05-hilltop-1920.avif 1920w">
+        <source type="image/webp" sizes="100vw"
+                data-srcset="assets/media/hero/hero-05-hilltop-900.webp 900w,
+                        assets/media/hero/hero-05-hilltop-1440.webp 1440w,
+                        assets/media/hero/hero-05-hilltop-1920.webp 1920w">
+        <img class="hero-img" alt="A man in a dark coat stands on a hilltop looking out over forested ridges under a wide, pale sky."
+             width="3840" height="2160" sizes="100vw"
+             style="--hero-pos: 55% 55%"
+             data-src="assets/media/hero/hero-05-hilltop-1440.jpg"
+             data-srcset="assets/media/hero/hero-05-hilltop-900.jpg 900w,
+                        assets/media/hero/hero-05-hilltop-1440.jpg 1440w,
+                        assets/media/hero/hero-05-hilltop-1920.jpg 1920w"
+             decoding="async">
+      </picture>
+      <!-- END hero-frames -->
+    </div>
+    <!-- hero.js inserts <canvas class="hero-fx"> here, between the frames and
+         the scrim: the shader draws OVER the image and UNDER the scrim and all
+         type, exactly as specified. The <picture> stack is never hidden — if
+         WebGL is missing or throws, the canvas is removed and what is left is
+         the plain image. There is no code path that blanks the hero. -->
+    <div class="hero-scrim" aria-hidden="true" style="--scrim: 0.93; --scrim-reach: 1.0"></div>
   </div>
 
   <div class="wrap hero-inner">
@@ -107,27 +198,126 @@
         <li class="partner"><img class="partner-logo" style="--h:24" src="assets/logos/colab.svg" alt="CoLAB" width="95" height="24" loading="lazy" decoding="async"></li>
         <li class="partner"><img class="partner-logo" style="--h:29" src="assets/logos/kaykav-academy.svg" alt="KayKav Academy" width="86" height="29" loading="lazy" decoding="async"></li>
       </ul>
+
+      <!-- CAROUSEL DOTS. Real <button>s in a real list, not divs with a click
+           handler: they tab, they take Enter and Space for free, and each one
+           announces "Show image N of 5". aria-current marks the active frame.
+
+           They sit on the partner strip row so the 25px right gutter and the
+           strip baseline are both inherited rather than re-derived — the right
+           edge is the same line the Apply pill sits on. hero.js sets hidden on
+           the whole list under Save-Data / 2g, where nothing rotates.
+
+           GENERATED. The count follows the manifest — an image marked
+           usable:false has no frame and no dot. Edit hero-manifest.json and
+           run tools/hero-derivatives.py; do not hand-edit between markers. -->
+      <div class="hero-dots" id="hero-dots" role="group" aria-label="Hero image">
+        <!-- BEGIN hero-dots (generated) -->
+        <button class="hero-dot is-on" type="button" data-go="0" aria-current="true" aria-label="Show image 1 of 5"></button>
+        <button class="hero-dot" type="button" data-go="1" aria-label="Show image 2 of 5"></button>
+        <button class="hero-dot" type="button" data-go="2" aria-label="Show image 3 of 5"></button>
+        <button class="hero-dot" type="button" data-go="3" aria-label="Show image 4 of 5"></button>
+        <button class="hero-dot" type="button" data-go="4" aria-label="Show image 5 of 5"></button>
+        <!-- END hero-dots -->
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ============ WHY ============ -->
-<section class="sec sec-why reveal" aria-label="Why this exists">
-  <div class="why-media" aria-hidden="true">
-    <figure class="slot slot-bleed" style="--ar:21/9" data-slot="pullquote-loop">
-      <div class="slot-box">
-        <div class="slot-ph">
-          <span class="slot-meta">pullquote-loop · 21:9 · 1920×823 · LOOP</span>
-          <span class="slot-desc">Ambient, near-abstract. A light being flagged, a lens turning, dust in a beam. No faces. 6–8s, silent.</span>
-          <span class="slot-path">assets/media/pullquote-loop.mp4</span>
-        </div>
-      </div>
-    </figure>
-    <div class="why-scrim"></div>
+<!-- ============ REST STATE / REEL ============
+     Full-bleed, full viewport height. The rest state is an AMBIENT VIDEO
+     LOOP with the pull line and one button over it. Pressing the button
+     stops the loop, fades the text out and plays the REEL in its place;
+     Escape or the close control puts the loop back.
+
+     TWO SEPARATE VIDEOS, and they never overlap. BackgroundLoop is 9.6s of
+     silent, muted, decorative wallpaper. The reel is a minute with a music
+     bed that only ever starts from a press.
+
+     THE POSTER IS THE FLOOR OF THIS SECTION. It is the first paint, the
+     handoff frame while the loop decodes, and the WHOLE background in every
+     case where the loop is suppressed — under 1024px, on Save-Data or
+     2g/3g, and under prefers-reduced-motion. In all three the section looks
+     identical, just still, and the play button still plays the reel. It is
+     frame zero of the loop, so the handoff is a continuation, not a cut.
+
+     THE LOOP <video> IS NOT IN THIS MARKUP. script.js constructs it, and
+     only after the three gates above pass — that is the only way "no video
+     element created on mobile" is literally true. A media element in the
+     document with a src is a fetch the browser may start on its own terms.
+     The reel <video> is here but ships with NO src and preload="none" for
+     the same reason: nothing about it crosses the wire until the press.
+
+     BOTH LADDERS STOP AT THE MASTER'S NATIVE 1280. The supplied loop is
+     1280x720, so a 1920 rung would be an upscale — the same per-asset cap
+     rule as the hero. See tools/background-loop.py.
+
+     Renditions live in data attributes rather than <source media> because no
+     shipping browser re-evaluates that media attribute — it is read once and
+     never again. Choosing in JS also means the connection and the device
+     pixel ratio are read when they matter rather than during parse. -->
+<section class="sec-still" id="reel" data-still aria-labelledby="still-h"
+         data-src-1080="assets/media/reel-1080.mp4"
+         data-src-720="assets/media/reel-720.mp4"
+         data-loop-720="assets/media/loop/background-loop-720.mp4"
+         data-loop-540="assets/media/loop/background-loop-540.mp4">
+  <h2 id="still-h" class="sr-only">The reel</h2>
+
+  <picture class="still-bg">
+    <source type="image/avif" sizes="100vw"
+            srcset="assets/media/loop/loop-poster-900.avif 900w,
+                    assets/media/loop/loop-poster-1280.avif 1280w">
+    <source type="image/webp" sizes="100vw"
+            srcset="assets/media/loop/loop-poster-900.webp 900w,
+                    assets/media/loop/loop-poster-1280.webp 1280w">
+    <!-- alt="" deliberately: it is a backdrop carrying no information the
+         pull line over it does not already say. The loop over it is
+         aria-hidden for the same reason. -->
+    <img class="still-img" alt="" width="1280" height="720" sizes="100vw"
+         src="assets/media/loop/loop-poster-1280.jpg"
+         srcset="assets/media/loop/loop-poster-900.jpg 900w,
+                 assets/media/loop/loop-poster-1280.jpg 1280w"
+         loading="lazy" decoding="async">
+  </picture>
+
+  <div class="still-veil" aria-hidden="true"></div>
+
+  <video class="still-video" preload="none" playsinline webkit-playsinline
+         width="1920" height="1080" tabindex="-1"></video>
+
+  <div class="still-content">
+    <p class="still-pull">There’s never been a better time to be a visual storyteller, and our team brings decades of industry expertise to show you exactly how to bring your vision to life</p>
+
+    <button class="still-play" type="button" aria-label="Play the reel">
+      <svg class="still-play-glyph" viewBox="0 0 40 40" fill="none" aria-hidden="true" focusable="false">
+        <path d="M20.0002 36.6668C29.2049 36.6668 36.6668 29.2049 36.6668 20.0002C36.6668 10.7954 29.2049 3.3335 20.0002 3.3335C10.7954 3.3335 3.3335 10.7954 3.3335 20.0002C3.3335 29.2049 10.7954 36.6668 20.0002 36.6668Z" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M26.5755 20.6578C26.281 21.7023 24.8888 22.4405 22.1048 23.9168C19.4133 25.3438 18.0677 26.0575 16.9832 25.7707C16.5348 25.652 16.1263 25.4268 15.7969 25.1167C15 24.3662 15 22.9107 15 19.9998C15 17.089 15 15.6335 15.7969 14.8831C16.1263 14.5729 16.5348 14.3476 16.9832 14.2291C18.0677 13.9422 19.4133 14.6558 22.1048 16.0829C24.8888 17.5592 26.281 18.2973 26.5755 19.3418C26.697 19.773 26.697 20.2267 26.5755 20.6578Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <span>Watch our experts in action</span>
+    </button>
   </div>
-  <div class="wrap">
-    <p class="pull-standalone">There have never been more people making things. There have never been fewer places to learn how.</p>
-  </div>
+
+  <button class="still-close" type="button" hidden aria-label="Close the reel">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+    </svg>
+  </button>
+
+  <!-- No JS: the custom control cannot work, so hand over the native one.
+       The <style> lives in here rather than in styles.css on purpose — keyed
+       off a .js class instead, it would apply for the moment between paint
+       and script.js running and flash the still away. -->
+  <noscript>
+    <!-- No JS means no loop either — it is script-constructed — so the
+         poster is already the background and only the reel handover
+         changes. -->
+    <style>.still-bg, .still-veil, .still-play { display: none; }
+           .still-video { position: static; opacity: 1; }</style>
+    <video class="still-video" controls muted preload="none" playsinline
+           width="1920" height="1080">
+      <source src="assets/media/reel-720.mp4" type="video/mp4">
+    </video>
+  </noscript>
 </section>
 
 <!-- ============ TRACKS ============ -->
@@ -290,6 +480,7 @@
       </figure>
     </div>
   </div>
+  <div class="wrap"><p class="tl-hint showcase-hint" aria-hidden="true">Scroll sideways &rarr;</p></div>
 </section>
 
 <!-- ============ TIMELINE ============ -->
@@ -628,5 +819,58 @@
 </footer>
 
 <script src="script.js"></script>
+<!-- The carousel owns the hero and must be able to run before the shader
+     exists; the shader is a pure enhancement that asks the carousel what is on
+     screen. Both are deferred so neither can block the LCP paint. -->
+<script src="hero.js" defer></script>
+<script src="hero-shader.js" defer></script>
+
+<!-- ============ ON-DEVICE WIDTH READOUT ============
+     Opt-in only: append ?widthcheck to the URL. Nothing renders, and nothing
+     is measured, without it — this costs a single querystring test on a normal
+     load, so it is safe to leave in production.
+
+     It exists because the bug it checks for is INVISIBLE to desktop tooling.
+     Chrome contains the four horizontal scrollers and reports document width
+     == viewport width; iOS Safari widens the layout viewport to ~3x and drags
+     the fixed header off screen. A desktop browser, at any emulated size, will
+     never reproduce it — so the measurement has to happen on the real phone,
+     and Safari on iOS has no console without a Mac and a cable. This prints
+     the two numbers into the page instead.
+
+     GREEN means document width == viewport width. RED means it does not, and
+     the delta is the amount the header will be dragged off screen.
+
+     Read it on filmschool.africa/?widthcheck on the actual device. -->
+<script>
+(function () {
+  if (!/[?&]widthcheck\b/.test(location.search)) return;
+  var box = document.createElement('div');
+  box.setAttribute('role', 'status');
+  box.style.cssText =
+    'position:fixed;left:8px;bottom:8px;z-index:2147483647;' +
+    'font:700 12px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;' +
+    'padding:8px 10px;border-radius:6px;color:#000;white-space:pre;' +
+    'pointer-events:none;box-shadow:0 2px 10px rgb(0 0 0 / .5)';
+  document.body.appendChild(box);
+  function read() {
+    var de = document.documentElement;
+    var doc = Math.max(document.body.scrollWidth, de.scrollWidth);
+    var vp = de.clientWidth;
+    var ok = doc === vp;
+    box.style.background = ok ? '#63e6a8' : '#ff5c5c';
+    box.textContent =
+      (ok ? 'OK  document == viewport' : 'FAIL  document > viewport') +
+      '\ndocument ' + doc + '   viewport ' + vp +
+      '\nbody.scrollWidth ' + document.body.scrollWidth +
+      '\nhtml.scrollWidth ' + de.scrollWidth +
+      (ok ? '' : '\noverhang ' + (doc - vp) + 'px');
+  }
+  read();
+  addEventListener('resize', read);
+  addEventListener('orientationchange', function () { setTimeout(read, 300); });
+})();
+</script>
+
 </body>
 </html>

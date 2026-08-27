@@ -9,28 +9,72 @@ Local preview: `python3 -m http.server 8000`
 
 ## 🔴 LAUNCH BLOCKERS
 
-### 0a. Mezzotint CF ampersand — BLOCKED ON LICENCE
+### 0a. ~~Mezzotint CF ampersand~~ — RESOLVED, substituted
 
-The `&` in the hero headline is specified as Mezzotint CF. **It has not been
-implemented, and nothing was extracted.**
+**No longer a blocker.** The `&` is now Playfair Display Italic SemiBold, an
+SIL Open Font Licence face from Google Fonts, self-hosted at
+`assets/fonts/amp.woff2`. Nothing was ever extracted from Mezzotint CF, and
+the `.otf` has been deleted from the working tree and the git index.
 
-Mezzotint CF is present on the build machine only as an **Adobe Fonts /
-Creative Cloud activated font** (`~/Library/Application Support/Adobe/CoreSync/
-plugins/livetype/`), by The Type Founders. That licence covers desktop use in
-design apps and Adobe's own web CDN. It does **not** permit pulling the `.otf`
-out and self-hosting a subset, which is what the spec asks for. Extracting it
-would have been a licence violation, so the `&` currently renders in Delight.
+Mezzotint CF was only ever on the build machine as an Adobe Fonts / Creative
+Cloud activated font (The Type Founders). That licence covers desktop use and
+Adobe's own web CDN; it does not permit self-hosting a subset. Rather than buy
+a webfont licence or accept a third-party CDN request, the glyph was
+substituted. If you later license Mezzotint CF properly, swap the file at
+`assets/fonts/amp.woff2` and re-run the optical tuning below — the CSS needs
+no structural change.
 
-To unblock, either buy a webfont licence for Mezzotint CF from The Type
-Founders, or use an Adobe Fonts web project (a CDN `<link>`, not self-hosted —
-which trades the self-hosting requirement for a third-party request).
+**How it was chosen.** Three Google Fonts italic serifs were set in the real
+headline and compared: Playfair Display, EB Garamond, Bodoni Moda.
 
-Once a licensed file exists: subset it to `U+0026` only (2–4KB), save as
-`assets/fonts/mezzotint-amp.woff2`, and uncomment the block at the top of
-`styles.css`. The `@font-face`, the `unicode-range`, `font-display: block` and
-starting optical values are all written out there. **Tune the size and baseline
-by eye against the comp** — a serif ampersand in a heavy sans line reads small
-and floats high at its natural size.
+- **Bodoni Moda was eliminated on the 375px hairline test.** Browsers apply
+  `font-optical-sizing: auto` by default, which at headline sizes drives
+  Bodoni's `opsz` axis (range 6–96) to the display end, where its hairlines are
+  thinnest. Measured on the rasterised glyph at 375px/50.25px, its thinnest
+  strokes peak at **0.54 luminance** and — the deciding detail — do **not**
+  recover at DPR 2 (still 0.54), so it is a genuinely sub-pixel stroke, not a
+  rasterisation artifact. Playfair measured 0.83/0.96 and EB Garamond 0.94/0.96
+  at DPR 1/2. Forcing `opsz: 6` fixes Bodoni's hairlines (0.91/0.99) but gives
+  up the high-contrast display character that was the reason to consider it.
+- **EB Garamond** survived the hairline test but lost on form: its open
+  double-curl reads as a separate ornament next to Delight's tight geometric
+  bowls, especially at 375 where it degrades into a squiggle.
+- **Playfair Display** has a closed lower bowl and a strong diagonal that
+  counterpoint the sans instead of fighting it.
+
+**Optical tuning — `1.18em / w600 / vertical-align -0.035em`.** Worth knowing
+why, because the obvious diagnosis is wrong. Playfair's `&` is *already*
+cap-aligned against Delight Black (ink top −1px, bottom +1px against the cap
+band, measured in a shared line box). It does **not** float high at its natural
+size. It reads small purely because a high-contrast italic puts far less ink on
+the page than Delight Black at the same height — so `1.18em` and `w600` are
+both doing optical-*mass* work, not height work. The `-0.035em` only re-seats
+it after that scale-up; measured, it lands the `&`'s ink centroid within 0.7px
+of the surrounding caps'. An earlier `-0.05em` overshot and sat visibly low.
+
+**The file.** Subset to `U+0026` and instanced at `wght 600`: **744 bytes**,
+two glyphs (`.notdef` + `ampersand`). Static rather than variable — the
+variable subset was 1276 bytes and would have depended on the browser exposing
+the weight range. `unicode-range: U+0026` means it is only fetched because the
+headline contains an `&`. The `@font-face` declares `font-weight: 600` so
+`.hero-amp`'s request is an exact match and no synthetic bolding is applied.
+
+Self-hosted, not the Google Fonts CDN, deliberately: a CDN `<link>` costs a DNS
+lookup and TLS handshake to a third-party origin before the CSS referencing it
+can be parsed, which is the expensive part on 3G.
+
+To reproduce the subset:
+
+```bash
+# 1. Get the latin italic woff2 URL (modern UA -> woff2)
+curl -A "Mozilla/5.0 ... Chrome/120.0" \
+  "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400..900"
+# 2. Download that .woff2, then pin the weight and subset to one glyph
+fonttools varLib.instancer playfair-italic-full.woff2 wght=600 -o playfair-600.ttf
+pyftsubset playfair-600.ttf --unicodes=U+0026 --flavor=woff2 \
+  --layout-features='' --no-hinting --desubroutinize --name-IDs='' \
+  --output-file=assets/fonts/amp.woff2
+```
 
 ### 0b. Hero media — RIGHTS, and the framing the layout depends on
 
@@ -214,6 +258,88 @@ An analytics slot sits commented in `<head>`. Nothing is loaded.
 
 ---
 
+## 🚧 REGRESSION GUARD — DOCUMENT WIDTH MUST EQUAL VIEWPORT WIDTH
+
+**Invariant: `document.documentElement.scrollWidth === document.documentElement.clientWidth`
+at every breakpoint, in BOTH motion states.** Check it before shipping any change
+to the timeline, the media scrollers, or the header.
+
+```js
+// paste in the console at each width, normal AND prefers-reduced-motion
+document.documentElement.scrollWidth === document.documentElement.clientWidth
+```
+
+### Read `documentElement`, NOT `body`
+
+`document.body.scrollWidth` is the wrong number and it will lie to you. A page
+whose scrollers are clipped reports a contained `body.scrollWidth` while
+`documentElement.scrollWidth` is still ~3x the frame — measured 390 vs 1108 at a
+390px viewport on the build that was live. **`body` reads correct both before and
+after the fix**, so a check written against it passes on a broken build. The
+layout viewport is built from the `documentElement` number. That is the one that
+decides where the fixed header goes.
+
+**Or open `/?widthcheck` on the actual phone.** That renders a fixed readout in
+the corner — green when document == viewport, red with the overhang in px when
+not. It is opt-in via the querystring, costs one regex test on a normal load, and
+exists because this bug cannot be reproduced on a desktop browser at any emulated
+size. No console, no cable, no Mac required.
+
+Widths to check: **320 / 360 / 375 / 390 / 414 / 430 / 768 / 1024 / 1440.**
+Reduce Motion is set at the OS level, so a default browser profile will NOT
+show the failure — toggle it on the machine, not in devtools.
+
+### Why this is not a cosmetic overflow
+
+`.site-head` is `position: fixed`. On iOS Safari a fixed element resolves against
+the **layout viewport**, which widens to the document width. So the instant the
+document is wider than the screen, the header stretches to the document width and
+takes the Apply pill off the right edge with it — 606px document on a 375px
+screen put the pill **231px off screen**. A full-page screenshot reproduces it
+(it captures at document width); a normal viewport screenshot does NOT.
+
+### The original offender — `.chev` — is gone; the invariant is not
+
+The worst offender was the curriculum marquee. `.chev` was `white-space: nowrap`
++ `flex: none`, so one tag was as wide as its text — **up to 581px against a
+375px frame**, and the row laid ~9368px end to end — contained only by clipping.
+**That whole band (the marquee and the Foundation block above it) has been
+removed**, and with it every `.marq` / `.chev` rule and the reduced-motion wrap
+that used to tame them. The tracks intro now runs straight into the panels.
+
+Removing the widest scroller does not retire the invariant — it still binds the
+three that remain, and the single rule that actually holds it is unchanged:
+
+- `.tl-scroll, .prod-scroll, .showcase-scroll { contain: paint }` —
+  **this is what actually fixes the document width.** A scroll container clips
+  its content, but that content still counts toward the ROOT's scrollable
+  overflow; only containment removes it from that sum. Overflow rules alone do
+  not: with `html, body { overflow-x: clip }` in place and no containment,
+  `documentElement.scrollWidth` stays wide. **Any new horizontal scroller must
+  be added to that selector list** (this is where `.marq-row` used to sit), and
+  no intrinsically-wide (`max-content`, `nowrap`) element may be reintroduced
+  guarded by `overflow: clip` alone.
+
+### Two traps when testing this
+
+- **`scroll-behavior: smooth` is set on `html`.** `window.scrollTo(9999, 0)`
+  followed by reading `window.scrollX` returns `0` whether or not the page
+  overflows, because the scroll is still animating. It is not a valid probe.
+- **`overflow: hidden` and `clip` still allow programmatic `scrollLeft`.** A
+  non-zero `scrollLeft` read does not prove user-visible overflow either.
+- **Chrome cannot reproduce this class of bug at all.** It contains the three
+  scrollers and reports a correct `body.scrollWidth` at every emulated size.
+  iOS Safari widens the layout viewport instead. A desktop pass is not evidence;
+  `/?widthcheck` on a real phone is.
+
+Compare `documentElement.scrollWidth` to `clientWidth`. Nothing else.
+
+*This bug has cost two sessions. Both times the header looked correct in a
+viewport screenshot and in `getBoundingClientRect` — Chrome pins fixed elements
+to the visual viewport, so the drift is invisible there.*
+
+---
+
 ## THE HEADER
 
 **It never gets a background.** No fill, no blur, no border, no shadow, at any
@@ -307,17 +433,17 @@ a bug to fix elsewhere.
 
 ## MEDIA MANIFEST
 
-Eighteen slots. Seventeen render on the page as labelled placeholders;
-`og-image` is the social card and is built, not photographed. **Every slot
-needs original or licensed material.** The hero reference comp must not ship —
-it is a publicity still of a recognisable actor.
+Seventeen slots. Sixteen render on the page as labelled placeholders;
+`og-image` is the social card and is built, not photographed. The reel is not
+in this table — it is shot, cut and delivered, and has its own section below.
+**Every slot needs original or licensed material.** The hero reference comp
+must not ship — it is a publicity still of a recognisable actor.
 
 Drop assets in at the exact paths below and they appear with no code change.
 Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the same name.
 
 | Slot | Section | Path | Ratio | Dimensions | Type | What it is | Status |
 |---|---|---|---|---|---|---|---|
-| `pullquote-loop` | Pull line | `assets/media/pullquote-loop.mp4` | 21:9 | 1920×823 | LOOP | Ambient, near-abstract. A light being flagged, a lens turning, dust in a beam. No faces. 6–8s, silent. |  |
 | `track-film` | Track 1 | `assets/media/track-film.jpg` | 2.39:1 | 1920×803 | STILL | A frame from a finished short. |  |
 | `track-content` | Track 2 | `assets/media/track-content.mp4` | 9:16 | 1080×1920 | LOOP | Phone-shot content as it appears in feed. 5–8s. |  |
 | `track-finishers` | Track 3 | `assets/media/track-finishers.jpg` | 16:9 | 1600×900 | STILL | An NLE timeline mid-cut, or a grade before/after. |  |
@@ -336,6 +462,280 @@ Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the same name.
 | `apply-still` | Apply | `assets/media/apply-still.jpg` | 3:2 | 1800×1200 | STILL | A premiere audience, or a room watching a screen. Warm, full of people. |  |
 | `og-image` | Social | `assets/media/og-image.jpg` | 1.91:1 | 1200×630 | STILL | Black ground, TFCS.AFRIC mark, headline. Built, not photographed. |  |
 
+### The background loop — section 2 at rest
+
+The rest state of section 2 is a silent ambient loop, not a still. It is a
+**different film from the reel** and the two never run together: pressing play
+pauses and hides the loop before the reel is given a URL, and exiting unloads
+the reel and resumes the loop.
+
+| | |
+|---|---|
+| Source master | `assets/media/BackgroundLoop.mp4` — 4.9MB, 1280x720 HEVC Main 10, 24fps, 9.625s, **gitignored** |
+| >=1280 device px | `assets/media/loop/background-loop-720.mp4` — 2.08MB, 1.82 Mbps |
+| <1280 device px | `assets/media/loop/background-loop-540.mp4` — 1.05MB, 0.92 Mbps |
+| Poster ladder | `assets/media/loop/loop-poster-{900,1280}.{avif,webp,jpg}` — 17.4KB AVIF at 1280 |
+
+```bash
+python3 tools/background-loop.py     # both renditions and the poster ladder
+```
+
+**The master cannot ship as supplied.** It is HEVC in an `hvc1` box, which only
+Safari decodes on the web, and 4.09 Mbps for decorative wallpaper that autoplays
+on every visit is roughly twice what the budget allows. Both renditions are
+8-bit H.264 High, two-pass, VBV-constrained to 1.5x target.
+
+**The last frame is dropped.** Frame 230 of the master (t=9.583s) is pure black
+while frames 227-229 average 164/255 — a one-frame cut to black that `loop`
+replays as a visible blink every ten seconds. `TRIM = 230` in the tool. Check
+this again if the master is replaced; the tail is not guaranteed to be a fade.
+
+**720 IS THE CEILING, and it is a real limit.** The supplied master is 1280x720,
+so a 1920 rung would be an upscale — more bytes, no more detail, and the same
+per-asset cap rule the hero and the old rest-state still already follow. Cover-
+fit into a full viewport means the file is being stretched 1.25x at 1440 and
+1.5x at 1920 before device pixel ratio is even counted, so on a retina laptop it
+is a 2.5-3x upscale and it will read soft. **Nothing in this repo can fix that —
+only a re-export from the original edit can.** If a 1920x1080 master arrives,
+drop it in and change one line:
+
+```python
+STEPS = [(1920, 1_800_000), (1280, 900_000)]   # tools/background-loop.py
+```
+
+The `<source>` lists in `index.html` are keyed to the file stems, not to pixel
+counts, so nothing else changes — but **re-run the contrast measurement**, because
+a sharper master has brighter specular pixels and the scrim below is tuned to
+this encode.
+
+#### When the loop does not play
+
+Three gates, and in all three the section looks identical, just still — the
+poster is already the background, and the play button still plays the reel
+(verified: `prefers-reduced-motion` still gets `reel-1080.mp4`, Save-Data gets
+`reel-720.mp4`):
+
+- **<1024px.** Mobile gets the poster only. `script.js` **constructs** the
+  `<video>`, so below 1024 there is no element in the document at all — not a
+  paused one, not a `preload="none"` one. An element with a `src` is a fetch the
+  browser may start on its own terms; an element that was never created is a
+  guarantee.
+- **Save-Data, or `effectiveType` 2g / slow-2g / 3g.** `navigator.connection
+  .saveData` is the client-side half of the preference the `Save-Data` header
+  carries — the header is not readable from script, but a browser that sends it
+  also sets this.
+- **`prefers-reduced-motion: reduce`.**
+
+The gates are re-evaluated on `matchMedia` `change`, so resizing across 1024 or
+toggling reduced motion mid-session creates or destroys the element rather than
+leaving a stale one.
+
+Otherwise: `preload="metadata"`, `muted` + `defaultMuted` + the attribute,
+`loop`, `playsinline`, `aria-hidden="true"`, `tabindex="-1"`,
+`disablepictureinpicture`. It pauses on `visibilitychange` and when the section
+leaves the viewport.
+
+**Two IntersectionObservers, not one**, because "worth downloading" and "worth
+decoding" are different distances. The lead observer runs at `rootMargin: 20%`
+and only constructs. The playback observer runs at `rootMargin: -1px` and only
+starts and stops. The **-1px is load-bearing**: the hero above is exactly
+`100svh`, so at the top of the page this section's first pixel row sits exactly
+on the fold, and Chromium reports that zero-height overlap as intersecting. At
+`0` the loop plays and buffers its full 2MB for every reader who lands and never
+scrolls, with none of it on screen.
+
+**No `poster` attribute on the element.** The `<picture>` underneath already
+shows the same frame in AVIF at a third of the JPEG's bytes, and `poster` would
+fetch it a second time. The element starts at `opacity: 0` and fades in on
+`loadeddata`/`playing`, so a decoder that paints black before its first frame
+cannot flash over the poster.
+
+#### The poster is frame zero, deliberately
+
+It is three things at once: the first paint, the handoff image while the loop
+decodes, and the entire background wherever the loop is suppressed. Frame zero
+makes the handoff a continuation rather than a cut, and it is within 6% of the
+loop's brightest frame — so the scrim that clears frame zero clears the video
+too, and one measurement covers both states.
+
+### Section 2 contrast — measured against a moving target
+
+Same method as the hero (0c): render the page, hide `.still-content` and
+`.site-head` so only backdrop and scrim remain, capture the viewport 1:1, then
+sample **every pixel** inside the real glyph boxes — per-line
+`Range.getClientRects()`, not the block box — and take the worst ratio. Yellow
+`#FFEA33` needs **3:1**, white needs **4.5:1**.
+
+**Every frame was measured, not just the brightest one.** 230 frames x 4
+viewports where the loop runs, plus the poster at 768 and 375. That is 920
+browser captures rather than six, and it is not thoroughness for its own sake —
+see the finding below.
+
+Shipping result — worst pixel found in each box, across the whole loop:
+
+| | 1920 | 1440 | 1280 | 1024 | 768 | 375 |
+|---|---|---|---|---|---|---|
+| pull line 1 | 4.03 | 3.97 | 3.93 | **3.82** | 4.26 | 4.28 |
+| pull line 2 | 4.06 | 3.97 | 3.93 | 3.88 | 4.01 | 4.26 |
+| pull line 3 | 4.02 | 4.01 | 3.94 | 3.90 | 4.33 | 4.13 |
+| pull line 4 | 4.01 | 4.07 | 3.99 | 3.91 | 4.36 | 4.51 |
+| pull line 5 | 4.02 | 4.02 | 4.01 | 3.91 | 5.62 | 5.09 |
+| pull lines 6-8 | — | — | — | — | 4.86 / 6.04 | 5.67 / 4.79 / 4.50 |
+| button label | 4.89 | 4.93 | 4.68 | **4.65** | 5.44 | 5.37 |
+| play glyph | 4.99 | 4.94 | 4.79 | 4.84 | 13.27 | 5.40 |
+
+768 and 375 are the poster, which is one frame; the other four are the worst of
+230. **Worst yellow anywhere: 3.82** (1024x768, frame 228, t=9.500s). **Worst
+white anywhere: 4.65** (1024x768, frame 153, t=6.375s). Both clear.
+
+#### The brightest frame is not the frame that binds
+
+The brief asked for the brightest frame. Measuring only that frame would have
+shipped a failing page. The loop's brightest frame is 206 (t=8.583s, mean
+relative luminance 0.5231) and its darkest is 126 (t=5.250s, 0.0219) — a **24x
+swing** inside ten seconds. But the frame that binds the white floor is **153
+(t=6.375s), at 17% of the brightest frame's mean luminance** — one of the
+darkest frames in the cut. It binds because it is the shot of a man beside a
+fire in dark foliage, and the flame lands exactly where the button label sits.
+A small bright object over the type beats a bright frame that is bright
+somewhere else.
+
+#### Why the scrim is a band and not a flat wash
+
+Tuned against the true worst frame, a **flat** scrim has to be **53.2%**, and
+53.2% flat leaves **19.6%** of the loop's mean luminance — which puts the dark
+half of a montage that already runs to 0.0219 below what a screen resolves. The
+shipping band clears the same floors at **31.1%**: 1.6x the picture for the same
+contrast, because it spends density only where the type is.
+
+| treatment | worst yellow | worst white | picture kept |
+|---|---|---|---|
+| flat 25% (what the still used) | 1.49 ✗ | 1.86 ✗ | 48.6% |
+| flat 30% | 1.71 ✗ | 2.13 ✗ | 43.5% |
+| flat 53.2% | 3.00 | 4.50 | 19.6% |
+| **28% base + band** | **3.82** | **4.65** | **31.1%** |
+
+Shipping values, in `.still-veil`:
+
+```css
+background-color: rgb(0 0 0 / .28);                  /* the brief's 25-30% */
+background-image: linear-gradient(to bottom,
+  rgb(0 0 0 / 0)    9%,
+  rgb(0 0 0 / .36) 29%,
+  rgb(0 0 0 / .36) 69%,
+  rgb(0 0 0 / 0)   89%);                             /* 53.9% combined at centre */
+```
+
+**The geometry is the type's, not a guess.** The pull block plus the button
+centres on 49% of the section height at every viewport measured — 1920, 1440,
+1280, 1024, 768 and 375 — and its half-height never exceeds 20.2% (375 is the
+widest case). So the plateau is 49% ±20% and the ramp runs to 49% ±40%, reaching
+zero at 9% and 89%: a scrim that has faded to nothing well before the frame
+edge, not a bar with a seam.
+
+**A band and not an ellipse** — the opposite call to the hero's, for the opposite
+reason. The hero's type sits in one corner, so density belongs in a corner. This
+block is centred and nearly full width: its half-*width* runs from 18.7% of the
+frame at 1920 to 40.1% at 375, so any ellipse wide enough for the phone is most
+of the frame anyway. The half-*height* over the same range is 14.0%-20.2%.
+Height is the axis that holds still, so height is the axis the scrim is built on.
+
+**These numbers are tuned to this cut.** Re-run the measurement when the loop is
+replaced, or when it is re-exported at 1920. Do not assume they transfer.
+
+#### The old rest-state still is now dead weight
+
+`assets/media/section-still-{900,1440}.{avif,webp,jpg}` (~120KB, committed),
+`assets/media/Section2img.png` (the gitignored master) and
+`tools/section-still.py` are no longer referenced by anything — the loop poster
+replaced them. Left on disk rather than deleted in the same change that
+replaced them; delete when you are satisfied the loop is staying.
+
+#### ⚠ 3.1MB more video in git
+
+Same problem as the reel below, and the same fix — both renditions are
+committed, only the 4.9MB master is ignored. When the reel moves to a CDN, move
+these two with it and repoint `data-loop-720` / `data-loop-540`. No JS change:
+the URLs were never in the JS.
+
+### The reel — the one piece of media that is actually finished
+
+Under the pull line, full bleed, 16:9. Fifty-seven seconds of work from the
+four founding partners, with a music bed and no speech.
+
+| | |
+|---|---|
+| Source master | `assets/media/clan_yujo_showreel_23_24 (1080p).mp4` — 33MB, **gitignored** |
+| 1080p rendition | `assets/media/reel-1080.mp4` — 16.4MB, 2.17 Mbps video / 128 kbps audio |
+| 720p rendition | `assets/media/reel-720.mp4` — 8.3MB, 1.06 Mbps video / 96 kbps audio |
+| Poster ladder | `assets/media/reel/reel-poster-{900,1440,1920}.{avif,webp,jpg}` |
+
+**It never autoplays**, at any width, on any connection. `preload="none"` and
+the `<video>` ships with no `src` at all — `script.js` assigns one on the first
+press, so the only reel byte on the wire before that is the poster (56KB AVIF
+at 1440, lazy-loaded, below the fold). It starts muted with an Unmute pill;
+that choice then sticks for the visit. Native controls take over once it is
+running. Scrolling it out of view pauses it and does not resume it.
+
+720p is served below 1024px, on Save-Data, and on `effectiveType` 2g/3g. The
+choice is made in JS at press time rather than with `<source media>`, because
+no shipping browser re-evaluates that attribute after load.
+
+Rebuild the renditions:
+
+```bash
+ffmpeg -i "assets/media/clan_yujo_showreel_23_24 (1080p).mp4" \
+  -c:v libx264 -profile:v high -level 4.0 -preset slow \
+  -b:v 2500k -maxrate 3000k -bufsize 5000k -pix_fmt yuv420p -g 48 \
+  -c:a aac -b:a 128k -ac 2 -movflags +faststart assets/media/reel-1080.mp4
+
+ffmpeg -i "assets/media/clan_yujo_showreel_23_24 (1080p).mp4" \
+  -vf "scale=1280:720:flags=lanczos" \
+  -c:v libx264 -profile:v main -level 3.1 -preset slow \
+  -b:v 1200k -maxrate 1500k -bufsize 2400k -pix_fmt yuv420p -g 48 \
+  -c:a aac -b:a 96k -ac 2 -movflags +faststart assets/media/reel-720.mp4
+```
+
+`+faststart` is not optional — it moves `moov` ahead of `mdat` so playback can
+begin before the file has finished arriving. Verify with
+`ffprobe -show_entries format_tags` or just check the box order.
+
+Rebuild the poster:
+
+```bash
+python3 tools/reel-poster.py 42.5          # timestamp is optional, 42.5 is the default
+python3 tools/reel-poster.py 31.5 --check  # audition a frame without writing the ladder
+```
+
+`--check` exists because most shots in this reel carry their own 2.35:1 mattes,
+baked in at the edit. A matted still inside an honest 16:9 box strands the
+caption ~100px below the last visible pixel, so the poster has to come from one
+of the frames that fills the frame — and it has to be dark enough at dead
+centre to carry a white play ring. `--check` reports both.
+
+#### ⚠ 25MB of video is sitting in git
+
+The two renditions are committed; only the 33MB master is ignored. That is a
+deliberate placeholder, not a decision — it keeps the page working today at the
+cost of a repo that grows by 25MB and can never shrink, because git keeps
+history forever.
+
+Before this gets committed more than a couple of times, move both renditions to
+Vercel Blob, R2, or any CDN, and point the two data attributes at the new URLs:
+
+```html
+<div class="reel" data-reel
+     data-src-1080="https://cdn.example/reel-1080.mp4"
+     data-src-720="https://cdn.example/reel-720.mp4">
+```
+
+That is the whole change — no JS edit, because the URLs were never in the JS.
+Then add `assets/media/reel-*.mp4` to `.gitignore` and purge them from history.
+
+Whatever host you pick **must serve HTTP Range requests**, or the native
+controls cannot scrub. Vercel, Netlify, Cloudflare and nginx all do; Python's
+`http.server` does not, which is worth knowing if you test locally.
+
 ### The 500KB problem
 
 The page budget is 500KB and the audience is on mobile data in Nigeria.
@@ -349,10 +749,27 @@ Measured on disk, first view:
 | hero (AVIF) | 36 KB | 80 KB |
 | **total** | **~226 KB** | **~270 KB** |
 
+Posters are not in that table because they are `loading="lazy"` and sit below
+the fold — they cost nothing until someone scrolls. Then the reel poster is
+29KB at 375 and 56KB at 1440 (AVIF), and the loop poster is 11KB at 375 and
+17KB at 1440. The reel itself costs nothing until pressed.
+
+**The background loop is the one thing on this page that breaks the budget, and
+it does it on purpose.** It autoplays, so at >=1024 it is 2.08MB on every visit
+that scrolls to section 2 — eight times the whole rest of the page. That is a
+deliberate, briefed trade with a 2.5MB ceiling, not an oversight, and it is why
+the three suppression gates are absolute rather than best-effort: **below 1024,
+on Save-Data and on 2g/3g the figure is 0 bytes of video**, which is the case
+the Nigerian-mobile-data argument is actually about. Desktop pays; the audience
+this budget was written for does not.
+
+If that trade is ever reconsidered, the lever is the bitrate in
+`tools/background-loop.py`, not the gates.
+
 That leaves roughly 230–270KB for everything else. Sixteen more images at even
 80KB each is 1.3MB — five times what is left.
 
-So these twenty slots are a shot list, not a shipping list. Pick the four or
+So these nineteen slots are a shot list, not a shipping list. Pick the four or
 five that carry the most weight, compress hard (WebP/AVIF with JPEG fallback,
 sized to the actual rendered box, not the source dimensions), and delete the
 rest. **Four real assets beat sixteen briefs.**
@@ -368,24 +785,26 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
 Set it to `false` and every slot still holding a placeholder is removed from
 the DOM. Sections that exist only to hold media — the showcase band and the
 production strip — are removed entirely when empty. This has been tested at
-375 and 1440: the page reads correctly with all twenty slots absent, no gaps
-and no orphaned headings.
+375 and 1440: the page reads correctly with all nineteen slots absent, no gaps
+and no orphaned headings. The reel is exempt — it holds a real asset, so the
+gate never touches it.
 
 **Do not ship dashed boxes to a live page.**
 
 ### How the slots behave
 
 - Every slot holds its ratio with CSS `aspect-ratio`, so nothing shifts when an
-  asset lands. Verified: 18 of 19 measure exact. The exception is
-  `pullquote-loop`, which is a cover backdrop by design — 21:9 is the shooting
-  spec, the display crops to the band, and layout shift is zero because the
-  media is absolutely positioned.
+  asset lands. All 18 measure exact. The reel is not a slot but follows the
+  same rule: the box is `aspect-ratio: 16/9` and both the poster and the video
+  are absolutely positioned inside it, so its height is known before a byte of
+  either arrives.
 - `<video>` is `muted`, `loop`, `playsinline`, with a required poster.
 - **No autoplay below 1024px, and none under `prefers-reduced-motion`** — those
   cases get the poster and a play/pause control instead. `script.js` wires this
   automatically for any `<video>` inside a slot.
 - Everything below the fold carries `loading="lazy"` and `decoding="async"`.
-- Stills take real alt text. The ambient pullquote loop takes empty `alt`.
+- Stills take real alt text. The reel poster takes empty `alt` — it is the
+  play button's backdrop, and the caption beneath already names the work.
 - Placeholders never use the accent. A page full of yellow dashed boxes would
   burn it — yellow stays reserved for the Apply CTA.
 
@@ -417,6 +836,13 @@ assets/
   logos/kaykav-academy.svg
   media/hero.png                   1.5MB master — NOT deployed
   media/hero-{900,1440,1688}.{avif,webp,jpg}
+  media/reel-1080.mp4              16.4MB — see "25MB of video is sitting in git"
+  media/reel-720.mp4               8.3MB
+  media/reel/reel-poster-{900,1440,1920}.{avif,webp,jpg}
+  media/reel/reel-poster-master.png   frame 42.5, build input — gitignored
+tools/
+  hero-derivatives.py              regenerates the hero ladder + stamps index.html
+  reel-poster.py                   regenerates the reel poster ladder
 ```
 
 Fonts are self-hosted rather than called from Google Fonts: the audience is on
@@ -449,17 +875,9 @@ are wired; `fonts/` at the repo root holds the rest of the family, unused.
   mark's own drop-shadow, not a bar and not a scrim.
 - Copy comes from `content.md`. The subhead is sentence case in the source —
   there is no `text-transform` on it.
-- **Horizontal-overflow guard.** The global floor is
-  `html, body { max-width: 100%; overflow-x: clip; }` in `styles.css` — keep it.
-  The confirmed offender was the curriculum marquee: its `.chev` chevron rows
-  were `width: max-content` and contained only by `.marq-row { overflow: clip }`,
-  which iOS Safari honours unreliably — so the row widened the document and
-  carried the fixed Apply pill off-screen. That whole band (marquee + the
-  Foundation panel above it) has been **removed**; the tracks intro now runs
-  straight into the panels. With it gone, the offender sweep at 390px reports
-  `body.scrollWidth === clientWidth` and every element that still extends past
-  the viewport is contained by an `overflow: auto`/`hidden` scroll band (the
-  showcase, the timeline, the production strip) — never by `overflow: clip`.
-  The remaining suspects are the intrinsic-width placeholder boxes inside those
-  bands; they scroll within their own band and do not carry the document. Never
-  reintroduce a `max-content` element guarded by `overflow: clip` alone.
+- **Horizontal-overflow guard.** The document-width invariant and its fix
+  (`contain: paint` on the horizontal scrollers) are documented in full under
+  "REGRESSION GUARD" above — read `documentElement.scrollWidth`, never
+  `body.scrollWidth`. The curriculum marquee that first exposed it, and the
+  Foundation block above it, have been removed; the guard now covers the three
+  scrollers that remain (timeline, production, showcase).
