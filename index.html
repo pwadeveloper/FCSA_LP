@@ -330,121 +330,116 @@
   </div>
 </section>
 
-<!-- ============ TRACK 1 — FILM PRODUCTION ============
-     The first track, pulled out of the card grid into its own full-bleed
-     section. At >=1024 (and only when motion is allowed) it PINS and the
-     pieces reveal on scroll — track-film.js drives a GSAP ScrollTrigger
-     timeline over a Lenis-smoothed scroll. Below 1024, and under
-     prefers-reduced-motion, none of that loads: the section is a plain
-     stacked layout and every piece is visible from the start, so the content
-     never depends on the animation or on the ~128KB of libraries, which are
-     fetched only where the pin actually runs. -->
-<section class="trk" id="track-film" aria-labelledby="tf-h" data-trk-film>
-  <div class="trk-media" aria-hidden="true" data-tf="media">
-    <div class="trk-ph">
-      <span class="slot-meta">track-film-portrait · full-bleed · 1600×2000+ · STILL or LOOP</span>
-      <span class="slot-desc">A student, rim-lit, looking to camera. Head-and-shoulders, subject centre-right; the edges fall to near-black so the title and body type stay legible over them.</span>
-      <span class="slot-path">assets/media/track-film/portrait.*</span>
-    </div>
+<!-- ============ THE THREE TRACKS — one full-bleed section each ============
+     Track 1 (Film) carries a full-frame portrait with a three-clip foot row;
+     Track 2 (Content) a six-up grid of vertical content on the right; Track 3
+     (Finisher) a single wide frame on the right. Each reveals its pieces once,
+     staggered, as it scrolls into view (tracks.js + CSS — native scroll, no
+     pinning, no smooth-scroll library). Images here are placeholders pulled
+     from the repo, to be swapped. -->
+
+<!-- Track 1 — Film Production -->
+<section class="trk trk--film" id="track-film" aria-labelledby="tf1-h" data-trk>
+  <div class="trk-bg" aria-hidden="true">
+    <img class="trk-bg-img" src="assets/media/hero/hero-01-crimson-1440.webp" alt="" loading="lazy" decoding="async">
     <div class="trk-scrim"></div>
   </div>
-
   <div class="trk-inner">
-    <header class="trk-head">
-      <p class="trk-n" data-tf="n">Track 1</p>
-      <h3 id="tf-h" class="trk-h" data-tf="title">Film Production Track</h3>
-    </header>
-
-    <dl class="trk-sched" data-tf="sched">
+    <h3 id="tf1-h" class="trk-h trk-anim" style="--i:0">Film Production Track</h3>
+    <dl class="trk-sched trk-anim" style="--i:1">
       <div><dt class="sr-only">Days</dt><dd class="trk-sched-lead">Mondays &amp; Saturdays</dd></div>
       <div><dt class="sr-only">Learning</dt><dd>9 weeks of learning</dd></div>
       <div><dt class="sr-only">Production</dt><dd>4 weeks of production</dd></div>
     </dl>
-
     <div class="trk-body">
-      <section class="trk-blk" data-tf="blk">
+      <section class="trk-blk trk-anim" style="--i:2">
         <h4 class="trk-k">Who it's for</h4>
         <p>For people who want to tell a story with a camera and a crew.</p>
       </section>
-      <section class="trk-blk" data-tf="blk">
+      <section class="trk-blk trk-anim" style="--i:3">
         <h4 class="trk-k">What you learn</h4>
-        <p>You'll learn composition and the master scene technique — coverage, the 180-degree rule, matching action. How to break down a script, build a budget, scout a location, and handle permits and IP rights in Nigeria.</p>
+        <p>You'll learn composition and the master scene technique, coverage, the 180-degree rule, matching action. How to break down a script, build a budget, scout a location, and handle permits and IP rights in Nigeria.</p>
         <p>How to work with collaborators, navigate rewrites, and direct actors. How to run auditions, camera tests and a call sheet that people can actually follow.</p>
       </section>
+      <section class="trk-blk trk-anim" style="--i:4">
+        <h4 class="trk-k">What you leave with</h4>
+        <p>A short film you wrote, produced and directed, premiered to an audience.</p>
+      </section>
     </div>
-
-    <ul class="trk-clips" data-tf="clips">
-      <li class="trk-clip"><div class="trk-ph" style="--ar:4/3">
-        <span class="slot-meta">film-clip-01 · 4:3</span>
-        <span class="slot-path">assets/media/track-film/clip-01.*</span>
-      </div></li>
-      <li class="trk-clip"><div class="trk-ph" style="--ar:16/9">
-        <span class="slot-meta">film-clip-02 · 16:9</span>
-        <span class="slot-path">assets/media/track-film/clip-02.*</span>
-      </div></li>
-      <li class="trk-clip"><div class="trk-ph" style="--ar:16/9">
-        <span class="slot-meta">film-clip-03 · 16:9</span>
-        <span class="slot-path">assets/media/track-film/clip-03.*</span>
-      </div></li>
+    <ul class="trk-clips trk-anim" style="--i:5" aria-hidden="true">
+      <li class="trk-clip trk-clip--sq"><img src="assets/media/hero/hero-04-procession-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li class="trk-clip"><img src="assets/media/hero/hero-03-lightpaint-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li class="trk-clip"><img src="assets/media/hero/hero-05-hilltop-900.webp" alt="" loading="lazy" decoding="async"></li>
     </ul>
   </div>
 </section>
 
-<section class="sec sec-tracks-rest" aria-label="The other two tracks">
-  <div class="wrap">
-    <div class="tracks tracks-rest">
-
-      <article class="track reveal">
-        <p class="track-n">Track 2</p>
-        <h3 class="h3">Content Creation Track</h3>
-        <p class="track-days"><span class="tag">Tuesdays &amp; Thursdays</span> <span class="tag tag-q">Weeks 4—9</span></p>
-        <figure class="slot slot-track" style="--ar:9/16" data-slot="track-content">
-          <div class="slot-box">
-            <div class="slot-ph">
-              <span class="slot-meta">track-content · 9:16 · 1080×1920 · LOOP</span>
-              <span class="slot-desc">Phone-shot content as it appears in feed. 5–8s.</span>
-              <span class="slot-path">assets/media/track-content.mp4</span>
-            </div>
-          </div>
-        </figure>
-        <dl class="track-dl">
-          <dt>Who it's for</dt>
-          <dd>For people making work for a phone screen who want it to actually land.</dd>
-          <dt>What you learn</dt>
-          <dd>Mobile-first, start to finish. What you shoot and how you shoot it. Why B-roll matters more than you think. The Hook Strategy and the retention mechanics behind it. Sound design for content. Lighting people, lighting products, filming outdoors. Then niche, SEO and monetization.</dd>
-          <dt>What you leave with</dt>
-          <dd class="track-out">A published body of work and a strategy that isn't guesswork.</dd>
-        </dl>
-        <p class="track-pull">The part nobody teaches properly.</p>
-      </article>
-
-      <article class="track reveal">
-        <p class="track-n">Track 3</p>
-        <h3 class="h3">The Finisher's Track</h3>
-        <p class="track-days"><span class="tag">Wednesdays &amp; Fridays</span> <span class="tag tag-q">Weeks 4—9</span></p>
-        <figure class="slot slot-track" style="--ar:16/9" data-slot="track-finishers">
-          <div class="slot-box">
-            <div class="slot-ph">
-              <span class="slot-meta">track-finishers · 16:9 · 1600×900 · STILL</span>
-              <span class="slot-desc">An NLE timeline mid-cut, or a grade before/after.</span>
-              <span class="slot-path">assets/media/track-finishers.jpg</span>
-            </div>
-          </div>
-        </figure>
-        <dl class="track-dl">
-          <dt>Who it's for</dt>
-          <dd>For people who'd rather be in the edit than on set.</dd>
-          <dt>What you learn</dt>
-          <dd>Post-production from the ground up: stages, file organization, assembly. The Rule of Six. Intention and rhythm. Multicam and delivery. Colour grading. Sound editing. Titles, motion graphics and basic VFX. Finishing, mastering and delivery.</dd>
-          <dt>What you leave with</dt>
-          <dd class="track-out">An editor's reel — a scene, a music video, an interview, Instagram content — plus the finished film the whole school made.</dd>
-        </dl>
-        <p class="track-note">You'll need a working computer and a durable hard drive of at least 1TB, from week four.</p>
-        <p class="track-pull">Where am I going, what am I saying?</p>
-      </article>
-
+<!-- Track 2 — Content Creation -->
+<section class="trk trk--content" id="track-content" aria-labelledby="tf2-h" data-trk>
+  <div class="trk-inner">
+    <h3 id="tf2-h" class="trk-h trk-anim" style="--i:0">The Content Creation Track</h3>
+    <dl class="trk-sched trk-anim" style="--i:1">
+      <div><dt class="sr-only">Days</dt><dd class="trk-sched-lead">Tuesdays &amp; Thursdays</dd></div>
+      <div><dt class="sr-only">Learning</dt><dd>10 weeks of learning</dd></div>
+      <div><dt class="sr-only">Creating</dt><dd>7 weeks of creating</dd></div>
+    </dl>
+    <div class="trk-body">
+      <section class="trk-blk trk-anim" style="--i:2">
+        <h4 class="trk-k">Who it's for</h4>
+        <p>For people making work for a phone screen who want it to actually land.</p>
+      </section>
+      <section class="trk-blk trk-anim" style="--i:3">
+        <h4 class="trk-k">What you learn</h4>
+        <p>Mobile-first, start to finish. What you shoot and how you shoot it. Why B-roll matters more than you think.</p>
+        <p>The Hook Strategy and the retention mechanics behind it. Sound design for content. Lighting people, lighting products, filming outdoors. Then niche, SEO and monetization.</p>
+      </section>
+      <section class="trk-blk trk-anim" style="--i:4">
+        <h4 class="trk-k">What you leave with</h4>
+        <p>A published body of work and a strategy that isn't guesswork.</p>
+      </section>
     </div>
+    <ul class="trk-grid trk-anim" style="--i:3" aria-hidden="true">
+      <li><img src="assets/media/hero/hero-02-lagoon-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><img src="assets/media/reel/reel-poster-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><img src="assets/media/loop/loop-poster-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><img src="assets/media/hero/hero-04-procession-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><img src="assets/media/hero/hero-05-hilltop-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li><img src="assets/media/hero/hero-03-lightpaint-900.webp" alt="" loading="lazy" decoding="async"></li>
+    </ul>
+  </div>
+</section>
 
+<!-- Track 3 — The Finisher's -->
+<section class="trk trk--finisher" id="track-finisher" aria-labelledby="tf3-h" data-trk>
+  <div class="trk-inner">
+    <h3 id="tf3-h" class="trk-h trk-anim" style="--i:0">The Finisher's Track</h3>
+    <dl class="trk-sched trk-anim" style="--i:1">
+      <div><dt class="sr-only">Days</dt><dd class="trk-sched-lead">Wednesdays &amp; Fridays</dd></div>
+      <div><dt class="sr-only">Learning</dt><dd>9 weeks of learning</dd></div>
+      <div><dt class="sr-only">Creating</dt><dd>3 weeks of creating</dd></div>
+    </dl>
+    <div class="trk-body">
+      <section class="trk-blk trk-anim" style="--i:2">
+        <h4 class="trk-k">Who it's for</h4>
+        <p>For people who'd rather be in the edit than on set.</p>
+      </section>
+      <section class="trk-blk trk-anim" style="--i:3">
+        <h4 class="trk-k">What you learn</h4>
+        <p>Post-production from the ground up: stages, file organization, assembly. The Rule of Six. Intention and rhythm. Multicam and delivery. Colour grading. Sound editing. Titles, motion graphics and basic VFX. Finishing, mastering and delivery.</p>
+      </section>
+      <section class="trk-blk trk-anim" style="--i:4">
+        <h4 class="trk-k">What you leave with</h4>
+        <p>An editor's reel, a scene, a music video, an interview, Instagram content, plus the finished film the whole school made.</p>
+      </section>
+    </div>
+    <figure class="trk-single trk-anim" style="--i:3" aria-hidden="true">
+      <img src="assets/media/hero/hero-05-hilltop-1440.webp" alt="" loading="lazy" decoding="async">
+    </figure>
+  </div>
+</section>
+
+<section class="sec sec-tracks-foot">
+  <div class="wrap">
     <p class="reassure reveal">Don't own a camera? Most of the first three weeks is shot on phones. Come anyway.</p>
   </div>
 </section>
@@ -866,30 +861,12 @@
 <script src="hero.js" defer></script>
 <script src="hero-shader.js" defer></script>
 
-<!-- ============ FILM TRACK SCROLLYTELLING ============
-     GSAP (core + ScrollTrigger) and Lenis are ~128KB, so they are NOT loaded
-     on every visit. They are fetched only where the pinned scroll animation
-     actually runs: a wide viewport with motion allowed. Below 1024, on a
-     phone's data, and under prefers-reduced-motion, none of this is requested
-     and the Film section stays the static CSS layout. Injected scripts run in
-     insertion order because async is forced false, so track-film.js always
-     sees gsap, ScrollTrigger and Lenis defined. Self-hosted in vendor/, never
-     a CDN — same rule as the fonts. -->
-<script>
-(function () {
-  try {
-    var wide = window.matchMedia('(min-width: 1024px)').matches;
-    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!wide || reduced) return;
-    ['vendor/gsap.min.js', 'vendor/ScrollTrigger.min.js', 'vendor/lenis.min.js', 'track-film.js']
-      .forEach(function (src) {
-        var s = document.createElement('script');
-        s.src = src; s.async = false;   /* preserve execution order */
-        document.head.appendChild(s);
-      });
-  } catch (e) { /* no matchMedia → leave the static section as-is */ }
-})();
-</script>
+<!-- The three track sections reveal their pieces once, staggered, as each
+     scrolls into view. Pure IntersectionObserver + CSS — native scroll, no
+     pinning and no smooth-scroll library, so the page stays fast and the feel
+     is the browser's own. ~1KB, and it degrades to fully-visible with no JS
+     and under prefers-reduced-motion. -->
+<script src="tracks.js" defer></script>
 
 <!-- ============ ON-DEVICE WIDTH READOUT ============
      Opt-in only: append ?widthcheck to the URL. Nothing renders, and nothing
