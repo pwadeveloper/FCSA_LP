@@ -52,6 +52,7 @@
     startLenis();
 
     var media = q('[data-tf="media"]');
+    var scrim = q('.trk-scrim');
     var n     = q('[data-tf="n"]');
     var title = q('[data-tf="title"]');
     var sched = q('[data-tf="sched"]');
@@ -59,13 +60,13 @@
     var clips = qa('.trk-clip');
 
     var tl = gsap.timeline({
-      defaults: { ease: 'power2.out' },
+      defaults: { ease: 'power3.out' },
       scrollTrigger: {
         trigger: section,
         start: 'top top',
-        end: '+=185%',           /* the pinned scroll length the reveal plays over */
+        end: '+=200%',           /* the pinned scroll length the reveal plays over */
         pin: true,
-        scrub: 0.7,
+        scrub: 0.8,
         anticipatePin: 1,
         invalidateOnRefresh: true
       }
@@ -82,18 +83,41 @@
     var rise = function (el, vars, at) {
       tl.fromTo(el,
         Object.assign({ opacity: 0 }, vars.from),
-        Object.assign({ opacity: 1, duration: 0.5 }, vars.to), at);
+        Object.assign({ opacity: 1, duration: 0.55, ease: 'power3.out' }, vars.to), at);
     };
 
-    /* The portrait eases out of a gentle push-in across the whole scrub. */
-    tl.fromTo(media, { scale: 1.12 }, { scale: 1, ease: 'none', duration: 1.28 }, 0);
+    /* THE PORTRAIT settles out of a slow push-in across the whole scrub, with a
+       hair of vertical drift. It never reaches scale 1 — it stays overscanned
+       (>=1.04) the entire time so the drift can never expose an edge. This runs
+       the full length so the frame is always quietly moving under the copy. */
+    tl.fromTo(media,
+      { scale: 1.14, yPercent: -1.6 },
+      { scale: 1.04, yPercent: 1.6, ease: 'none', duration: 1.8 }, 0);
 
-    rise(n,       { from: { y: 24 },        to: { y: 0 } }, 0.02);
-    rise(title,   { from: { yPercent: 45 }, to: { yPercent: 0 } }, 0.02);
-    rise(sched,   { from: { y: -18 },       to: { y: 0 } }, 0.14);
-    rise(blks[0], { from: { y: 42 },        to: { y: 0 } }, 0.30);
-    rise(blks[1], { from: { y: 42 },        to: { y: 0 } }, 0.46);
-    tl.fromTo(clips, { opacity: 0, y: 64 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.07 }, 0.64);
+    /* The frame is brightest first, then the scrim deepens as the copy lands on
+       it — the picture reads before the type covers its dark side. */
+    tl.fromTo(scrim, { opacity: 0.4 }, { opacity: 1, ease: 'power1.inOut', duration: 0.7 }, 0.15);
+
+    /* Beat 1 — eyebrow + title. The title wipes up behind a mask AND lifts a
+       little, so it assembles rather than just fading. The -6%/106% insets keep
+       ascenders and descenders from ever clipping at rest. */
+    rise(n, { from: { y: 26 }, to: { y: 0 } }, 0.20);
+    tl.fromTo(title,
+      { opacity: 0, yPercent: 12, clipPath: 'inset(0 0 106% 0)' },
+      { opacity: 1, yPercent: 0, clipPath: 'inset(0 0 -6% 0)', ease: 'power4.out', duration: 0.7 }, 0.22);
+
+    /* Beat 2 — schedule, top-right, slides in from its own corner. */
+    rise(sched, { from: { y: -16, x: 14 }, to: { y: 0, x: 0 } }, 0.44);
+
+    /* Beat 3 — the two copy blocks, one after the other. */
+    rise(blks[0], { from: { y: 46 }, to: { y: 0 } }, 0.60);
+    rise(blks[1], { from: { y: 46 }, to: { y: 0 } }, 0.78);
+
+    /* Beat 4 — the clips deal in from the foot, staggered, with a touch of
+       scale so they feel placed rather than faded. */
+    tl.fromTo(clips,
+      { opacity: 0, y: 72, scale: 0.94 },
+      { opacity: 1, y: 0, scale: 1, ease: 'power3.out', duration: 0.6, stagger: 0.1 }, 1.02);
 
     return function () {         /* cleanup when the query stops matching */
       tl.scrollTrigger && tl.scrollTrigger.kill();
