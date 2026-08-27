@@ -64,6 +64,56 @@ def run(args):
         raise SystemExit(' '.join(args[:3]) + ' failed')
 
 
+def zero_edit_list(path):
+    """Neutralise the edit list libx264 emits, so the loop is seamless.
+
+    libx264 uses B-frames (good — they pay for themselves on this montage), and
+    the mov muxer represents the resulting reorder delay as an edit list with a
+    non-zero media_time — measured 1024 @ a 12288 media timescale, i.e. the
+    first 83ms of the track are skipped on playback. A `loop` attribute then
+    has to seek back to that offset every cycle, and browsers do that
+    inconsistently: sometimes it loops, sometimes it stalls on the last frame.
+    (Same family of problem as the black tail frame TRIM already removes.)
+
+    Setting media_time to 0 makes the edit an identity map, which every engine
+    loops cleanly, and starts playback on frame 0 — the exact frame the poster
+    is extracted from, so the poster->video handoff is now frame-accurate too.
+    Only a single 4-byte field changes; sample tables and mdat are untouched,
+    so the encode is bit-for-bit identical to decode. Doing it here rather than
+    with an ffmpeg flag because no libx264 flag reliably suppresses the edit
+    list without also giving up B-frames."""
+    import struct
+    data = bytearray(open(path, 'rb').read())
+
+    def find(path_boxes):
+        def rec(off, end, p):
+            while off < end - 8:
+                size = struct.unpack('>I', data[off:off + 4])[0]
+                typ, hdr = data[off + 4:off + 8], 8
+                if size == 1:
+                    size = struct.unpack('>Q', data[off + 8:off + 16])[0]; hdr = 16
+                elif size == 0:
+                    size = end - off
+                if typ == p[0]:
+                    if len(p) == 1:
+                        return off + hdr
+                    r = rec(off + hdr, off + size, p[1:])
+                    if r is not None:
+                        return r
+                off += size
+            return None
+        return rec(0, len(data), [b.encode() for b in path_boxes])
+
+    o = find(['moov', 'trak', 'edts', 'elst'])
+    if o is None:
+        return  # no edit list, nothing to do
+    ver, cnt = data[o], struct.unpack('>I', data[o + 4:o + 8])[0]
+    if ver != 0 or cnt != 1:
+        return  # unexpected shape — leave it rather than guess
+    struct.pack_into('>i', data, o + 8 + 4, 0)  # entry0.media_time -> 0
+    open(path, 'wb').write(data)
+
+
 def encode(w, rate):
     h = round(w * 9 / 16 / 2) * 2
     dst = os.path.join(OUT, f'background-loop-{h}.mp4')
@@ -88,6 +138,7 @@ def encode(w, rate):
     for f in os.listdir(OUT):
         if f.startswith('.x264-'):
             os.remove(os.path.join(OUT, f))
+    zero_edit_list(dst)   # make the loop seamless — see the function's note
     return dst
 
 
