@@ -772,28 +772,39 @@ a { color: inherit; }
   padding: clamp(2rem, 7vw, 3rem) var(--edge-l) clamp(2.5rem, 6vw, 3.5rem) var(--edge-r);
 }
 
+/* Sizes are calibrated to the spec at a 1512px frame and expressed as
+   vw-clamps so they hit the exact px there and scale on any other width:
+   1px @1512 = 0.0661vw. Title 64 REGULAR, labels + schedule 20 SEMI BOLD /
+   REGULAR, body 16 REGULAR, 50px between blocks. "Semi bold" maps to Delight
+   700 — the family ships 400/700/900, so 600 would only be faux-bolded. */
 .trk-h {
-  font-size: clamp(2.25rem, 8vw, 2.9rem);
-  font-weight: 400; line-height: 1.02; letter-spacing: -0.01em;
+  font-size: clamp(2.5rem, 4.23vw, 4rem);          /* 64px @1512 */
+  font-weight: 400; line-height: 1.03; letter-spacing: -0.01em;
   color: var(--paper); text-wrap: balance; margin-bottom: 1.5rem;
 }
 
 .trk-sched {
-  display: flex; flex-direction: column; gap: .15rem; margin-bottom: 2rem;
-  text-transform: uppercase; letter-spacing: .07em;
-  font-size: var(--t-1); font-weight: 400; color: var(--mute);
-  font-feature-settings: 'tnum' 1;
+  display: flex; flex-direction: column; gap: .2rem; margin-bottom: 2rem;
+  text-transform: uppercase; letter-spacing: .04em;
+  font-size: clamp(1rem, 1.32vw, 1.25rem);         /* 20px @1512, REGULAR */
+  font-weight: 400; color: var(--mute); font-feature-settings: 'tnum' 1;
 }
 .trk-sched dd { color: var(--mute); }
-.trk-sched .trk-sched-lead { color: var(--paper); font-weight: 700; }
+.trk-sched .trk-sched-lead { color: var(--paper); font-weight: 700; }   /* SEMI BOLD */
 
-.trk-body { display: flex; flex-direction: column; gap: clamp(1.75rem, 3.5vw, 2.75rem); }
+.trk-body { display: flex; flex-direction: column; gap: clamp(1.75rem, 3.3vw, 3.125rem); }  /* 50px @1512 */
 .trk-k {
-  font-size: var(--t-2); text-transform: uppercase; letter-spacing: .1em;
-  font-weight: 700; color: var(--paper); margin-bottom: .7rem;
+  font-size: clamp(1rem, 1.32vw, 1.25rem);         /* 20px @1512, SEMI BOLD */
+  text-transform: uppercase; letter-spacing: .04em;
+  font-weight: 700; color: var(--paper);
+  margin-bottom: clamp(.5rem, .66vw, .625rem);     /* ~10px @1512 */
 }
-.trk-blk p { color: var(--body); font-size: 0.9375rem; line-height: 1.5; max-width: 34ch; text-wrap: pretty; }
-.trk-blk p + p { margin-top: .85rem; }
+.trk-blk p {
+  color: var(--body);
+  font-size: clamp(0.9375rem, 1.06vw, 1rem);       /* 16px @1512, REGULAR */
+  line-height: 1.45; max-width: clamp(220px, 16.7vw, 252px); text-wrap: pretty;
+}
+.trk-blk p + p { margin-top: 1rem; }
 
 /* ---------- media ---------- */
 /* Film — full-frame portrait behind everything. On mobile it is the section's
@@ -804,13 +815,13 @@ a { color: inherit; }
   position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(to top, rgb(0 0 0 / 0.82) 0%, rgb(0 0 0 / 0.45) 38%, rgb(0 0 0 / 0.15) 70%, rgb(0 0 0 / 0.35) 100%);
 }
-.trk-clips { display: flex; gap: clamp(.5rem, 2vw, .9rem); margin-top: 2.25rem; }
-.trk-clips li { flex: 1 1 0; min-width: 0; }
+/* Three equal clips, 428x225 (~1.902:1) at the spec frame. */
+.trk-clips { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(.5rem, 1.72vw, 1.625rem); margin-top: 2.25rem; }
+.trk-clips li { min-width: 0; }
 .trk-clip img, .trk-grid img, .trk-single img {
   display: block; width: 100%; height: 100%; object-fit: cover; background: #0A0A0A;
 }
-.trk-clip img { aspect-ratio: 16 / 9; }
-.trk-clip--sq img { aspect-ratio: 3 / 4; }
+.trk-clip img { aspect-ratio: 428 / 225; }
 
 /* Content — a grid of vertical (9:16) frames. */
 .trk-grid {
@@ -1533,22 +1544,29 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
      the right (or, for Film, behind everything with a clip row along the foot).
      No pin, no scrub — the section just fills the frame and its pieces reveal
      on enter. */
+  /* Gutter and vertical padding are the spec's, calibrated to 1512: an 88px
+     side gutter (5.82vw), and a top that clears the floating header (the comp
+     has none) so the title and the top-right schedule sit below the mark and
+     the Apply pill rather than under them. */
   .trk { min-height: 100svh; display: flex; }
   .trk-inner {
+    --trk-gutter: clamp(25px, 5.82vw, 96px);       /* 88px @1512 */
     width: 100%; min-height: 100svh;
     display: grid;
-    column-gap: clamp(2rem, 4vw, 4rem);
+    column-gap: clamp(1.5rem, 3vw, 3rem);
     row-gap: clamp(1.5rem, 3vh, 2.5rem);
-    padding: calc(var(--head-pad-top) + var(--head-mark-compact) + clamp(1rem, 4vh, 2.5rem))
-             var(--edge-r) clamp(2rem, 5vh, 3.25rem) var(--edge-l);
+    padding: calc(var(--head-pad-top) + var(--head-mark-compact) + clamp(.5rem, 2.5vh, 1.5rem))
+             var(--trk-gutter) clamp(2.5rem, 6vh, 4rem) var(--trk-gutter);
   }
-  .trk-h     { font-size: clamp(2.5rem, 4.2vw, 3.9rem); line-height: 1.0; max-width: 20ch; margin-bottom: 0; }
+  .trk-h     { margin-bottom: 0; max-width: 18ch; }   /* size comes from the base 64px clamp */
   .trk-sched { grid-area: sched; justify-self: end; text-align: right; align-self: start; margin-bottom: 0; }
-  .trk-body  { grid-area: body; max-width: 32ch; gap: clamp(1.75rem, 3vh, 2.75rem); }
+  .trk-body  { grid-area: body; align-self: start; }  /* width + 50px gap from the base */
 
-  /* Film — portrait behind everything, clips along the foot. */
+  /* Film — portrait behind everything, three 428x225 clips across the foot.
+     col1 is `auto` so it is exactly the title's width and the title never
+     wraps; the body (its own narrow measure) sits inside it, left-aligned. */
   .trk--film .trk-inner {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
       "title sched"
@@ -1556,18 +1574,16 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
       "clips clips";
   }
   .trk--film .trk-h { grid-area: title; align-self: start; }
-  .trk--film .trk-body { align-self: center; }
   .trk-bg-img { object-position: 58% 26%; }
   .trk--film .trk-scrim {
     /* left- and foot-weighted: type sits left and along the bottom */
     background:
-      linear-gradient(to right, rgb(0 0 0 / 0.8) 0%, rgb(0 0 0 / 0.3) 36%, rgb(0 0 0 / 0) 62%),
+      linear-gradient(to right, rgb(0 0 0 / 0.8) 0%, rgb(0 0 0 / 0.3) 38%, rgb(0 0 0 / 0) 64%),
       linear-gradient(to top, rgb(0 0 0 / 0.72) 0%, rgb(0 0 0 / 0) 30%);
   }
-  .trk--film .trk-clips { grid-area: clips; align-self: end; margin-top: 0; max-width: 62%; }
-  .trk--film .trk-clip img { height: clamp(150px, 17vh, 210px); aspect-ratio: auto; }
-  .trk--film .trk-clip--sq { flex: 0 0 auto; }
-  .trk--film .trk-clip--sq img { width: auto; aspect-ratio: 3 / 4; }
+  /* Full content-width row: three equal cells, 26px gaps -> 428px each @1512,
+     and aspect-ratio gives the 225px height. */
+  .trk--film .trk-clips { grid-area: clips; align-self: end; margin-top: 0; }
 
   /* Content & Finisher — text left, media filling the right. Title spans the
      top so it can run wide; schedule sits in the top-right. */
@@ -1580,9 +1596,7 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
       "body  figs  figs";
   }
   .trk--content .trk-h,
-  .trk--finisher .trk-h { grid-area: title; align-self: start; }
-  .trk--content .trk-body { align-self: start; }
-  .trk--finisher .trk-body { align-self: start; }
+  .trk--finisher .trk-h { grid-area: title; align-self: start; max-width: none; }
 
   /* Content — six vertical (9:16) frames in 3x2. Each card gets a fixed,
      viewport-relative HEIGHT so two rows always fit the frame; the width
