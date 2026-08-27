@@ -211,8 +211,35 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
       var ready = function () { v.classList.add('is-ready'); };
       v.addEventListener('loadeddata', ready);
       v.addEventListener('playing', ready);
-      v.src = loopSrc();
+
+      /* BELT AND BRACES ON THE LOOP, because `loop` is the one media attribute
+         engines quietly drop. It is set as both property and attribute above,
+         and Chromium honours it — measured here, the wrap costs a single frame
+         (40.8ms against a 41.7ms median step). But honouring it requires the
+         engine to be able to seek the resource back to zero, and WebKit will
+         not seek a resource served by a host that answers 200 to a Range
+         request instead of 206. `python3 -m http.server`, which is what this
+         project is tested on and which README already flags, is exactly such a
+         host: in Safari that combination gives a video that plays once and
+         stops on its last frame.
+
+         So do not rely on it alone. When the native loop is dropped the
+         element fires `ended`, and this puts it back. Where the native loop
+         works `ended` never fires and none of this ever runs. */
+      v.addEventListener('ended', function () {
+        if (!loop) return;
+        try { v.currentTime = 0; } catch (e) {}
+        var p = v.play();
+        if (p && p.catch) p.catch(function () {});
+      });
+
+      /* IN THE DOM BEFORE IT GETS A URL. Resource selection on a detached
+         media element is the path engines disagree about — WebKit in
+         particular can finish selecting against an element that is not yet in
+         a document and end up ignoring attributes set alongside the src, `loop`
+         among them. Attached first, there is nothing to disagree about. */
       box.insertBefore(v, veil || vid);
+      v.src = loopSrc();
       loop = v;
     }
 
@@ -232,6 +259,19 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     function resume() {
       if (!loop || !shown || document.hidden) return;
       if (box.classList.contains('is-live')) return;
+      /* metadata until here, auto from here. The brief's point was not to
+         spend bytes ahead of need, and this line is the moment the need is
+         established: every gate has passed and the section is on screen.
+         Promoting here rather than off the `playing` event because `playing`
+         is not guaranteed to fire on a first play that never had to wait for
+         data — measured, it fired on some loads and not others, and a hint
+         that only sometimes applies is worse than none.
+
+         It buys the seam. Measured against a host that does NOT serve Range,
+         the wrap stalled 242ms at preload="metadata" because the head of the
+         file had been evicted and had to be fetched again. Holding the whole
+         2MB once we are committed to it takes the worst step to 51ms. */
+      loop.preload = 'auto';
       var p = loop.play();
       if (p && p.catch) p.catch(function () {});
     }

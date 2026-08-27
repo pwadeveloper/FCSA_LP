@@ -544,6 +544,44 @@ on the fold, and Chromium reports that zero-height overlap as intersecting. At
 `0` the loop plays and buffers its full 2MB for every reader who lands and never
 scrolls, with none of it on screen.
 
+#### Looping is not just the `loop` attribute
+
+`loop` is set as both property and attribute, and Chromium honours it —
+measured, the wrap costs a single frame (32.6ms against a 41.7ms median step at
+24fps). But honouring it requires the engine to seek the resource back to zero,
+and **WebKit will not seek a resource from a host that answers `200` to a Range
+request instead of `206`**. `python3 -m http.server` is exactly such a host, and
+it is what this project is tested on. In Safari that combination gives a video
+that plays once and stops on its last frame — which looks exactly like "the
+loop is broken" and is not a code fault at all.
+
+Three things guard it, and they are deliberately redundant:
+
+1. **`loop` as property and attribute.** The normal path.
+2. **An `ended` handler that rewinds and replays.** Where the native loop works
+   `ended` never fires and this never runs (verified: 0 events over 2.4 passes
+   on both a Range and a non-Range host). Where `loop` is dropped, this is what
+   puts it back.
+3. **The element is inserted into the DOM before it gets a `src`.** Resource
+   selection on a *detached* media element is the path engines disagree about;
+   WebKit can finish selecting against an element that is not yet in a document
+   and ignore attributes set alongside the src, `loop` among them.
+
+**`preload` is promoted from `metadata` to `auto` in `resume()`** — the moment
+every gate has passed and the section is on screen, not before. It buys the
+seam: measured against a non-Range host at `preload="metadata"`, the wrap
+stalled **242ms** because the head of the file had been evicted and had to be
+fetched again. Holding the whole 2MB once we are committed to it takes the
+worst frame-to-frame step to **51ms**, on both host types.
+
+Promoted in `resume()` rather than off the `playing` event because `playing` is
+not guaranteed to fire on a first play that never had to wait for data —
+measured, it fired on some loads and not others.
+
+> Testing locally: `python3 -m http.server` does not serve Range. If you are
+> checking loop or scrub behaviour, use a host that does, or you will be
+> debugging the server.
+
 **No `poster` attribute on the element.** The `<picture>` underneath already
 shows the same frame in AVIF at a third of the JPEG's bytes, and `poster` would
 fetch it a second time. The element starts at `opacity: 0` and fades in on
