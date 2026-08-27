@@ -132,14 +132,13 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 
    WHY IT IS ON html AND body, AND WHY hidden COMES BEFORE clip.
 
-   This page has three deliberate horizontal scrollers — .tl-scroll (1124px of
-   timeline), .prod-scroll (1765px) and .showcase-scroll (1400px). All three
-   are far wider than any phone, and all are correctly contained by their own
-   overflow. Chrome honours that: measured on the deployed build at 390,
-   body.scrollWidth is 390. (The curriculum marquee, a fourth and by far the
-   widest scroller at ~9368px, was the original trigger; it has since been
-   removed with the Foundation block, but the invariant it exposed stands for
-   the three that remain — and for any new one.)
+   This page has one deliberate horizontal scroller — .tl-scroll (1124px of
+   timeline). It is far wider than any phone, and is correctly contained by its
+   own overflow. Chrome honours that: measured on the deployed build at 390,
+   body.scrollWidth is 390. (The curriculum marquee, by far the widest scroller
+   at ~9368px, was the original trigger; it, the production strip and the
+   showcase scroller have all since been removed or rebuilt as grids, but the
+   invariant they exposed stands for .tl-scroll — and for any new scroller.)
 
    iOS SAFARI DOES NOT. It widens the LAYOUT viewport to the widest of them —
    measured at 2.84x the frame on a real device — and `overflow-x: clip` on
@@ -180,8 +179,7 @@ html, body {
 
    Applies to every horizontal scroller on the page. A new one MUST be added
    to this list, or the invariant breaks again the day it ships. */
-.tl-scroll,
-.prod-scroll {
+.tl-scroll {
   contain: paint;
 }
 
@@ -1148,20 +1146,6 @@ a { color: inherit; }
   .showcase { grid-template-columns: 1fr 1fr; column-gap: clamp(1rem, 2.5vw, 1.75rem); }
 }
 
-/* ---------- production strip ---------- */
-.sec-prod { border-top: 1px solid var(--rule); }
-.prod-scroll {
-  overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
-  /* scroll band: starts on the --edge line, bleeds to 0 on the right */
-  padding-inline: var(--edge-l) 0;
-  scrollbar-width: thin; scrollbar-color: var(--rule) transparent;
-}
-.prod-scroll::-webkit-scrollbar { height: 6px; }
-.prod-scroll::-webkit-scrollbar-thumb { background: var(--rule); }
-.prod-strip { display: flex; gap: 1rem; width: max-content; align-items: stretch; }
-.slot-strip { width: auto; }
-.slot-strip .slot-box { height: 240px; width: auto; aspect-ratio: var(--ar); }
-
 /* ---------- apply ---------- */
 .slot-apply { margin-bottom: clamp(2rem, 4vw, 2.75rem); }
 
@@ -1507,7 +1491,6 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 
 @media (min-width: 768px) {
   :root { --lane-w: 116px; --week-w: 92px; --lane-h: 128px; }
-  .slot-strip .slot-box { height: 300px; }
   .tl-foot { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
   .foot-top { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 1rem; }
   .foot-top .foot-sub:last-child { grid-column: 2; grid-row: 1 / 3; text-align: right; margin-top: 0; }
@@ -1638,7 +1621,6 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   .trk--finisher .trk-single { grid-area: figs; margin-top: 0; align-self: center; width: 100%; }
 
   .tl-hint { display: none; }
-  .slot-strip .slot-box { height: 340px; }
 
   /* showcase — the 8-tile masonry from the comp. Three groups of the 12-col
      rail: (5,3,4), (4,3,5) then (6,6). Each group's tiles fill the row exactly,
