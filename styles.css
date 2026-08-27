@@ -181,8 +181,7 @@ html, body {
    Applies to every horizontal scroller on the page. A new one MUST be added
    to this list, or the invariant breaks again the day it ships. */
 .tl-scroll,
-.prod-scroll,
-.showcase-scroll {
+.prod-scroll {
   contain: paint;
 }
 
@@ -1118,20 +1117,36 @@ a { color: inherit; }
    height and letting width follow keeps the ratio exact and the row balanced. */
 .slot-track[data-slot="track-content"] .slot-box { height: min(380px, 96vw); width: fit-content; max-width: 100%; }
 
-/* ---------- showcase ---------- */
+/* ---------- showcase — a masonry of partner work ----------
+   Eight bordered tiles, each a centred SHOWCASE placeholder with a caption
+   below it. Below 1024 they stack (one column on phones, two on tablets);
+   at >=1024 they resolve into the 3-across masonry from the comp. */
 .sec-showcase { border-top: 1px solid var(--rule); }
-/* Same affordance the timeline and the production strip carry. The showcase
-   is a horizontal scroller below 1024 and was the only one of the three with
-   nothing telling you so; at >=1024 it becomes a grid and .tl-hint's own
-   display:none in that block switches this off with it. */
-.showcase-hint { margin-top: 1rem; }
-.showcase-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
-.showcase-scroll::-webkit-scrollbar { height: 6px; }
-.showcase-scroll::-webkit-scrollbar-thumb { background: var(--rule); }
-.showcase { display: flex; gap: 1rem; width: max-content; align-items: start; }
-.showcase-scroll .showcase { padding-inline: var(--edge-l) 0; }
-.showcase .slot { width: 62vw; max-width: 340px; }
-.showcase .sc-02, .showcase .sc-05 { width: 42vw; max-width: 230px; }
+.showcase {
+  display: grid; grid-template-columns: 1fr; align-items: start;
+  gap: clamp(1.75rem, 5vw, 2.75rem);
+  margin: 0; padding: 0; list-style: none;
+}
+.showcase .slot { width: 100%; max-width: none; }
+.slot-fig { margin: 0; }
+/* the bordered placeholder tile — a subtle rule and a centred label. Real
+   media dropped into .slot-box covers the label and the border reads as the
+   media edge. */
+.showcase .slot-box {
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--rule); background: #0A0A0A;
+}
+.slot-tag {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  font-weight: 700; color: #9a9a9a;
+}
+.showcase .slot-cap {
+  margin-top: .9rem; color: var(--paper); font-weight: 400;
+  font-size: clamp(.875rem, 1vw, 1rem); line-height: 1.35;
+}
+@media (min-width: 560px) and (max-width: 1023.98px) {
+  .showcase { grid-template-columns: 1fr 1fr; column-gap: clamp(1rem, 2.5vw, 1.75rem); }
+}
 
 /* ---------- production strip ---------- */
 .sec-prod { border-top: 1px solid var(--rule); }
@@ -1565,15 +1580,23 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   /* Film — portrait behind everything, three 428x225 clips across the foot.
      col1 is `auto` so it is exactly the title's width and the title never
      wraps; the body (its own narrow measure) sits inside it, left-aligned. */
+  /* True 12-column grid so the copy sits in an exact 3-of-12 measure and the
+     foot clips are 4 columns each (3 clips = 12). Column gap matches the clip
+     gap (26px @1512) so the copy edge, the title and the clips all snap to the
+     same rail. Body = cols 1-3; schedule = cols 10-12; clips span all 12. */
   .trk--film .trk-inner {
-    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: clamp(.5rem, 1.72vw, 1.625rem);
+    grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
-      "title sched"
-      "body  ."
-      "clips clips";
+      "title title title title title title title title title sched sched sched"
+      "body  body  body  .     .     .     .     .     .     .     .     ."
+      "clips clips clips clips clips clips clips clips clips clips clips clips";
   }
   .trk--film .trk-h { grid-area: title; align-self: start; }
+  /* The 3-col grid area already sets the measure — let the copy fill it rather
+     than the base ~252px cap. */
+  .trk--film .trk-blk p { max-width: none; }
   .trk-bg-img { object-position: 58% 26%; }
   .trk--film .trk-scrim {
     /* left- and foot-weighted: type sits left and along the bottom */
@@ -1617,23 +1640,24 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   .tl-hint { display: none; }
   .slot-strip .slot-box { height: 340px; }
 
-  /* showcase becomes an asymmetric 12-column grid, no scrolling — so it takes
-     the frame on both sides again rather than bleeding right */
-  .showcase-scroll { overflow: visible; }
-  .showcase-scroll .showcase { padding-inline: var(--edge-l) var(--edge-r); }
+  /* showcase — the 8-tile masonry from the comp. Three groups of the 12-col
+     rail: (5,3,4), (4,3,5) then (6,6). Each group's tiles fill the row exactly,
+     so auto-flow drops them into three visual rows; align-items:start lets the
+     differing aspect ratios stagger the bottoms. A tall row-gap opens the air
+     between groups. */
   .showcase {
-    display: grid; width: auto;
-    grid-template-columns: repeat(12, 1fr);
-    gap: clamp(1rem, 2vw, 1.75rem);
-    align-items: start;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(1rem, 1.72vw, 1.625rem);
+    row-gap: clamp(3rem, 6vw, 5.5rem);
   }
-  .showcase .slot { width: 100%; max-width: none; }
   .sc-01 { grid-column: span 5; }
   .sc-02 { grid-column: span 3; }
   .sc-03 { grid-column: span 4; }
   .sc-04 { grid-column: span 4; }
   .sc-05 { grid-column: span 3; }
   .sc-06 { grid-column: span 5; }
+  .sc-07 { grid-column: span 6; }
+  .sc-08 { grid-column: span 6; }
 }
 
 @media (min-width: 1400px) {
