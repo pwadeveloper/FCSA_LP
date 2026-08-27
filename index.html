@@ -321,37 +321,78 @@
 </section>
 
 <!-- ============ TRACKS ============ -->
-<section class="sec" id="tracks" aria-labelledby="tracks-h">
+<section class="sec sec-tracks-head" id="tracks" aria-labelledby="tracks-h">
   <div class="wrap">
     <div class="sec-head reveal">
       <h2 id="tracks-h" class="h2">The three tracks</h2>
       <p class="sec-intro">Everyone starts together for three weeks. Then you choose.</p>
     </div>
+  </div>
+</section>
 
-    <div class="tracks">
+<!-- ============ TRACK 1 — FILM PRODUCTION ============
+     The first track, pulled out of the card grid into its own full-bleed
+     section. At >=1024 (and only when motion is allowed) it PINS and the
+     pieces reveal on scroll — track-film.js drives a GSAP ScrollTrigger
+     timeline over a Lenis-smoothed scroll. Below 1024, and under
+     prefers-reduced-motion, none of that loads: the section is a plain
+     stacked layout and every piece is visible from the start, so the content
+     never depends on the animation or on the ~128KB of libraries, which are
+     fetched only where the pin actually runs. -->
+<section class="trk" id="track-film" aria-labelledby="tf-h" data-trk-film>
+  <div class="trk-media" aria-hidden="true" data-tf="media">
+    <div class="trk-ph">
+      <span class="slot-meta">track-film-portrait · full-bleed · 1600×2000+ · STILL or LOOP</span>
+      <span class="slot-desc">A student, rim-lit, looking to camera. Head-and-shoulders, subject centre-right; the edges fall to near-black so the title and body type stay legible over them.</span>
+      <span class="slot-path">assets/media/track-film/portrait.*</span>
+    </div>
+    <div class="trk-scrim"></div>
+  </div>
 
-      <article class="track reveal">
-        <p class="track-n">Track 1</p>
-        <h3 class="h3">Film Production Track</h3>
-        <p class="track-days"><span class="tag">Mondays &amp; Saturdays</span> <span class="tag tag-q">Weeks 4—8</span></p>
-        <figure class="slot slot-track" style="--ar:2.39/1" data-slot="track-film">
-          <div class="slot-box">
-            <div class="slot-ph">
-              <span class="slot-meta">track-film · 2.39:1 · 1920×803 · STILL</span>
-              <span class="slot-desc">A frame from a finished short.</span>
-              <span class="slot-path">assets/media/track-film.jpg</span>
-            </div>
-          </div>
-        </figure>
-        <dl class="track-dl">
-          <dt>Who it's for</dt>
-          <dd>For people who want to tell a story with a camera and a crew.</dd>
-          <dt>What you learn</dt>
-          <dd>You'll learn composition and the master scene technique — coverage, the 180-degree rule, matching action. How to break down a script, build a budget, scout a location, and handle permits and IP rights in Nigeria. How to work with collaborators, navigate rewrites, and direct actors. How to run auditions, camera tests and a call sheet that people can actually follow.</dd>
-          <dt>What you leave with</dt>
-          <dd class="track-out">A short film you wrote, produced and directed, premiered to an audience.</dd>
-        </dl>
-      </article>
+  <div class="trk-inner">
+    <header class="trk-head">
+      <p class="trk-n" data-tf="n">Track 1</p>
+      <h3 id="tf-h" class="trk-h" data-tf="title">Film Production Track</h3>
+    </header>
+
+    <dl class="trk-sched" data-tf="sched">
+      <div><dt class="sr-only">Days</dt><dd class="trk-sched-lead">Mondays &amp; Saturdays</dd></div>
+      <div><dt class="sr-only">Learning</dt><dd>9 weeks of learning</dd></div>
+      <div><dt class="sr-only">Production</dt><dd>4 weeks of production</dd></div>
+    </dl>
+
+    <div class="trk-body">
+      <section class="trk-blk" data-tf="blk">
+        <h4 class="trk-k">Who it's for</h4>
+        <p>For people who want to tell a story with a camera and a crew.</p>
+      </section>
+      <section class="trk-blk" data-tf="blk">
+        <h4 class="trk-k">What you learn</h4>
+        <p>You'll learn composition and the master scene technique — coverage, the 180-degree rule, matching action. How to break down a script, build a budget, scout a location, and handle permits and IP rights in Nigeria.</p>
+        <p>How to work with collaborators, navigate rewrites, and direct actors. How to run auditions, camera tests and a call sheet that people can actually follow.</p>
+      </section>
+    </div>
+
+    <ul class="trk-clips" data-tf="clips">
+      <li class="trk-clip"><div class="trk-ph" style="--ar:4/3">
+        <span class="slot-meta">film-clip-01 · 4:3</span>
+        <span class="slot-path">assets/media/track-film/clip-01.*</span>
+      </div></li>
+      <li class="trk-clip"><div class="trk-ph" style="--ar:16/9">
+        <span class="slot-meta">film-clip-02 · 16:9</span>
+        <span class="slot-path">assets/media/track-film/clip-02.*</span>
+      </div></li>
+      <li class="trk-clip"><div class="trk-ph" style="--ar:16/9">
+        <span class="slot-meta">film-clip-03 · 16:9</span>
+        <span class="slot-path">assets/media/track-film/clip-03.*</span>
+      </div></li>
+    </ul>
+  </div>
+</section>
+
+<section class="sec sec-tracks-rest" aria-label="The other two tracks">
+  <div class="wrap">
+    <div class="tracks tracks-rest">
 
       <article class="track reveal">
         <p class="track-n">Track 2</p>
@@ -824,6 +865,31 @@
      screen. Both are deferred so neither can block the LCP paint. -->
 <script src="hero.js" defer></script>
 <script src="hero-shader.js" defer></script>
+
+<!-- ============ FILM TRACK SCROLLYTELLING ============
+     GSAP (core + ScrollTrigger) and Lenis are ~128KB, so they are NOT loaded
+     on every visit. They are fetched only where the pinned scroll animation
+     actually runs: a wide viewport with motion allowed. Below 1024, on a
+     phone's data, and under prefers-reduced-motion, none of this is requested
+     and the Film section stays the static CSS layout. Injected scripts run in
+     insertion order because async is forced false, so track-film.js always
+     sees gsap, ScrollTrigger and Lenis defined. Self-hosted in vendor/, never
+     a CDN — same rule as the fonts. -->
+<script>
+(function () {
+  try {
+    var wide = window.matchMedia('(min-width: 1024px)').matches;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!wide || reduced) return;
+    ['vendor/gsap.min.js', 'vendor/ScrollTrigger.min.js', 'vendor/lenis.min.js', 'track-film.js']
+      .forEach(function (src) {
+        var s = document.createElement('script');
+        s.src = src; s.async = false;   /* preserve execution order */
+        document.head.appendChild(s);
+      });
+  } catch (e) { /* no matchMedia → leave the static section as-is */ }
+})();
+</script>
 
 <!-- ============ ON-DEVICE WIDTH READOUT ============
      Opt-in only: append ?widthcheck to the URL. Nothing renders, and nothing

@@ -433,7 +433,7 @@ a bug to fix elsewhere.
 
 ## MEDIA MANIFEST
 
-Seventeen slots. Sixteen render on the page as labelled placeholders;
+Twenty slots. Nineteen render on the page as labelled placeholders;
 `og-image` is the social card and is built, not photographed. The reel is not
 in this table — it is shot, cut and delivered, and has its own section below.
 **Every slot needs original or licensed material.** The hero reference comp
@@ -444,7 +444,10 @@ Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the same name.
 
 | Slot | Section | Path | Ratio | Dimensions | Type | What it is | Status |
 |---|---|---|---|---|---|---|---|
-| `track-film` | Track 1 | `assets/media/track-film.jpg` | 2.39:1 | 1920×803 | STILL | A frame from a finished short. |  |
+| `track-film-portrait` | Track 1 | `assets/media/track-film/portrait.*` | ~4:5, full-bleed | 1600×2000+ | STILL or LOOP | A student, rim-lit, looking to camera. Head-and-shoulders, subject centre-right; edges fall to near-black so the title and body type stay legible over them. |  |
+| `film-clip-01` | Track 1 | `assets/media/track-film/clip-01.*` | 4:3 | — | STILL or LOOP | Foot-row clip, film track. |  |
+| `film-clip-02` | Track 1 | `assets/media/track-film/clip-02.*` | 16:9 | — | STILL or LOOP | Foot-row clip, film track. |  |
+| `film-clip-03` | Track 1 | `assets/media/track-film/clip-03.*` | 16:9 | — | STILL or LOOP | Foot-row clip, film track. |  |
 | `track-content` | Track 2 | `assets/media/track-content.mp4` | 9:16 | 1080×1920 | LOOP | Phone-shot content as it appears in feed. 5–8s. |  |
 | `track-finishers` | Track 3 | `assets/media/track-finishers.jpg` | 16:9 | 1600×900 | STILL | An NLE timeline mid-cut, or a grade before/after. |  |
 | `showcase-01` | Showcase | `assets/media/showcase-01.mp4` | 16:9 | 1920×1080 | LOOP | Tutor work. |  |
@@ -878,6 +881,11 @@ assets/
   media/reel-720.mp4               8.3MB
   media/reel/reel-poster-{900,1440,1920}.{avif,webp,jpg}
   media/reel/reel-poster-master.png   frame 42.5, build input — gitignored
+  track-film.js                    Track 1 pinned scrollytelling (GSAP + Lenis)
+vendor/
+  gsap.min.js                      GSAP 3.12.5 core   — self-hosted, not a CDN
+  ScrollTrigger.min.js             GSAP ScrollTrigger — the scroll-driven pin
+  lenis.min.js                     Lenis 1.1.x        — global smooth scroll
 tools/
   hero-derivatives.py              regenerates the hero ladder + stamps index.html
   reel-poster.py                   regenerates the reel poster ladder
@@ -887,6 +895,15 @@ Fonts are self-hosted rather than called from Google Fonts: the audience is on
 mobile data, and self-hosting removes two DNS + TLS round trips before the
 first byte of font CSS arrives. Only the three weights the page actually uses
 are wired; `fonts/` at the repo root holds the rest of the family, unused.
+
+`vendor/` holds GSAP (core + ScrollTrigger) and Lenis, self-hosted for the same
+reason as the fonts — never a CDN. Together they are ~128KB raw / ~49KB
+gzipped, which is real weight against the budget, so they are **not** on the
+critical path: the loader at the foot of `index.html` fetches them, and
+`track-film.js`, only on a wide viewport (>=1024) with motion allowed. On a
+phone's data, and under `prefers-reduced-motion`, none of it is requested and
+the Film Track is a plain static layout. To upgrade, re-pull the same files
+from `registry.npmjs.org` (the CDN hosts are blocked; the registry is not).
 
 ## Notes for whoever picks this up
 
@@ -919,3 +936,16 @@ are wired; `fonts/` at the repo root holds the rest of the family, unused.
   `body.scrollWidth`. The curriculum marquee that first exposed it, and the
   Foundation block above it, have been removed; the guard now covers the three
   scrollers that remain (timeline, production, showcase).
+- **Film Track scrollytelling (Track 1).** `track-film.js` pins the Film
+  section and scrubs a GSAP timeline over a Lenis-smoothed scroll. Two things
+  to know before adding more of these: (1) **Lenis is global** — once it loads
+  (>=1024, motion allowed) it smooths the *whole* page's scroll, and it drives
+  `ScrollTrigger.update` off one shared `gsap.ticker` loop. A second smooth-
+  scroll library, or a ScrollTrigger that reads scroll independently, will
+  fight it. Reuse the single Lenis instance. (2) The reveal tweens are
+  `fromTo`, never `.from()` — a scrubbed timeline of chained `.from()` tweens
+  captures the wrong end value and the piece stays hidden at progress 1. (3)
+  It is gated at load: below 1024 and under reduced motion the libraries are
+  never fetched and the section is the static CSS layout, so nothing here may
+  become load-bearing for the content. When Tracks 2 and 3 get the same
+  treatment, extend this file rather than starting a second Lenis.

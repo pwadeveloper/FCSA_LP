@@ -750,6 +750,69 @@ a { color: inherit; }
   color: var(--paper); letter-spacing: -0.026em; max-width: 26ch;
 }
 
+/* The head section carries the intro only; its panels moved to the Film
+   section and the rest grid, so it should not draw the tight bottom margin
+   meant to close on a grid. */
+.sec-tracks-head { padding-bottom: clamp(1.5rem, 3vw, 2.25rem); }
+.sec-tracks-rest { padding-top: clamp(1.5rem, 3vw, 2.25rem); }
+
+/* ==========================================================================
+   TRACK 1 — FILM PRODUCTION, full-bleed
+   Base (below 1024) is a plain stacked layout, fully legible with no script:
+   media block, title, schedule, the two copy blocks, then the clip row. The
+   >=1024 rules turn it into the pinned, scroll-revealed comp; track-film.js
+   only adds motion on top of this same DOM, so nothing here depends on it.
+   ========================================================================== */
+.trk { position: relative; background: var(--ground); overflow: clip; }
+
+.trk-media { position: relative; width: 100%; aspect-ratio: 4 / 5; background: #0A0A0A; overflow: hidden; }
+.trk-media .trk-ph {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .5rem; text-align: center; padding: 1.25rem;
+  background: #0A0A0A; border: 1px dashed #444;
+}
+/* Bottom-anchored scrim so title/body clear the picture once a real asset
+   lands. Harmless over the placeholder. */
+.trk-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.75) 0%, rgb(0 0 0 / 0.35) 35%, rgb(0 0 0 / 0) 62%);
+}
+
+.trk-inner {
+  position: relative; z-index: 2;
+  padding: clamp(1.5rem, 5vw, 2.5rem) var(--edge-l) var(--edge-bottom) var(--edge-r);
+}
+.trk-head { margin-bottom: 1.5rem; }
+.trk-n { color: var(--mute); margin-bottom: .6rem; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; font-size: var(--t-2); }
+.trk-h {
+  font-size: var(--t4); font-weight: 900; line-height: 1.0;
+  letter-spacing: -0.032em; color: var(--paper); text-wrap: balance;
+}
+.trk-sched {
+  display: flex; flex-direction: column; gap: .1rem; margin-bottom: 1.75rem;
+  text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
+  font-size: var(--t-2); color: var(--mute); font-feature-settings: 'tnum' 1;
+}
+.trk-sched dd { color: var(--mute); }
+.trk-sched .trk-sched-lead { color: var(--paper); }
+
+.trk-body { display: flex; flex-direction: column; gap: 1.75rem; max-width: 42ch; }
+.trk-k { font-size: var(--t-2); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: var(--mute); margin-bottom: .6rem; }
+.trk-blk p { color: var(--body); text-wrap: pretty; }
+.trk-blk p + p { margin-top: .8rem; }
+
+.trk-clips { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(.5rem, 1.5vw, 1rem); margin-top: 2rem; }
+.trk-clip .trk-ph {
+  aspect-ratio: var(--ar, 16/9);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .4rem; text-align: center; padding: .75rem;
+  background: #0A0A0A; border: 1px dashed #444; overflow: hidden;
+}
+.trk-ph .slot-meta { font-size: 12px; line-height: 1.35; color: #888; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+.trk-ph .slot-desc { font-size: 12px; line-height: 1.45; color: #888; max-width: 34ch; font-weight: 400; }
+.trk-ph .slot-path { font-size: 12px; line-height: 1.35; color: #888; font-weight: 400; opacity: .8; }
+
 /* ==========================================================================
    MEDIA SLOTS
    Every slot holds its ratio with aspect-ratio, so nothing shifts when a real
@@ -1441,7 +1504,48 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
      near-full-width mobile bar. */
   .hero-actions .btn-outline { width: auto; min-height: 52px; }
   .partners { margin-top: clamp(3rem, 9vw, 8.5rem); }
-  .tracks { grid-template-columns: repeat(3, 1fr); }
+  /* Film moved out to its own full-bleed section, so the rest grid is 2-up. */
+  .tracks-rest { grid-template-columns: repeat(2, 1fr); }
+  .tracks:not(.tracks-rest) { grid-template-columns: repeat(3, 1fr); }
+
+  /* ---------- FILM TRACK, full-bleed pinned comp ----------
+     Full viewport, media absolute behind, content on a three-row grid: the
+     title top-left with the schedule top-right, the copy blocks mid-left over
+     the subject's dark side, and the clip row along the foot. track-film.js
+     pins this and scrubs the reveal; the layout itself is pure CSS. */
+  .trk { min-height: 100svh; }
+  .trk-media {
+    position: absolute; inset: 0; aspect-ratio: auto; width: 100%; height: 100%;
+    z-index: 0;
+  }
+  .trk-scrim {
+    /* left-weighted on desktop: the type sits left, the face centre-right */
+    background:
+      linear-gradient(to right, rgb(0 0 0 / 0.82) 0%, rgb(0 0 0 / 0.35) 34%, rgb(0 0 0 / 0) 60%),
+      linear-gradient(to top, rgb(0 0 0 / 0.7) 0%, rgb(0 0 0 / 0) 42%);
+  }
+  .trk-inner {
+    position: relative; z-index: 2;
+    min-height: 100svh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "head  sched"
+      "body  ."
+      "clips clips";
+    column-gap: clamp(1.5rem, 4vw, 3rem);
+    /* top clears the resting header, same basis as the hero */
+    padding: calc(var(--head-pad-top) + var(--head-mark-h) + 1rem) var(--edge-r) var(--edge-bottom) var(--edge-l);
+  }
+  .trk-head  { grid-area: head; margin-bottom: 0; align-self: start; }
+  .trk-sched { grid-area: sched; justify-self: end; text-align: right; align-self: start; margin-bottom: 0; }
+  .trk-body  { grid-area: body; align-self: center; max-width: 40ch; gap: clamp(1.75rem, 3vw, 2.75rem); }
+  .trk-clips { grid-area: clips; align-self: end; margin-top: 0; grid-template-columns: repeat(3, minmax(0, 22vw)); justify-content: start; gap: clamp(.75rem, 1.5vw, 1.25rem); }
+  .trk-clip .trk-ph { height: clamp(150px, 17vw, 230px); aspect-ratio: auto; }
+  .trk-h { font-size: clamp(2.5rem, 4.4vw, 4.25rem); line-height: 0.98; max-width: 14ch; }
+  .trk-sched .trk-sched-lead { font-size: var(--t-1); }
+
   .tl-hint { display: none; }
   .slot-strip .slot-box { height: 340px; }
 
