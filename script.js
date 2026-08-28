@@ -273,12 +273,59 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
          2MB once we are committed to it takes the worst step to 51ms. */
       loop.preload = 'auto';
       var p = loop.play();
-      if (p && p.catch) p.catch(function () {});
+      if (p && p.then) p.then(mark('playing'), blocked);
     }
-    function suspend() { if (loop) loop.pause(); }
+
+    /* ---------- the failure that looks like success ----------
+       A rejected play() used to be swallowed by an empty catch, and that is
+       the one outcome indistinguishable from working: the element is in the
+       DOM, `is-ready` has already fired off `loadeddata`, opacity is 1 — and
+       what you are looking at is frame zero, held. The poster underneath IS
+       frame zero, so a blocked autoplay and a suppressed loop and a healthy
+       first paint all render the same pixels. That is why it was reported as
+       "frozen on the first frame" rather than as an error: nothing anywhere
+       said otherwise.
+
+       Two things change. The state is written to the section as
+       data-loop-state, so the answer is one glance in devtools instead of a
+       guess. And a block is retried on the next real user gesture, which is
+       precisely what lifts an autoplay block — the reader scrolls or clicks
+       within a second or two of arriving, and the loop starts itself. */
+    function mark(state) {
+      return function () { box.setAttribute('data-loop-state', state); };
+    }
+
+    var gestureArmed = false;
+    var GESTURES = ['pointerdown', 'keydown', 'touchstart', 'wheel'];
+
+    function retryOnGesture() {
+      gestureArmed = false;
+      for (var i = 0; i < GESTURES.length; i++) {
+        document.removeEventListener(GESTURES[i], retryOnGesture);
+      }
+      resume();
+    }
+
+    function blocked() {
+      box.setAttribute('data-loop-state', 'blocked');
+      if (gestureArmed) return;
+      gestureArmed = true;
+      for (var i = 0; i < GESTURES.length; i++) {
+        document.addEventListener(GESTURES[i], retryOnGesture, { passive: true });
+      }
+    }
+
+    function suspend() {
+      if (loop) { loop.pause(); box.setAttribute('data-loop-state', 'paused'); }
+    }
 
     function syncLoop() {
-      if (!loopAllowed()) { dropLoop(); return; }
+      if (!loopAllowed()) {
+        dropLoop();
+        box.setAttribute('data-loop-state', 'suppressed:' +
+          (!wideMq.matches ? 'width' : reducedMq.matches ? 'reduced-motion' : 'save-data'));
+        return;
+      }
       if (near) { makeLoop(); resume(); }
     }
 
