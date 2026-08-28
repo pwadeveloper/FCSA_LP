@@ -905,10 +905,14 @@ assets/
   media/reel-720.mp4               8.3MB
   media/reel/reel-poster-{900,1440,1920}.{avif,webp,jpg}
   media/reel/reel-poster-master.png   frame 42.5, build input — gitignored
+  media/finisher/fin-0N-*-{640,960,1280}.{avif,webp,jpg}   the Finisher's cycling frames
+  media/finisher track/            the seven masters, build inputs — gitignored
   tracks.js                        the three track sections reveal on enter (~1KB, no deps)
+  finisher-track.js                the Finisher's 500ms frame cycle, paused on hover
 tools/
   hero-derivatives.py              regenerates the hero ladder + stamps index.html
   reel-poster.py                   regenerates the reel poster ladder
+  finisher-track.py                regenerates the seven Finisher frames
 ```
 
 Fonts are self-hosted rather than called from Google Fonts: the audience is on
@@ -959,9 +963,29 @@ scroll — faster, ~128KB lighter, and it degrades to fully visible with no JS.
   top-right, the three copy blocks down the left, and the section's media on
   the right (or, for Film, a full-frame portrait behind everything with a clip
   row along the foot). Content carries a 3×2 grid of 9:16 frames sized by a
-  fixed viewport height so two rows always fit; Finisher a single 16:9 frame.
+  fixed viewport height so two rows always fit; Finisher a single 428/225 frame.
   The reveal is CSS-only: pieces carry `.trk-anim` with a per-element `--i`
   index, and `tracks.js` just adds `.in` to the section when it scrolls in — no
-  pin, no smooth-scroll library, native scroll. Images are placeholders pulled
-  from the repo (`hero/`, `reel/`, `loop/` posters), to be swapped for real
-  track media.
+  pin, no smooth-scroll library, native scroll. Film and Finisher now carry
+  real media; Content's grid is still placeholders pulled from the repo, to be
+  swapped.
+- **The Finisher's frame holds seven stills, cycling at a 500ms dwell** — the
+  six DaVinci Resolve pages in the app's own order (Photo, Cut, Edit, Fusion,
+  Color, Fairlight) and then the suite they are run from. `finisher-track.js`.
+  It **pauses while the pointer is over it**: half a second is a flick-through,
+  and the moment anyone wants to actually look at a page the pointer is already
+  there. It also **waits for all seven to decode before the first advance** —
+  at 500ms there is no time to fetch a frame between beats, so a frame that has
+  not arrived stutters on the one pass everybody sees; a 5s cap starts it
+  anyway rather than sitting on frame one forever. Same in-view / tab-hidden /
+  reduced-motion gating as the Film cycle.
+  The frames are built by `tools/finisher-track.py`, which **pillarboxes** the
+  16:9 screenshots instead of cropping them. Taking 1.778 to 1.902 by cropping
+  removes 26px off the top and 26px off the bottom, which in a 1440-wide
+  Resolve screenshot is almost exactly the menu bar and the page-switcher —
+  i.e. the strip that says which page you are looking at. The pad is `#17181A`,
+  the app's own corner chrome, so the seam does not read. The one master that
+  is already wider than the frame (the suite photograph) is centre-cropped at
+  the sides instead. Measured in AVIF, all seven frames: 142KB at the 640
+  rung (what a 390-wide phone pulls), 259KB at 960 (what a 1440 desktop pulls),
+  376KB at 1280.

@@ -909,13 +909,38 @@ a { color: inherit; }
   font-variant-numeric: tabular-nums;
 }
 
-/* Finisher — a single wide frame. */
-.trk-single { margin-top: 2.25rem; }
+/* Finisher — a single wide frame, holding seven stills that cycle. */
+/* A GRID STACK, not absolute positioning. All seven frames sit in the one
+   cell, so the figure still takes its height from its content the way a single
+   image did — the max-height/max-width caps in the >=1024 block go on keeping
+   it, and nothing had to be given an explicit height. Absolute frames (which
+   is how Film stacks its backgrounds) would have collapsed the figure to zero,
+   because Film's stack lives inside a section that already has a height and
+   this one does not. */
+.trk-single { margin-top: 2.25rem; display: grid; grid-template-areas: "frame"; }
+.trk-frame { grid-area: frame; display: block; min-width: 0; }
 /* 428/225 (1.902), the same ratio the Film clips are cut to and the ratio the
    Finisher comp measures (956x501 = 1.908). Declared at base so it is one
    house ratio at every width — when this lived only in the >=1024 block the
-   frame silently reverted to 16:9 on phones. */
+   frame silently reverted to 16:9 on phones. All seven derivatives are built
+   to this ratio by tools/finisher-track.py, so `cover` never has to crop and
+   the frame cannot change size mid-cycle. */
 .trk-single img { aspect-ratio: 428 / 225; }
+
+/* The cycle. 160ms, where the Film backgrounds get 900ms — the dwell here is
+   500ms, and a fade that is a third of the dwell reads as a cut with the flash
+   taken off it rather than as a crossfade. Longer and two frames are visibly
+   superimposed for most of the time either is up.
+   visibility is stepped, not faded, so a frame that is off is also out of the
+   way of hit-testing and of the accessibility tree. */
+.trk-frame {
+  opacity: 0; visibility: hidden;
+  transition: opacity .16s var(--ease), visibility 0s linear .16s;
+}
+.trk-frame.is-on { opacity: 1; visibility: visible; transition-delay: 0s, 0s; }
+@media (prefers-reduced-motion: reduce) {
+  .trk-frame { transition: none; }
+}
 
 /* ---------- reveal on enter ----------
    Each piece rises and fades once when its section scrolls in, staggered by

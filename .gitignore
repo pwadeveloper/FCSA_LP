@@ -24,3 +24,6 @@ assets/media/Film Track BG Image.jpg
 assets/media/2nd BG image film track.jpg
 assets/media/3rd bg image film track.jpg
 __pycache__/
+# Same rule for the seven Finisher Track frames: tools/finisher-track.py builds
+# the derivatives in assets/media/finisher/ and only those ship.
+assets/media/finisher track/

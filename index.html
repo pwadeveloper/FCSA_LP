@@ -520,8 +520,125 @@
         <p>An editor’s reel, a scene, a music video, an interview, Instagram content, plus the finished film the whole school made.</p>
       </section>
     </div>
-    <figure class="trk-single trk-anim" style="--i:3" aria-hidden="true">
-      <img src="assets/media/hero/hero-05-hilltop-1440.webp" alt="" loading="lazy" decoding="async">
+    <!-- SEVEN FRAMES, cycling on a 500ms dwell — Resolve's own page order
+         (Photo, Cut, Edit, Fusion, Color, Fairlight) and then the suite they
+         are run from. finisher-track.js owns the index; it waits for all seven
+         to decode before it starts, so the first pass through does not stutter,
+         and it pauses while the pointer is over the frame. Frame 1 carries
+         .is-on in the markup, so with no JS the strip is simply one still. -->
+    <figure class="trk-single trk-anim" style="--i:3" aria-hidden="true" data-fin-loop>
+      <picture class="trk-frame is-on" data-frame="0">
+        <source type="image/avif" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-01-photo-640.avif 640w,
+                        assets/media/finisher/fin-01-photo-960.avif 960w,
+                        assets/media/finisher/fin-01-photo-1280.avif 1280w">
+        <source type="image/webp" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-01-photo-640.webp 640w,
+                        assets/media/finisher/fin-01-photo-960.webp 960w,
+                        assets/media/finisher/fin-01-photo-1280.webp 1280w">
+        <img alt="" width="1541" height="810" loading="lazy" decoding="async"
+             sizes="(min-width: 1024px) 63vw, 92vw"
+             src="assets/media/finisher/fin-01-photo-960.jpg"
+             srcset="assets/media/finisher/fin-01-photo-640.jpg 640w,
+                     assets/media/finisher/fin-01-photo-960.jpg 960w,
+                     assets/media/finisher/fin-01-photo-1280.jpg 1280w">
+      </picture>
+      <picture class="trk-frame" data-frame="1">
+        <source type="image/avif" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-02-cut-640.avif 640w,
+                        assets/media/finisher/fin-02-cut-960.avif 960w,
+                        assets/media/finisher/fin-02-cut-1280.avif 1280w">
+        <source type="image/webp" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-02-cut-640.webp 640w,
+                        assets/media/finisher/fin-02-cut-960.webp 960w,
+                        assets/media/finisher/fin-02-cut-1280.webp 1280w">
+        <img alt="" width="1541" height="810" loading="lazy" decoding="async"
+             sizes="(min-width: 1024px) 63vw, 92vw"
+             src="assets/media/finisher/fin-02-cut-960.jpg"
+             srcset="assets/media/finisher/fin-02-cut-640.jpg 640w,
+                     assets/media/finisher/fin-02-cut-960.jpg 960w,
+                     assets/media/finisher/fin-02-cut-1280.jpg 1280w">
+      </picture>
+      <picture class="trk-frame" data-frame="2">
+        <source type="image/avif" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-03-edit-640.avif 640w,
+                        assets/media/finisher/fin-03-edit-960.avif 960w,
+                        assets/media/finisher/fin-03-edit-1280.avif 1280w">
+        <source type="image/webp" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-03-edit-640.webp 640w,
+                        assets/media/finisher/fin-03-edit-960.webp 960w,
+                        assets/media/finisher/fin-03-edit-1280.webp 1280w">
+        <img alt="" width="1541" height="810" loading="lazy" decoding="async"
+             sizes="(min-width: 1024px) 63vw, 92vw"
+             src="assets/media/finisher/fin-03-edit-960.jpg"
+             srcset="assets/media/finisher/fin-03-edit-640.jpg 640w,
+                     assets/media/finisher/fin-03-edit-960.jpg 960w,
+                     assets/media/finisher/fin-03-edit-1280.jpg 1280w">
+      </picture>
+      <picture class="trk-frame" data-frame="3">
+        <source type="image/avif" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-04-fusion-640.avif 640w,
+                        assets/media/finisher/fin-04-fusion-960.avif 960w,
+                        assets/media/finisher/fin-04-fusion-1280.avif 1280w">
+        <source type="image/webp" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-04-fusion-640.webp 640w,
+                        assets/media/finisher/fin-04-fusion-960.webp 960w,
+                        assets/media/finisher/fin-04-fusion-1280.webp 1280w">
+        <img alt="" width="1541" height="810" loading="lazy" decoding="async"
+             sizes="(min-width: 1024px) 63vw, 92vw"
+             src="assets/media/finisher/fin-04-fusion-960.jpg"
+             srcset="assets/media/finisher/fin-04-fusion-640.jpg 640w,
+                     assets/media/finisher/fin-04-fusion-960.jpg 960w,
+                     assets/media/finisher/fin-04-fusion-1280.jpg 1280w">
+      </picture>
+      <picture class="trk-frame" data-frame="4">
+        <source type="image/avif" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-05-color-640.avif 640w,
+                        assets/media/finisher/fin-05-color-960.avif 960w,
+                        assets/media/finisher/fin-05-color-1280.avif 1280w">
+        <source type="image/webp" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-05-color-640.webp 640w,
+                        assets/media/finisher/fin-05-color-960.webp 960w,
+                        assets/media/finisher/fin-05-color-1280.webp 1280w">
+        <img alt="" width="1541" height="810" loading="lazy" decoding="async"
+             sizes="(min-width: 1024px) 63vw, 92vw"
+             src="assets/media/finisher/fin-05-color-960.jpg"
+             srcset="assets/media/finisher/fin-05-color-640.jpg 640w,
+                     assets/media/finisher/fin-05-color-960.jpg 960w,
+                     assets/media/finisher/fin-05-color-1280.jpg 1280w">
+      </picture>
+      <picture class="trk-frame" data-frame="5">
+        <source type="image/avif" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-06-fairlight-640.avif 640w,
+                        assets/media/finisher/fin-06-fairlight-960.avif 960w,
+                        assets/media/finisher/fin-06-fairlight-1280.avif 1280w">
+        <source type="image/webp" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-06-fairlight-640.webp 640w,
+                        assets/media/finisher/fin-06-fairlight-960.webp 960w,
+                        assets/media/finisher/fin-06-fairlight-1280.webp 1280w">
+        <img alt="" width="1541" height="810" loading="lazy" decoding="async"
+             sizes="(min-width: 1024px) 63vw, 92vw"
+             src="assets/media/finisher/fin-06-fairlight-960.jpg"
+             srcset="assets/media/finisher/fin-06-fairlight-640.jpg 640w,
+                     assets/media/finisher/fin-06-fairlight-960.jpg 960w,
+                     assets/media/finisher/fin-06-fairlight-1280.jpg 1280w">
+      </picture>
+      <!-- No 1280 rung on this one: the master is 1274 wide after its side
+           crop, so 960 is the top of its ladder. Same 1.902 ratio as the other
+           six, which is all the stack needs to hold one height. -->
+      <picture class="trk-frame" data-frame="6">
+        <source type="image/avif" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-07-suite-640.avif 640w,
+                        assets/media/finisher/fin-07-suite-960.avif 960w">
+        <source type="image/webp" sizes="(min-width: 1024px) 63vw, 92vw"
+                srcset="assets/media/finisher/fin-07-suite-640.webp 640w,
+                        assets/media/finisher/fin-07-suite-960.webp 960w">
+        <img alt="" width="1274" height="670" loading="lazy" decoding="async"
+             sizes="(min-width: 1024px) 63vw, 92vw"
+             src="assets/media/finisher/fin-07-suite-960.jpg"
+             srcset="assets/media/finisher/fin-07-suite-640.jpg 640w,
+                     assets/media/finisher/fin-07-suite-960.jpg 960w">
+      </picture>
     </figure>
   </div>
 </section>
@@ -909,6 +1026,11 @@
      gated exactly like the hero shader (fine pointer, >=1024, motion allowed,
      connection not metered). -->
 <script src="film-track.js" defer></script>
+
+<!-- Finisher track: seven frames cycling at 500ms inside the single wide
+     frame, paused while the pointer is over it. Same in-view / tab-hidden /
+     reduced-motion gating as the film track. -->
+<script src="finisher-track.js" defer></script>
 
 <!-- ============ ON-DEVICE LOOP READOUT ============
      Opt-in only: append ?loopcheck. Same shape and the same justification as
