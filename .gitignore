@@ -17,4 +17,10 @@ assets/media/hero-0*.jpg
 # Same rule for the rest-state still: tools/section-still.py regenerates the
 # derivatives from it, and only those are deliverables.
 assets/media/Section2img.png
+# Same rule for the three Film Track frames: tools/film-track-bg.py builds the
+# derivatives in assets/media/film/ and only those ship. The masters are 4K and
+# total 11.6MB.
+assets/media/Film Track BG Image.jpg
+assets/media/2nd BG image film track.jpg
+assets/media/3rd bg image film track.jpg
 __pycache__/

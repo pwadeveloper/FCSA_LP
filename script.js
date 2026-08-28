@@ -467,7 +467,9 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     }
 
     if (reduced || !('IntersectionObserver' in window)) {
-      tl.classList.add('tl-armed', 'tl-run');
+      /* reduced motion / no observer: straight to the finished state, and no
+         will-change ever asked for. */
+      tl.classList.add('tl-armed', 'tl-run', 'tl-done');
     } else {
       tl.classList.add('tl-armed');
       var tlio = new IntersectionObserver(function (entries) {
@@ -475,6 +477,10 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
           if (!e.isIntersecting) return;
           tl.classList.add('tl-run');
           tlio.disconnect();
+          /* Longest block is column 13, so --b maxes at 11: 11 x 55ms of
+             stagger plus the 500ms wipe = 1105ms. Release the compositor
+             layers a beat after that. */
+          window.setTimeout(function () { tl.classList.add('tl-done'); }, 1300);
         });
       }, { threshold: 0.15 });
       tlio.observe(tl);

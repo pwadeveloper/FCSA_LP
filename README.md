@@ -214,13 +214,35 @@ The label is **"Supported by"**. In the hero it is `sr-only` — the comp carrie
 no visible label — so the wording lives in the accessible name. The footer
 prints it.
 
-### 1. Cost — needs a real answer AND a prominent home
+### 1. ~~Cost~~ — RESOLVED, and the layout was chosen from a prototype
 
-There is currently no price anywhere on the page, and no placeholder standing
-in for one. This is the single biggest gap: people cannot decide to apply
-without it. When the number exists it needs more than an FAQ line — most
-likely its own block near the apply form, or in the tracks section beside the
-day/week tags.
+NGN 200,000, in its own section (`#pricing`) between the timeline and the
+apply form. One fee, all three tracks, no per-track upsells.
+
+**Pricing section layout — decided from `/proto/pricing`**
+
+- **Direction: Ledger.** A hairline-bordered card split by one rule: fee cell
+  left, inclusions right. Kept because the fee and what it buys read side by
+  side, and the card stays a discrete object rather than a page-wide gesture.
+- Currency and figure are separate spans — `NGN` sits back as a muted label so
+  the figure can run to 104px at 1512. Set at one size, three letters nobody is
+  deciding on carried the same weight as the one number that matters.
+- The CTA hugs its label from 768 up (`width: auto` + `align-self: flex-start`),
+  full-width below. `btn-block` had stretched it to 542px, which reads as a
+  yellow strip rather than a control and spent the accent at a scale nothing
+  else on the page uses.
+- Panel is two anchored groups — fee at the top, CTA and small print at the
+  foot — so the slack against the eight-row list becomes space between them
+  rather than a hole in the middle. The label stays top-aligned with "What the
+  fee unlocks" across the divider; that alignment ties the card's halves.
+- **Rejected — Marquee** (no card, figure at 13rem across the rail): the most
+  striking, but it eats the most vertical space and commits hardest. If the fee
+  ever needs softening it is the worst layout to soften, and the inclusions lose
+  the "unlocks" framing to a plain grid.
+- **Rejected — Receipt** (single narrow column, items with no price against
+  them, one total at the foot): makes "no add-ons" a visual argument rather than
+  a claim, but "INCLUDED" eight times reads repetitive up close and the column
+  leaves two-thirds of a wide viewport empty.
 
 ### 2. Everything else missing
 
@@ -232,7 +254,6 @@ day/week tags.
 | Reply time, in days | Under the submit button |
 | Contact — phone, WhatsApp, email | Footer |
 | Socials — school, Clan Yujo, Multimudia | Footer |
-| Content track, weeks 10–11 | Timeline lane — currently the one visible `[To confirm]` on the page |
 | Tutor roster | Section was cut. Needs photos, credits and each person's sign-off before it earns a place back. |
 
 ### 3. `FORM_ENDPOINT`

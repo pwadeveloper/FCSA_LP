@@ -60,6 +60,20 @@
   --accent:    #FFEA33;  /* sampled from the supplied comp */
   --on-accent: #000000;  /* 17.07:1 on accent. NEVER white — white is 1.23:1 */
 
+  /* THE THREE PHASE COLOURS — the 12-week grid, and nowhere else.
+     This is the one deliberate exception to "three colours and a
+     text-on-accent" above. The grid is the only element on the page that has
+     to say "these twelve weeks are not all the same kind of week", and colour
+     is the shortest way to say it; everywhere else the page keeps its two
+     tones. Black type on all three, measured, because none of them carry
+     white: teal 7.40:1, orange 7.60:1, yellow 17.07:1.
+     --phase-premiere IS --accent. That is the one place the accent is spent
+     outside the Apply CTA, and it is spent on purpose: the premiere is what
+     the CTA is selling, so the two sharing a colour is the argument. */
+  --phase-foundation: #2EA9AE;
+  --phase-production: #F67730;
+  --phase-premiere:   #FFEA33;
+
   /* Supporting ladder, re-derived against pure black. */
   --body:    #E9E9E9;  /* running text        17.30:1 */
   --mute:    #949494;  /* captions, labels     6.92:1  / boundary 6.92:1 */
@@ -362,8 +376,13 @@ a { color: inherit; }
   text-decoration: none; border: 1px solid transparent; cursor: pointer;
   border-radius: 999px;
   transition: background-color .22s var(--ease), color .22s var(--ease),
-              border-color .22s var(--ease), filter .22s var(--ease);
+              border-color .22s var(--ease), filter .22s var(--ease),
+              transform .15s ease-out;
 }
+/* Press. A CTA this size with only a brightness shift reads as a picture of a
+   button rather than a button — nothing moves under the finger. 0.96 is the
+   floor that still feels like a press; below 0.95 it reads as a bounce. */
+.btn:active { transform: scale(.96); }
 /* THE ONE PLACE YELLOW APPEARS */
 .btn-apply { background: var(--accent); color: var(--on-accent); }
 .btn-apply:hover { filter: brightness(1.07); }
@@ -808,6 +827,44 @@ a { color: inherit; }
    own background; a scrim keeps the type legible over it. */
 .trk-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #0A0A0A; }
 .trk-bg-img { width: 100%; height: 100%; object-fit: cover; object-position: 60% 28%; }
+
+/* ---- the three cycling frames ----
+   Stacked, one opaque at a time, crossfading. The fade is longer than the
+   2.5s dwell would suggest it needs (900ms) because these are full-viewport
+   photographs, not thumbnails: a fast cut between a crimson portrait and a
+   near-black shaft of light reads as a flash. */
+.trk-bg-frame {
+  position: absolute; inset: 0; display: block;
+  opacity: 0; visibility: hidden;
+  transition: opacity .9s var(--ease), visibility 0s linear .9s;
+}
+.trk-bg-frame.is-on { opacity: 1; visibility: visible; transition-delay: 0s, 0s; }
+
+/* ---- the cursor shader's canvas ----
+   Created by hero-shader.js, inserted before .trk-scrim so the contrast work
+   still lands on top of the effect. Same rules as .hero-fx. */
+.trk-fx {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  display: block; pointer-events: none;
+  opacity: 0; transition: opacity 320ms var(--ease);
+}
+.trk-fx.is-live { opacity: 1; }
+
+/* ---- the clip strip as an indicator ----
+   Greyscale is the resting state and colour is the signal, which is the way
+   round that costs nothing when JS never runs: with no script every clip
+   stays grey and the strip still reads as a set. */
+.trk-clip picture { display: block; }
+.trk-clip img {
+  filter: grayscale(1) contrast(.95);
+  transition: filter .55s var(--ease);
+}
+.trk-clip.is-on img { filter: grayscale(0) contrast(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .trk-bg-frame { transition: none; }
+  .trk-clip img { transition: none; }
+}
 .trk-scrim {
   position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(to top, rgb(0 0 0 / 0.82) 0%, rgb(0 0 0 / 0.45) 38%, rgb(0 0 0 / 0.15) 70%, rgb(0 0 0 / 0.35) 100%);
@@ -827,9 +884,38 @@ a { color: inherit; }
 }
 .trk-grid img { aspect-ratio: 9 / 16; }
 
+/* The video placeholders. Presentation lives HERE, at base, not in the >=1024
+   block — the cards exist at every width, and while the flex centring was
+   desktop-only the two labels fell back to inline flow on phones and printed
+   as one run-together string, "VID 19:16". Layout (which columns, the height
+   caps) stays in the breakpoint; how a card looks does not. */
+.trk-grid .slot-box {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: .35rem; text-align: center; padding: .5rem;
+  border: 1px solid var(--rule); background: #0A0A0A;
+  /* The labels are scaffolding, not copy — they name a slot that has no asset
+     yet. Dragging across the section should select the track's prose, not
+     "vid 29:16". */
+  user-select: none; -webkit-user-select: none;
+}
+.trk-grid .slot-tag {
+  color: var(--paper); letter-spacing: 0; text-transform: none; font-weight: 700;
+  font-size: clamp(.75rem, 1.06vw, 1rem);
+}
+.trk-grid .slot-ratio {
+  color: var(--paper); font-weight: 700;
+  font-size: clamp(.8125rem, 1.32vw, 1.25rem);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Finisher — a single wide frame. */
 .trk-single { margin-top: 2.25rem; }
-.trk-single img { aspect-ratio: 16 / 9; }
+/* 428/225 (1.902), the same ratio the Film clips are cut to and the ratio the
+   Finisher comp measures (956x501 = 1.908). Declared at base so it is one
+   house ratio at every width — when this lived only in the >=1024 block the
+   frame silently reverted to 16:9 on phones. */
+.trk-single img { aspect-ratio: 428 / 225; }
 
 /* ---------- reveal on enter ----------
    Each piece rises and fades once when its section scrolls in, staggered by
@@ -842,6 +928,11 @@ a { color: inherit; }
   will-change: opacity, transform;
 }
 .js .trk.in .trk-anim { opacity: 1; transform: none; }
+/* Hand the layer back. will-change is a standing promise to the
+   compositor to keep these elements on their own layers, and the reveal
+   runs exactly once per section — holding it afterwards is memory rented
+   for an animation that can no longer happen. */
+.js .trk.in .trk-anim { will-change: auto; }
 
 /* ==========================================================================
    MEDIA SLOTS
@@ -1067,7 +1158,7 @@ a { color: inherit; }
   transition: background-color .18s var(--ease), transform .18s var(--ease);
 }
 .still-play:hover { background: rgb(255 255 255 / .14); }
-.still-play:active { transform: scale(.98); }
+.still-play:active { transform: scale(.96); }
 /* The supplied glyph draws its own ring, so there is no CSS circle here any
    more — a border-radius ring around it would double the stroke. */
 .still-play-glyph { width: 34px; height: 34px; flex: none; display: block; }
@@ -1262,6 +1353,12 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 .blk-all   { background: var(--paper); color: var(--ground); }
 .blk-mid   { background: var(--surface); color: var(--paper); }
 .blk-quiet { background: var(--sunk); color: var(--mute); border: 1px solid var(--rule); }
+/* The house treatment for a lane whose content is not settled: hatched, dashed
+   and muted, so it reads as provisional at a glance rather than needing a key.
+   CURRENTLY UNUSED — the Content track's weeks 10-11 was the last one and is
+   now confirmed as Post-production. Kept because the schedule is still being
+   firmed up and the next unconfirmed cell should look like the last one did,
+   not get a second invented treatment. */
 .blk-tbc {
   background: repeating-linear-gradient(135deg, var(--sunk) 0 6px, var(--ground) 6px 12px);
   color: var(--mute); border: 1px dashed var(--rule);
@@ -1273,7 +1370,7 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 .blk-all.blk-v .blk-t { font-weight: 600; }
 
 /* placement */
-.blk-a-foundation { grid-area: 2 / 2 / 5 / 5; }
+.blk-a-foundation { grid-area: 2 / 2 / 5 / 5;  background: var(--phase-foundation); }
 .blk-a-s1 { grid-area: 2 / 5 / 3 / 7; }
 .blk-a-s2 { grid-area: 3 / 5 / 4 / 7; }
 .blk-a-s3 { grid-area: 4 / 5 / 5 / 7; }
@@ -1283,14 +1380,24 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 .blk-a-e1 { grid-area: 2 / 9 / 3 / 10; }
 .blk-a-e2 { grid-area: 3 / 9 / 4 / 10; }
 .blk-a-e3 { grid-area: 4 / 9 / 5 / 10; }
-.blk-a-prod { grid-area: 2 / 10 / 5 / 11; }
+.blk-a-prod { grid-area: 2 / 10 / 5 / 11;  background: var(--phase-production); }
 .blk-a-o1 { grid-area: 2 / 11 / 3 / 13; }
 .blk-a-o2 { grid-area: 3 / 11 / 4 / 13; }
 .blk-a-o3 { grid-area: 4 / 11 / 5 / 13; }
-.blk-a-prem { grid-area: 2 / 13 / 5 / 14; }
+.blk-a-prem { grid-area: 2 / 13 / 5 / 14;  background: var(--phase-premiere); }
 
 .blk-a-foundation .blk-t { font-size: 0.8125rem; letter-spacing: .14em; font-weight: 600; }
-.blk-a-foundation .blk-s { max-width: 22ch; opacity: .68; }
+
+/* THE DIMMING HAS TO COME BACK UP ON A COLOURED FIELD. Opacity dimming reads
+   as hierarchy on white because there is a full stop of luminance to spend;
+   on a mid-luminance phase colour there is not. Measured on the rendered page
+   against teal (the darkest of the three, field Y 0.3201): .blk-w at .6 fell
+   to 3.87:1 and .blk-s at .68 to 4.03:1, both under the 4.5 floor they used
+   to clear at 5.74:1 on white. At .85 they measure back over 6:1, and the
+   hierarchy is carried by the size and weight difference that was always
+   there — which costs no contrast at all. */
+.blk-a-foundation .blk-w, .blk-a-prod .blk-w, .blk-a-prem .blk-w { opacity: .85; }
+.blk-a-foundation .blk-s { max-width: 22ch; opacity: .85; }   /* .68 measured 4.03:1 on teal */
 
 /* the shared marker under weeks 4—5 */
 .tl-tie {
@@ -1367,10 +1474,24 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   font-size: var(--t-1); font-weight: 700; letter-spacing: .12em;
   text-transform: uppercase; color: var(--mute);
 }
+/* THE NUMBER IS THE SECTION. It was set at the same size as its currency
+   code, so "NGN" — three letters nobody is deciding on — carried the same
+   weight as the one figure the whole page is asking the reader to accept.
+   Splitting them lets the figure run to 104px at 1512 and the code sit back
+   as a label, which is also what fills the panel: the void under the button
+   was the price failing to earn its column. */
 .price-amount {
-  margin-top: .65rem; font-size: clamp(2.75rem, 7vw, 4rem); font-weight: 900;
-  line-height: 0.98; letter-spacing: -0.03em; color: var(--paper);
-  font-variant-numeric: tabular-nums;
+  margin-top: .65rem;
+  display: flex; align-items: baseline; gap: .55rem;
+  color: var(--paper); font-variant-numeric: tabular-nums;
+}
+.price-cur {
+  font-size: clamp(.9375rem, 1.5vw, 1.375rem); font-weight: 700;
+  letter-spacing: .1em; color: var(--mute); text-transform: uppercase;
+}
+.price-fig {
+  font-size: clamp(3rem, 8.4vw, 6.5rem); font-weight: 900;
+  line-height: .9; letter-spacing: -0.035em;
 }
 .price-sub { margin-top: .85rem; color: var(--mute); font-size: var(--t0); }
 .price-cta { margin-top: clamp(1.5rem, 4vw, 2.25rem); }
@@ -1404,7 +1525,28 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
     border-bottom: 0; border-right: 1px solid var(--rule);
     display: flex; flex-direction: column;
   }
-  .price-note { margin-top: auto; padding-top: 1.25rem; }   /* pin note to the panel foot */
+  /* TWO ANCHORED GROUPS, not one group and a hole. The panel is shorter than
+     the eight-row list beside it, so ~190px of slack has to live somewhere.
+     Pinning only the note sent all of it into the gap between the button and
+     the note — a void in the middle of the cell, which reads as something
+     missing. Pushing the CTA down instead splits the panel into what you get
+     (label, price, terms) at the top and what you do (button, small print) at
+     the foot, and the slack becomes the space between them.
+
+     The label stays top-aligned on purpose: it sits on the same line as "What
+     the fee unlocks" across the divider, and that is the one alignment tying
+     the two halves of the card together. */
+  .price-cta { margin-top: auto; }
+  .price-note { margin-top: 1rem; padding-top: 0; }
+  /* THE BUTTON STOPS BEING A BANNER. btn-block stretched it to the full 542px
+     of the panel, and a pill is a shape that hugs its label — at 542px for
+     three words it is 380px of empty yellow with two rounded ends, which
+     reads as a highlighted strip, not a control. It also spent the accent at
+     a scale the rest of the page reserves for nothing. Full width is still
+     right on a phone, where a thumb-wide target is the convention, so this
+     only lifts from 768. align-self is required as well as width: the panel
+     is a column flex container, so a stretched item ignores width:auto. */
+  .price-cta { width: auto; align-self: flex-start; }
 }
 
 /* ---------- APPLY ---------- */
@@ -1514,10 +1656,32 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 .js .reveal { opacity: 0; transform: translateY(12px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
 .js .reveal.in { opacity: 1; transform: none; }
 
-.js .tl-armed .blk { clip-path: inset(0 100% 0 0); }
+/* THE PLAYHEAD. Each block wipes open left-to-right, staggered by its grid
+   column (script.js sets --b from gridColumnStart), so the reveal reads as a
+   head scrubbing across the schedule rather than fifteen things popping at
+   once. The stagger is the information: it restates what the element it
+   decorates already says, which is that these weeks happen in an order.
+
+   The opacity companion is there because the blocks are coloured now. A bare
+   clip wipe hands you a fully saturated teal block the instant the wipe edge
+   crosses it; fading over the first 340ms of the 500ms wipe lets the colour
+   arrive instead of appear. It is deliberately the shorter of the two so the
+   wipe still carries the last third alone and the gesture stays a wipe. */
+.js .tl-armed .blk {
+  clip-path: inset(0 100% 0 0); opacity: 0;
+  will-change: clip-path, opacity;
+}
 .js .tl-armed .tl-tie { opacity: 0; }
-.js .tl-run .blk { clip-path: inset(0 0 0 0); transition: clip-path .5s var(--ease); transition-delay: calc(var(--b, 0) * 55ms); }
+.js .tl-run .blk {
+  clip-path: inset(0 0 0 0); opacity: 1;
+  transition: clip-path .5s var(--ease), opacity .34s var(--ease);
+  transition-delay: calc(var(--b, 0) * 55ms);
+}
 .js .tl-run .tl-tie { opacity: 1; transition: opacity .4s var(--ease) .55s; }
+/* Hand the layers back once the sweep is done — fifteen elements held on their
+   own compositor layers for an animation that runs once is rent with no
+   tenant. script.js adds .tl-done when the last block lands. */
+.js .tl-done .blk { will-change: auto; }
 
 /* ==========================================================================
    RESPONSIVE
@@ -1644,26 +1808,90 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
      than the base ~252px cap. */
   .trk--film .trk-blk p { max-width: none; }
   .trk-bg-img { object-position: 58% 26%; }
+  /* RE-TUNED FOR THE THREE REAL FRAMES. The old pair was set against a dark
+     placeholder and had no top band at all, because nothing needed one: the
+     placeholder was black where the title and the schedule sit. Measured
+     against the supplied frames it failed in two places at once — the title
+     hit 2.67:1 over the portrait, and the schedule, which sits hard right
+     where the left wedge has faded to nothing, hit 1.32:1 over the stone
+     landscape. A third gradient across the top is what those two need; the
+     left wedge is deepened for the body column, which was 4.22:1.
+
+     Three bands, each doing one job, none of them reaching the frame's
+     middle-right — which is where all three photographs put their subject. */
   .trk--film .trk-scrim {
-    /* left- and foot-weighted: type sits left and along the bottom */
     background:
-      linear-gradient(to right, rgb(0 0 0 / 0.8) 0%, rgb(0 0 0 / 0.3) 38%, rgb(0 0 0 / 0) 64%),
+      /* top — the title runs wide and the schedule sits hard right */
+      linear-gradient(to bottom, rgb(0 0 0 / 0.78) 0%, rgb(0 0 0 / 0.58) 15%,
+                                 rgb(0 0 0 / 0.18) 27%, rgb(0 0 0 / 0) 36%),
+      /* left — the body column */
+      linear-gradient(to right, rgb(0 0 0 / 0.88) 0%, rgb(0 0 0 / 0.58) 30%,
+                                rgb(0 0 0 / 0.12) 52%, rgb(0 0 0 / 0) 64%),
+      /* foot — the clip strip */
       linear-gradient(to top, rgb(0 0 0 / 0.72) 0%, rgb(0 0 0 / 0) 30%);
   }
   /* Full content-width row: three equal cells, 26px gaps -> 428px each @1512,
      and aspect-ratio gives the 225px height. */
   .trk--film .trk-clips { grid-area: clips; align-self: end; margin-top: 0; }
 
-  /* Content & Finisher — text left, media filling the right. Title spans the
-     top so it can run wide; schedule sits in the top-right. */
-  .trk--content .trk-inner,
-  .trk--finisher .trk-inner {
-    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr) minmax(0, 1fr);
+  /* THE SCHEDULE'S DETAIL LINES GO UP A STEP, on this track only. --mute is
+     6.93:1 on pure black, which is why it is fine on Content and Finisher —
+     their schedules sit on the section ground. Film's sits on a photograph,
+     and against the scrimmed frame (backdrop Y 0.077) the same grey measured
+     2.73:1. No amount of extra scrim rescues it: --mute caps at 6.93 even
+     against pure black, and reaching 4.5 from here would need ~73% over the
+     top-right corner of every frame. Lifting the text instead costs nothing
+     and keeps the hierarchy — the lead line is still white, these are still
+     a step down. --body measures 6.83:1 on the same backdrop. */
+  .trk--film .trk-sched dd { color: var(--body); }
+  .trk--film .trk-sched .trk-sched-lead { color: var(--paper); }
+
+  /* Content — the same TRUE 12-COLUMN RAIL the Film track above is built on,
+     so the copy measure, the title and the media all snap to one set of
+     column lines instead of two tracks using two different grids.
+
+     Measured off the 1512 comp: the copy runs to x=373 and the media block
+     starts at x=640. Against a 12-column rail those are the col-3 and col-6
+     lines exactly — hence body = cols 1-3, a two-column trough at 4-5, and
+     figs = cols 6-12. The old `0.82fr 1fr 1fr` put the copy at ~29% of the
+     frame and started the media at col 4, which is why the trough the comp
+     relies on was missing.
+
+     Schedule keeps cols 10-12, matching Film. */
+  .trk--content .trk-inner {
+    column-gap: clamp(.5rem, 1.72vw, 1.625rem);
+    grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
-      "title title sched"
-      "body  figs  figs";
+      "title title title title title title title title title sched sched sched"
+      "body  body  body  .     .     figs  figs  figs  figs  figs  figs  figs";
   }
+  /* The 3-of-12 area is the measure now, so drop the base ~252px cap and let
+     the copy fill its columns — same call as Film. */
+  .trk--content .trk-blk p { max-width: none; }
+
+  /* Finisher — the same 12-column rail as Film and Content, so all three
+     tracks now read off one set of column lines.
+
+     Measured off the 1512 comp: the copy runs to x=373 and the frame runs
+     524 -> 1480. Those are the col-3 and col-5 lines, so body = cols 1-3 with
+     a ONE-column trough at 4 (Content's is two — the Finisher's single frame
+     is wider and starts a column earlier), and figs = cols 5-12. */
+  .trk--finisher .trk-inner {
+    column-gap: clamp(.5rem, 1.72vw, 1.625rem);
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "title title title title title title title title title sched sched sched"
+      "body  body  body  .     figs  figs  figs  figs  figs  figs  figs  figs";
+  }
+  /* The 3-of-12 area is the measure — drop the base ~252px cap, as Film and
+     Content both do. */
+  .trk--finisher .trk-blk p { max-width: none; }
+  /* Centred, not top-aligned. In the comp the copy block and the frame start
+     within 8px of each other; left at align-self:start the copy sat 74px
+     above the frame's top edge and the two read as unrelated. */
+  .trk--finisher .trk-body { align-self: center; }
   .trk--content .trk-h,
   .trk--finisher .trk-h { grid-area: title; align-self: start; max-width: none; }
 
@@ -1672,16 +1900,45 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
      follows from 9:16 and the auto columns pack tight to the right, like the
      comp. Fixed height (not 100%) avoids the circular grid sizing that let the
      cards balloon and push the section past one screen. */
+  /* ONE ROW OF THREE, filling cols 6-12. Dropping from six tiles to three is
+     what buys the true 9:16: two rows of 9:16 could never fit a screen that
+     also carries the title and the header clearance, which is why the six-up
+     had to be squared off. Three fit with room to spare. */
   .trk--content .trk-grid {
     grid-area: figs; margin-top: 0; align-self: center;
-    grid-template-columns: repeat(3, auto); align-content: center;
-    justify-content: end; gap: clamp(.4rem, 1vw, .7rem);
+    grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: center;
+    gap: clamp(.4rem, 1vw, .7rem);
   }
   .trk--content .trk-grid li { min-height: 0; min-width: 0; }
-  .trk--content .trk-grid img { height: clamp(210px, 33vh, 340px); width: auto; aspect-ratio: 9 / 16; }
+  /* The ratio rides on --ar in the markup, through the shared .slot-box rule,
+     so it is declared in one place and the row cannot shift when a clip lands.
+     max-height keeps the row inside the frame on short, wide viewports, where
+     width alone would push the cards past the fold. */
+  /* The height guard has to cap WIDTH as well, or it wins against
+     aspect-ratio and letterboxes the card: at 1920x1080 a bare max-height held
+     the width at 340 and squashed 9:16 to 0.65. Capping both keeps the ratio
+     exact and simply centres a smaller card in its column on short, wide
+     viewports. 9/16 is repeated from --ar because calc() cannot read the ratio
+     back out of aspect-ratio. */
+  .trk--content .trk-grid .slot-box {
+    max-height: 62vh;
+    max-width: calc(62vh * 9 / 16);
+    margin-inline: auto;
+  }
 
-  /* Finisher — a single wide frame, vertically centred in the media area. */
+  /* Finisher — a single wide frame, vertically centred in the media area.
+
+     NOT 16:9. The comp's frame measures 956x501 = 1.908, which is the 428/225
+     (1.902) the Film clips are already cut to — one house ratio for the wide
+     frames rather than two that differ by half a percent. Same width+height
+     guard as the Content cards: capping height alone would beat aspect-ratio
+     and letterbox the frame on short viewports. */
   .trk--finisher .trk-single { grid-area: figs; margin-top: 0; align-self: center; width: 100%; }
+  .trk--finisher .trk-single img {
+    max-height: 62vh;
+    max-width: calc(62vh * 428 / 225);
+    margin-inline: auto;
+  }
 
   .tl-hint { display: none; }
 
@@ -1787,7 +2044,10 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
     transition-duration: 0.001ms !important; transition-delay: 0ms !important;
   }
   .js .anim, .js .reveal, .js .trk .trk-anim { opacity: 1 !important; transform: none !important; }
-  .js .tl-armed .blk { clip-path: none !important; }
+  /* opacity as well as clip-path: the armed state now zeroes both, and a
+     reduced-motion reader must never depend on a 0.001ms transition to
+     bring the blocks back. */
+  .js .tl-armed .blk { clip-path: none !important; opacity: 1 !important; will-change: auto !important; }
   .js .tl-armed .tl-tie { opacity: 1 !important; }
   .q[open] .q-b { animation: none; }
 }

@@ -30,10 +30,6 @@
                conn.effectiveType === '2g' ||
                conn.effectiveType === 'slow-2g')) return;
 
-  var media  = document.querySelector('.hero-media');
-  var scrim  = document.querySelector('.hero-scrim');
-  var frames = document.querySelectorAll('.hero-frame');
-  if (!media || !frames.length) return;
 
   /* ======================================================================
      THE TUNED CONSTANTS — chromatic bloom.
@@ -202,6 +198,25 @@
     })();
   }
 
+  /* ---------- 3b. ONE SHADER, TWO SURFACES ----------
+     Everything above this line is shared: the guards, the tuned constants, the
+     GLSL, and a single LCP observer. Everything below is per-surface, so the
+     same effect can be pointed at the hero's <picture> stack and at the Film
+     track's frame stack without a second copy of the shader existing.
+
+     cfg.media  the positioned box the canvas is inserted into
+     cfg.frame  the stacked frames it reads textures from
+     cfg.scrim  inserted BEFORE this, so the scrim stays on top of the effect
+     cfg.cls    canvas class
+     cfg.api    window.<name> for the QA handle
+     cfg.carousel  window.<name> exposing onChange, so the shader learns which
+                   frame is up from whoever owns the cycling */
+  function run(cfg) {
+    var media  = document.querySelector(cfg.media);
+    var scrim  = cfg.scrim ? document.querySelector(cfg.scrim) : null;
+    var frames = document.querySelectorAll(cfg.frame);
+    if (!media || !frames.length) return;
+
   function gate(fn) {
     var left = 3;
     var done = function () { if (--left === 0) whenLcpQuiet(function () { whenIdle(fn); }); };
@@ -247,7 +262,7 @@
 
     try {
       canvas = document.createElement('canvas');
-      canvas.className = 'hero-fx';
+      canvas.className = cfg.cls;
       canvas.setAttribute('aria-hidden', 'true');
 
       var opts = { alpha: false, antialias: false, depth: false, stencil: false,
@@ -507,12 +522,12 @@
       }, { threshold: 0 }).observe(media);
     }
 
-    if (window.heroCarousel) window.heroCarousel.onChange(function (n) { goTo(n); });
+    if (window[cfg.carousel]) window[cfg.carousel].onChange(function (n) { goTo(n); });
 
     requestAnimationFrame(function () { if (canvas) canvas.classList.add('is-live'); });
     wake();
 
-    window.heroShader = {
+    window[cfg.api] = {
       destroy: destroy,
       /* Used only by the screenshot harness: park the cursor and hold the
          effect at full strength so a still frame shows what motion looks like. */
@@ -548,6 +563,18 @@
       }
     };
   }
+  }
+
+  /* The hero, exactly as before. */
+  run({ media: '.hero-media', frame: '.hero-frame', scrim: '.hero-scrim',
+        cls: 'hero-fx', api: 'heroShader', carousel: 'heroCarousel' });
+
+  /* The Film track. Same effect, same constants, same guards — the frames are
+     photographs of the same kind behind type of the same kind. The canvas goes
+     under .trk-scrim so the contrast work still lands on top of the effect. */
+  run({ media: '.trk--film .trk-bg', frame: '.trk--film .trk-bg-frame',
+        scrim: '.trk--film .trk-scrim',
+        cls: 'trk-fx', api: 'filmShader', carousel: 'filmCarousel' });
 
   /* ---------- shader plumbing ---------- */
   function compile(gl, type, src) {

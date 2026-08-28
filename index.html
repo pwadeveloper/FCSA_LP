@@ -340,8 +340,61 @@
 
 <!-- Track 1 — Film Production -->
 <section class="trk trk--film" id="track-film" aria-labelledby="tf1-h" data-trk>
+  <!-- THREE FRAMES, cycling. Only one is opaque at a time; film-track.js
+       advances the index every 2.5s and the clip strip at the foot mirrors it,
+       so the row of three doubles as the indicator for which frame is up.
+       All three ship a real srcset — unlike the hero, where frames 2-5 are
+       hydrated on demand — because at 7-111KB the whole set is smaller than a
+       single hero frame and the swap has to be instant at 2.5s intervals. -->
   <div class="trk-bg" aria-hidden="true">
-    <img class="trk-bg-img" src="assets/media/hero/hero-01-crimson-1440.webp" alt="" loading="lazy" decoding="async">
+    <picture class="trk-bg-frame is-on" data-frame="0">
+      <source type="image/avif" sizes="100vw"
+              srcset="assets/media/film/film-bg-01-900.avif 900w,
+                        assets/media/film/film-bg-01-1440.avif 1440w,
+                        assets/media/film/film-bg-01-1920.avif 1920w">
+      <source type="image/webp" sizes="100vw"
+              srcset="assets/media/film/film-bg-01-900.webp 900w,
+                        assets/media/film/film-bg-01-1440.webp 1440w,
+                        assets/media/film/film-bg-01-1920.webp 1920w">
+      <img class="trk-bg-img" alt="" width="3840" height="2160" sizes="100vw"
+           src="assets/media/film/film-bg-01-1440.jpg"
+           srcset="assets/media/film/film-bg-01-900.jpg 900w,
+                        assets/media/film/film-bg-01-1440.jpg 1440w,
+                        assets/media/film/film-bg-01-1920.jpg 1920w"
+           loading="lazy" decoding="async">
+    </picture>
+    <picture class="trk-bg-frame" data-frame="1">
+      <source type="image/avif" sizes="100vw"
+              srcset="assets/media/film/film-bg-02-900.avif 900w,
+                        assets/media/film/film-bg-02-1440.avif 1440w,
+                        assets/media/film/film-bg-02-1920.avif 1920w">
+      <source type="image/webp" sizes="100vw"
+              srcset="assets/media/film/film-bg-02-900.webp 900w,
+                        assets/media/film/film-bg-02-1440.webp 1440w,
+                        assets/media/film/film-bg-02-1920.webp 1920w">
+      <img class="trk-bg-img" alt="" width="3840" height="2160" sizes="100vw"
+           src="assets/media/film/film-bg-02-1440.jpg"
+           srcset="assets/media/film/film-bg-02-900.jpg 900w,
+                        assets/media/film/film-bg-02-1440.jpg 1440w,
+                        assets/media/film/film-bg-02-1920.jpg 1920w"
+           loading="lazy" decoding="async">
+    </picture>
+    <picture class="trk-bg-frame" data-frame="2">
+      <source type="image/avif" sizes="100vw"
+              srcset="assets/media/film/film-bg-03-900.avif 900w,
+                        assets/media/film/film-bg-03-1440.avif 1440w,
+                        assets/media/film/film-bg-03-1920.avif 1920w">
+      <source type="image/webp" sizes="100vw"
+              srcset="assets/media/film/film-bg-03-900.webp 900w,
+                        assets/media/film/film-bg-03-1440.webp 1440w,
+                        assets/media/film/film-bg-03-1920.webp 1920w">
+      <img class="trk-bg-img" alt="" width="3840" height="1620" sizes="100vw"
+           src="assets/media/film/film-bg-03-1440.jpg"
+           srcset="assets/media/film/film-bg-03-900.jpg 900w,
+                        assets/media/film/film-bg-03-1440.jpg 1440w,
+                        assets/media/film/film-bg-03-1920.jpg 1920w"
+           loading="lazy" decoding="async">
+    </picture>
     <div class="trk-scrim"></div>
   </div>
   <div class="trk-inner">
@@ -353,12 +406,12 @@
     </dl>
     <div class="trk-body">
       <section class="trk-blk trk-anim" style="--i:2">
-        <h4 class="trk-k">Who it's for</h4>
+        <h4 class="trk-k">Who it’s for</h4>
         <p>For people who want to tell a story with a camera and a crew.</p>
       </section>
       <section class="trk-blk trk-anim" style="--i:3">
         <h4 class="trk-k">What you learn</h4>
-        <p>You'll learn composition and the master scene technique, coverage, the 180-degree rule, matching action. How to break down a script, build a budget, scout a location, and handle permits and IP rights in Nigeria.</p>
+        <p>You’ll learn composition and the master scene technique, coverage, the 180-degree rule, matching action. How to break down a script, build a budget, scout a location, and handle permits and IP rights in Nigeria.</p>
         <p>How to work with collaborators, navigate rewrites, and direct actors. How to run auditions, camera tests and a call sheet that people can actually follow.</p>
       </section>
       <section class="trk-blk trk-anim" style="--i:4">
@@ -366,10 +419,31 @@
         <p>A short film you wrote, produced and directed, premiered to an audience.</p>
       </section>
     </div>
+    <!-- The same three frames as the background. The one currently up is in
+         colour; the other two sit in greyscale, so the strip reads as an
+         indicator rather than three unrelated stills. -->
     <ul class="trk-clips trk-anim" style="--i:5" aria-hidden="true">
-      <li class="trk-clip"><img src="assets/media/hero/hero-04-procession-900.webp" alt="" loading="lazy" decoding="async"></li>
-      <li class="trk-clip"><img src="assets/media/hero/hero-03-lightpaint-900.webp" alt="" loading="lazy" decoding="async"></li>
-      <li class="trk-clip"><img src="assets/media/hero/hero-05-hilltop-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li class="trk-clip is-on" data-clip="0">
+        <picture>
+          <source type="image/avif" srcset="assets/media/film/film-bg-01-900.avif">
+          <source type="image/webp" srcset="assets/media/film/film-bg-01-900.webp">
+          <img src="assets/media/film/film-bg-01-900.jpg" alt="" loading="lazy" decoding="async">
+        </picture>
+      </li>
+      <li class="trk-clip" data-clip="1">
+        <picture>
+          <source type="image/avif" srcset="assets/media/film/film-bg-02-900.avif">
+          <source type="image/webp" srcset="assets/media/film/film-bg-02-900.webp">
+          <img src="assets/media/film/film-bg-02-900.jpg" alt="" loading="lazy" decoding="async">
+        </picture>
+      </li>
+      <li class="trk-clip" data-clip="2">
+        <picture>
+          <source type="image/avif" srcset="assets/media/film/film-bg-03-900.avif">
+          <source type="image/webp" srcset="assets/media/film/film-bg-03-900.webp">
+          <img src="assets/media/film/film-bg-03-900.jpg" alt="" loading="lazy" decoding="async">
+        </picture>
+      </li>
     </ul>
   </div>
 </section>
@@ -385,7 +459,7 @@
     </dl>
     <div class="trk-body">
       <section class="trk-blk trk-anim" style="--i:2">
-        <h4 class="trk-k">Who it's for</h4>
+        <h4 class="trk-k">Who it’s for</h4>
         <p>For people making work for a phone screen who want it to actually land.</p>
       </section>
       <section class="trk-blk trk-anim" style="--i:3">
@@ -395,16 +469,30 @@
       </section>
       <section class="trk-blk trk-anim" style="--i:4">
         <h4 class="trk-k">What you leave with</h4>
-        <p>A published body of work and a strategy that isn't guesswork.</p>
+        <p>A published body of work and a strategy that isn’t guesswork.</p>
       </section>
     </div>
+    <!-- THREE 9:16 VIDEO SLOTS, awaiting the real clips. These use the page's
+         standard .slot vocabulary rather than a bespoke box, for two reasons:
+         --ar drives the ratio through the same aspect-ratio rule every other
+         slot uses, so the row cannot shift when the videos land; and
+         SHOW_MEDIA_PLACEHOLDERS in script.js already knows how to strip a
+         .slot that never got its asset, so closing the launch gate cannot
+         ship three empty boxes.
+
+         Dropping a <video> (poster + muted/loop/playsinline) inside .slot-box
+         covers the label, and the 1px rule then reads as the clip's edge.
+         Add all three to the MEDIA MANIFEST in README when they are briefed. -->
     <ul class="trk-grid trk-anim" style="--i:3" aria-hidden="true">
-      <li><img src="assets/media/hero/hero-02-lagoon-900.webp" alt="" loading="lazy" decoding="async"></li>
-      <li><img src="assets/media/reel/reel-poster-900.webp" alt="" loading="lazy" decoding="async"></li>
-      <li><img src="assets/media/loop/loop-poster-900.webp" alt="" loading="lazy" decoding="async"></li>
-      <li><img src="assets/media/hero/hero-04-procession-900.webp" alt="" loading="lazy" decoding="async"></li>
-      <li><img src="assets/media/hero/hero-05-hilltop-900.webp" alt="" loading="lazy" decoding="async"></li>
-      <li><img src="assets/media/hero/hero-03-lightpaint-900.webp" alt="" loading="lazy" decoding="async"></li>
+      <li class="slot" style="--ar:9/16" data-slot="content-vid-01">
+        <div class="slot-box"><span class="slot-tag">vid 1</span><span class="slot-ratio">9:16</span></div>
+      </li>
+      <li class="slot" style="--ar:9/16" data-slot="content-vid-02">
+        <div class="slot-box"><span class="slot-tag">vid 2</span><span class="slot-ratio">9:16</span></div>
+      </li>
+      <li class="slot" style="--ar:9/16" data-slot="content-vid-03">
+        <div class="slot-box"><span class="slot-tag">vid 3</span><span class="slot-ratio">9:16</span></div>
+      </li>
     </ul>
   </div>
 </section>
@@ -412,7 +500,7 @@
 <!-- Track 3 — The Finisher's -->
 <section class="trk trk--finisher" id="track-finisher" aria-labelledby="tf3-h" data-trk>
   <div class="trk-inner">
-    <h3 id="tf3-h" class="trk-h trk-anim" style="--i:0">The Finisher's Track</h3>
+    <h3 id="tf3-h" class="trk-h trk-anim" style="--i:0">The Finisher’s Track</h3>
     <dl class="trk-sched trk-anim" style="--i:1">
       <div><dt class="sr-only">Days</dt><dd class="trk-sched-lead">Wednesdays &amp; Fridays</dd></div>
       <div><dt class="sr-only">Learning</dt><dd>9 weeks of learning</dd></div>
@@ -420,8 +508,8 @@
     </dl>
     <div class="trk-body">
       <section class="trk-blk trk-anim" style="--i:2">
-        <h4 class="trk-k">Who it's for</h4>
-        <p>For people who'd rather be in the edit than on set.</p>
+        <h4 class="trk-k">Who it’s for</h4>
+        <p>For people who’d rather be in the edit than on set.</p>
       </section>
       <section class="trk-blk trk-anim" style="--i:3">
         <h4 class="trk-k">What you learn</h4>
@@ -429,7 +517,7 @@
       </section>
       <section class="trk-blk trk-anim" style="--i:4">
         <h4 class="trk-k">What you leave with</h4>
-        <p>An editor's reel, a scene, a music video, an interview, Instagram content, plus the finished film the whole school made.</p>
+        <p>An editor’s reel, a scene, a music video, an interview, Instagram content, plus the finished film the whole school made.</p>
       </section>
     </div>
     <figure class="trk-single trk-anim" style="--i:3" aria-hidden="true">
@@ -562,7 +650,7 @@
       </div>
 
       <div class="blk blk-quiet blk-a-o1"><span class="sr-only">Film Production track, weeks 10 to 11:</span><span class="blk-w">10—11</span><span class="blk-t">Supervises</span></div>
-      <div class="blk blk-tbc blk-a-o2"><span class="sr-only">Content Creation track, weeks 10 to 11:</span><span class="blk-w">10—11</span><span class="blk-t">[To confirm]</span></div>
+      <div class="blk blk-mid blk-a-o2"><span class="sr-only">Content Creation track, weeks 10 to 11:</span><span class="blk-w">10—11</span><span class="blk-t">Post-production</span></div>
       <div class="blk blk-mid blk-a-o3"><span class="sr-only">The Finisher's track, weeks 10 to 11:</span><span class="blk-w">10—11</span><span class="blk-t">Post-production</span><span class="blk-s">Assembly, cut, grade, mix.</span></div>
 
       <div class="blk blk-all blk-v blk-a-prem">
@@ -576,7 +664,7 @@
   <div class="wrap">
     <p class="tl-hint" aria-hidden="true">Scroll the timeline sideways →</p>
     <div class="tl-foot reveal">
-      <p class="cap">Weeks 8 to 12 are scheduled but class times are still being finalised.</p>
+      <p class="cap">Weekday classes run in the evening, after working hours, so you can keep your job. Saturday classes run in the morning or the afternoon, depending on the week.</p>
       <p class="cap cap-dates"><strong>Confirmed opening dates</strong><br>Friday 25 September · Saturday 26 September · then Fridays and Saturdays through 10 October.</p>
     </div>
   </div>
@@ -588,13 +676,13 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <h2 id="price-h" class="h2 h2-big">Take your seat</h2>
-      <p class="sec-intro">One fee covers all three tracks, three months on the CoLAB Campus, the mentors, the gear and the film you leave with. No add-ons, no per-track upsells.</p>
+      <p class="sec-intro">One fee covers all three tracks, three months on the CoLAB Campus, the mentors, the gear you learn on and the film you leave with. No add-ons, no per-track upsells.</p>
     </div>
 
     <div class="price-card reveal">
       <div class="price-panel">
         <span class="price-label">Full programme &middot; all tracks</span>
-        <p class="price-amount">NGN 200,000</p>
+        <p class="price-amount"><span class="price-cur">NGN</span><span class="price-fig">200,000</span></p>
         <p class="price-sub">Three tracks &middot; 12 weeks &middot; one premiere</p>
 
         <a class="btn btn-apply btn-block price-cta" href="#apply">Claim your seat <span class="arr" aria-hidden="true">&rarr;</span></a>
@@ -608,7 +696,7 @@
           <li>Full access to CoLAB Campus for the whole three months</li>
           <li>Direct access to the film-school mentors</li>
           <li>Every class, on set and in the edit suite</li>
-          <li>Camera, lighting and sound gear on set</li>
+          <li>Access to camera, lighting and sound gear during classes</li>
           <li>A finished film, premiered to a live audience</li>
           <li>A seat in a working community of builders</li>
           <li>A certificate when you finish</li>
@@ -635,7 +723,8 @@
 
       <details class="q">
         <summary><span>Do I need my own camera?</span></summary>
-        <div class="q-b"><p>Not for the intro weeks — most of that work is shot on phones. A digital camera helps in the track weeks, and the school has gear on set during production week.</p></div>
+        <div class="q-b"><p>Not for the intro weeks — most of that work is shot on phones. In class you work on the school&rsquo;s camera, lighting and sound gear, so you learn the kit hands-on before you ever have to own it.</p>
+        <p>Production week is different. You source what your film needs yourself, borrowed or rented — and budgeting for exactly that is part of the Film Track, so the cost lands in your production plan instead of arriving as a surprise.</p></div>
       </details>
 
       <details class="q">
@@ -674,7 +763,8 @@
 
       <details class="q">
         <summary><span>How much time does this take each week?</span></summary>
-        <div class="q-b"><p>Two classes a week, roughly six hours total, across weeks 1—3 and 6—12. In weeks 4 and 5 some tracks attend up to four days, because every student sits in on the post-production foundation.</p></div>
+        <div class="q-b"><p>Two classes a week, roughly six hours total, across weeks 1—3 and 6—12. In weeks 4 and 5 some tracks attend up to four days, because every student sits in on the post-production foundation.</p>
+        <p>Weekday classes run in the evening, after working hours, so you can keep your job. Saturday classes run in the morning or the afternoon, depending on the week.</p></div>
       </details>
 
       <details class="q">
@@ -814,6 +904,11 @@
      is the browser's own. ~1KB, and it degrades to fully-visible with no JS
      and under prefers-reduced-motion. -->
 <script src="tracks.js" defer></script>
+
+<!-- Film track: three cycling background frames, plus a hover glitch that is
+     gated exactly like the hero shader (fine pointer, >=1024, motion allowed,
+     connection not metered). -->
+<script src="film-track.js" defer></script>
 
 <!-- ============ ON-DEVICE WIDTH READOUT ============
      Opt-in only: append ?widthcheck to the URL. Nothing renders, and nothing
