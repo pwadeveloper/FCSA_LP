@@ -322,8 +322,19 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     function syncLoop() {
       if (!loopAllowed()) {
         dropLoop();
+        /* Name the ACTUAL reason. "save-data" covered two very different
+           causes, and the second one is the one that bites: Chrome is the only
+           engine that implements navigator.connection, and it reports
+           effectiveType '3g' on plenty of ordinary connections — measured on
+           RTT, not on the technology. A reader on usable Wi-Fi can therefore
+           be handed the poster forever while the attribute says something that
+           sounds deliberate. Spell out which it was. */
+        var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         box.setAttribute('data-loop-state', 'suppressed:' +
-          (!wideMq.matches ? 'width' : reducedMq.matches ? 'reduced-motion' : 'save-data'));
+          (!wideMq.matches      ? 'width'
+           : reducedMq.matches  ? 'reduced-motion'
+           : (c && c.saveData)  ? 'save-data'
+           : 'effective-type-' + ((c && c.effectiveType) || 'unknown')));
         return;
       }
       if (near) { makeLoop(); resume(); }

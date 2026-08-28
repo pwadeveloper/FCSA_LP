@@ -910,6 +910,50 @@
      connection not metered). -->
 <script src="film-track.js" defer></script>
 
+<!-- ============ ON-DEVICE LOOP READOUT ============
+     Opt-in only: append ?loopcheck. Same shape and the same justification as
+     the width readout below — the section-2 loop has three suppression gates
+     and a silent autoplay path, and all four outcomes paint the SAME pixels,
+     because the poster underneath is frame zero of the video. So "it is not
+     playing" cannot be told apart from "it is deliberately not playing" by
+     looking, and the machine where it happens is not the machine with the
+     devtools open. This prints the answer into the page instead.
+
+     GREEN means the video is running. AMBER means a gate suppressed it, and
+     names which. RED means autoplay was refused and it is waiting for a
+     gesture. Read it on filmschool.africa/?loopcheck -->
+<script>
+(function () {
+  if (!/[?&]loopcheck\b/.test(location.search)) return;
+  var box = document.querySelector('[data-still]');
+  if (!box) return;
+  var el = document.createElement('div');
+  el.setAttribute('role', 'status');
+  el.style.cssText =
+    'position:fixed;left:8px;bottom:8px;z-index:2147483647;max-width:92vw;' +
+    'font:700 12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;' +
+    'padding:8px 10px;border-radius:6px;color:#000;white-space:pre;' +
+    'pointer-events:none;box-shadow:0 2px 10px rgb(0 0 0 / .5)';
+  document.body.appendChild(el);
+  setInterval(function () {
+    var v = box.querySelector('.still-loop');
+    var st = box.getAttribute('data-loop-state') || '(unset)';
+    var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    el.style.background =
+      st === 'playing' ? '#7BE07B' : st.indexOf('suppressed') === 0 ? '#F6C177' : '#F58F8F';
+    el.textContent =
+      'loop-state  ' + st + '\n' +
+      'element     ' + (v ? 'yes' : 'NOT CREATED') + '\n' +
+      (v ? 'paused      ' + v.paused + '   t=' + v.currentTime.toFixed(2) +
+           '   ready=' + v.readyState + '\n' : '') +
+      'viewport    ' + window.innerWidth + 'px' + '\n' +
+      'saveData    ' + (c ? c.saveData : 'no API') + '\n' +
+      'effType     ' + (c ? c.effectiveType + '  rtt=' + c.rtt + '  down=' + c.downlink : 'no API') + '\n' +
+      'reduced     ' + window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, 500);
+})();
+</script>
+
 <!-- ============ ON-DEVICE WIDTH READOUT ============
      Opt-in only: append ?widthcheck to the URL. Nothing renders, and nothing
      is measured, without it — this costs a single querystring test on a normal
