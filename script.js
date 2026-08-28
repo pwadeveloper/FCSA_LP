@@ -143,9 +143,39 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
        .saveData is the client-side half of the same signal and is what a
        browser sets when the user turns the setting on. Both halves point at
        the same preference, so honouring this one honours the header. */
+    function conn() {
+      return navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    }
     function frugal() {
-      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      var c = conn();
       return !!(c && (c.saveData === true || /^(slow-2g|2g|3g)$/.test(c.effectiveType || '')));
+    }
+
+    /* ---------- 3g IS NOT A REASON TO SEND NOTHING ----------
+       The brief said suppress the loop on 2g, slow-2g and 3g. 3g turned out to
+       be the wrong line, and it was suppressing the feature for the person who
+       commissioned it: Chrome buckets anything over 270ms RTT as '3g'
+       regardless of the actual technology, so a desktop reader on a 300ms /
+       1.5Mbps link got the poster and no way to tell it was deliberate.
+
+       Two facts make degrading better than suppressing here. The <1024px gate
+       already means no phone ever loads this video, so the 3g branch only ever
+       hits DESKTOP readers on a slow link — not the mobile-data audience the
+       budget was written for. And the two renditions bracket exactly this
+       case: 720p is 1.82Mbps, which would not fit a 1.5Mbps link anyway, while
+       540p is 0.92Mbps, which fits comfortably. Sending the small file is both
+       the kinder answer and the honest one.
+
+       So: saveData and 2g/slow-2g still send nothing — a 1MB autoplay on a
+       sub-0.4Mbps link is hopeless and asking for it is rude. 3g gets the
+       small rendition. */
+    function loopBlocked() {
+      var c = conn();
+      return !!(c && (c.saveData === true || /^(slow-2g|2g)$/.test(c.effectiveType || '')));
+    }
+    function loopThrifty() {
+      var c = conn();
+      return !!(c && c.effectiveType === '3g');
     }
 
     /* 720p below 1024px, on Save-Data, and on 2g/3g. Pushing 1080p into a
@@ -168,7 +198,7 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     var shown = false;            /* actually on screen — worth decoding */
 
     function loopAllowed() {
-      return wideMq.matches && !reducedMq.matches && !frugal();
+      return wideMq.matches && !reducedMq.matches && !loopBlocked();
     }
 
     /* Rendition by DEVICE pixels, not CSS pixels. The <1024 rung in the brief
@@ -179,6 +209,9 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
        difference. dpr is capped at 2 because past that nothing on this page
        is being resolved anyway. */
     function loopSrc() {
+      /* A slow link overrides the pixel maths: 540p at 0.92Mbps is the whole
+         reason 3g is allowed to play at all. */
+      if (loopThrifty()) return box.getAttribute('data-loop-540');
       var px = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
       return box.getAttribute(px >= 1280 ? 'data-loop-720' : 'data-loop-540');
     }
@@ -329,7 +362,7 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
            RTT, not on the technology. A reader on usable Wi-Fi can therefore
            be handed the poster forever while the attribute says something that
            sounds deliberate. Spell out which it was. */
-        var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        var c = conn();
         box.setAttribute('data-loop-state', 'suppressed:' +
           (!wideMq.matches      ? 'width'
            : reducedMq.matches  ? 'reduced-motion'

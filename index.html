@@ -945,7 +945,8 @@
       'loop-state  ' + st + '\n' +
       'element     ' + (v ? 'yes' : 'NOT CREATED') + '\n' +
       (v ? 'paused      ' + v.paused + '   t=' + v.currentTime.toFixed(2) +
-           '   ready=' + v.readyState + '\n' : '') +
+           '   ready=' + v.readyState + '\n' +
+           'rendition   ' + (v.currentSrc || '').split('/').pop() + '\n' : '') +
       'viewport    ' + window.innerWidth + 'px' + '\n' +
       'saveData    ' + (c ? c.saveData : 'no API') + '\n' +
       'effType     ' + (c ? c.effectiveType + '  rtt=' + c.rtt + '  down=' + c.downlink : 'no API') + '\n' +
