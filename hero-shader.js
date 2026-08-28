@@ -381,9 +381,40 @@
       wake();
     }
 
+    /* ---------- ONE uCover FOR TWO TEXTURES ----------
+       PRECONDITION: every frame in a surface must share one aspect ratio.
+
+       There is a single uCover uniform and the fragment shader applies it to
+       both textures, so the cover-fit of the INCOMING frame is computed here
+       and its scale thrown away — only its offset survives. That is correct
+       while all frames are the same shape, which the hero's five are.
+
+       Point this at a set of mixed ratios and it fails silently and only on
+       the crossfades that straddle the difference: the UV leaves [0,1], the
+       texture is CLAMP_TO_EDGE, and the edge texel repeats as a vertical smear
+       down the side of the frame. It reads as "the image sometimes loads
+       stretched", which is a long way from "the shader has one uCover".
+
+       Shipped that way once, on the Film track, when frame 3 was 2.37:1 and
+       its siblings were 16:9. The frames are normalised in
+       tools/film-track-bg.py now; this warns if a set ever disagrees again,
+       because the render gives no clue on its own. */
+    var coverWarned = false;
     function recompute() {
-      if (srcA) { var a = coverFor(srcA, posOf(frames[idxA])); cover = a.cover; offA = a.offset; }
-      if (srcB) { var b = coverFor(srcB, posOf(frames[idxB])); offB = b.offset; }
+      var a = srcA ? coverFor(srcA, posOf(frames[idxA])) : null;
+      var b = srcB ? coverFor(srcB, posOf(frames[idxB])) : null;
+      if (a) { cover = a.cover; offA = a.offset; }
+      if (b) { offB = b.offset; }
+      if (a && b && !coverWarned &&
+          (Math.abs(a.cover[0] - b.cover[0]) > 0.005 ||
+           Math.abs(a.cover[1] - b.cover[1]) > 0.005)) {
+        coverWarned = true;
+        if (window.console) {
+          console.warn('[' + cfg.cls + '] frames have different aspect ratios; ' +
+                       'one uCover cannot fit both and the edge texel will smear. ' +
+                       'Normalise the sources.', a.cover, b.cover);
+        }
+      }
     }
 
     /* ---------- input ---------- */

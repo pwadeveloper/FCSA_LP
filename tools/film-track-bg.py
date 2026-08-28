@@ -14,11 +14,24 @@ They can take heavier compression than a foreground image because a scrim sits
 over them and type sits over that — detail below the scrim is detail nobody
 sees. The quality floors below are lower than the hero's for exactly that.
 
-FRAME 3 IS A DIFFERENT SHAPE. Frames 1 and 2 are 3840x2160 (16:9); frame 3 is
-3840x1620 (2.37:1). Cover-fit into a full-viewport box crops all three anyway,
-so this costs nothing at the background — but the clip strip at the foot uses
-the same files at 428x225, and there the wider frame crops tighter. Check
-frame 3's clip if the composition ever looks off.
+ALL THREE ARE NORMALISED TO 16:9, AND THAT IS LOAD-BEARING. The masters are
+not the same shape: 1 and 2 are 3840x2160 (1.778), 3 is 3840x1620 (2.370).
+
+The cursor shader in hero-shader.js crossfades two frames through ONE uCover
+uniform, computed from the outgoing frame only — coverFor() is called for the
+incoming frame but only its offset is kept. That is safe on the hero, where
+all five images share a ratio, and it is silently wrong the moment two frames
+do not: the UV runs past [0,1] and CLAMP_TO_EDGE repeats the edge texel as a
+vertical smear down the right of the frame. It only shows on the pairs that
+straddle the difference, which is why it read as "sometimes stretched".
+
+So the shapes are made to agree here rather than the shader made cleverer,
+because the shader is the piece that cannot be tested without a GPU. A centre
+crop is free at the background — every frame is cover-fit into a ~1.38:1 box
+and already loses its sides.
+
+IF YOU ADD A FRAME, it goes through this crop. Do not point the shader at a
+set of mixed ratios.
 """
 import os
 from PIL import Image
@@ -35,6 +48,24 @@ STEPS = [900, 1440, 1920]
 FMTS = [('AVIF', 'avif', 58, 24), ('WEBP', 'webp', 76, 32), ('JPEG', 'jpg', 74, 32)]
 
 
+TARGET_AR = 16 / 9
+
+
+def crop_to(im, ar):
+    """Centre-crop to a target aspect ratio, taking from whichever axis is long."""
+    w, h = im.size
+    cur = w / h
+    if abs(cur - ar) < 1e-3:
+        return im
+    if cur > ar:                       # too wide: take from the sides
+        nw = round(h * ar)
+        x = (w - nw) // 2
+        return im.crop((x, 0, x + nw, h))
+    nh = round(w / ar)                 # too tall: take from top and bottom
+    y = (h - nh) // 2
+    return im.crop((0, y, w, y + nh))
+
+
 def cap_for(w):
     return int(CAP_1440 * (w / 1440) ** 2)
 
@@ -47,7 +78,10 @@ def main():
             print(f'  MISSING {fname}')
             continue
         master = Image.open(src).convert('RGB')
-        print(f'{stem}  <- {fname}  {master.width}x{master.height}')
+        w0, h0 = master.size
+        master = crop_to(master, TARGET_AR)
+        note = '' if (w0, h0) == master.size else f'  -> centre-cropped to {master.width}x{master.height}'
+        print(f'{stem}  <- {fname}  {w0}x{h0}{note}')
         for w in STEPS:
             if w > master.width:
                 print(f'    skip {w}w — wider than the master')
