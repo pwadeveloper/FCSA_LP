@@ -1,13 +1,14 @@
 /* GET /api/paystack/config
-   What the page is allowed to know: the public key, the price, and whether the
-   whole thing is switched on yet.
+   What the page is allowed to know: the public key, the plans and their
+   prices, and whether the whole thing is switched on.
 
-   THE PRICE IS SERVED FROM HERE rather than written into index.html so that
-   the number on the page and the number charged come from the SAME
-   environment variable. Hard-coding it in the markup gives you two sources of
-   truth that drift, and the failure mode is a page advertising one figure
-   while the card is debited another. */
+   EVERY FIGURE ON THE PAY SECTION COMES FROM HERE rather than being written
+   into index.html, so the number shown and the number charged read the same
+   environment variable and cannot drift. The deposit and balance are derived
+   from the total (see api/_paystack.js), so they cannot drift from each other
+   either. */
 import { config, configProblem, json } from '../_paystack.js';
+import { storeConfig } from '../_store.js';
 
 export const runtime = 'edge';
 
@@ -16,16 +17,25 @@ export default async function handler(request) {
 
   const c = config();
   const problem = configProblem(c);
+  const store = storeConfig();
 
   return json({
-    /* configured:false is the page's cue to disable the button and say so.
-       It is not an error — before a price exists this is the correct state. */
     configured: !problem,
     reason: problem,
-    /* pk_ only. The secret key is not in this object and must never be. */
-    publicKey: c.hasKeys ? c.publicKey : null,
-    amountKobo: c.amountKobo,
+    publicKey: c.hasKeys ? c.publicKey : null,   // pk_ only, never sk_
     currency: c.currency,
     live: c.live,
+    totalKobo: c.totalKobo,
+    depositKobo: c.depositKobo,
+    balanceKobo: c.balanceKobo,
+    depositPercent: c.depositPercent,
+
+    /* THE SPLIT PLAN IS OFFERED ONLY IF THERE IS SOMEWHERE TO RECORD IT.
+       Part payment without a durable record is a promise to track something
+       you have no way of tracking: the deposit arrives, the browser closes,
+       and nothing anywhere knows ₦60,000 is still owed. So with no database
+       configured the page shows pay-in-full only, which is honest, instead of
+       a plan it cannot honour. */
+    splitAvailable: !problem && store.enabled,
   });
 }

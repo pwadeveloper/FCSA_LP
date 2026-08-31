@@ -852,6 +852,12 @@
       </details>
 
       <details class="q">
+        <summary><span>What does it cost?</span></summary>
+        <div class="q-b"><p>Tuition is &#8358;200,000 for the twelve weeks. You can pay it in full, or pay 70% &mdash; &#8358;140,000 &mdash; to hold your place and the remaining &#8358;60,000 on resumption, within the first four weeks.</p>
+        <p>Both come to the same &#8358;200,000; there is no surcharge for splitting it. <a href="#pay">Pay on this page</a>.</p></div>
+      </details>
+
+      <details class="q">
         <summary><span>What do I need to bring?</span></summary>
         <div class="q-b">
           <ul class="kit">
@@ -1015,10 +1021,40 @@
     </div>
 
     <form class="form reveal" id="pay-form" novalidate>
+      <!-- THE PLANS. Every figure inside is written by pay.js from
+           /api/paystack/config — none of these numbers exist in this file, so
+           the price on the page and the price charged cannot disagree, and the
+           deposit and balance cannot disagree with the total.
+
+           The split option is REMOVED, not disabled, when the server says the
+           payment record is unavailable: part payment with nowhere to record
+           the balance is a promise to track something untrackable. -->
+      <fieldset class="f f-fs pay-plans" data-pay-plans hidden>
+        <legend>How would you like to pay?</legend>
+        <div class="pay-plan-list">
+          <label class="pay-plan">
+            <input type="radio" name="plan" value="full" checked>
+            <span class="pay-plan-b">
+              <span class="pay-plan-t">Pay in full</span>
+              <span class="pay-plan-v" data-plan-full>—</span>
+              <span class="pay-plan-n">One payment, nothing else owed.</span>
+            </span>
+          </label>
+          <label class="pay-plan" data-plan-split-row hidden>
+            <input type="radio" name="plan" value="split">
+            <span class="pay-plan-b">
+              <span class="pay-plan-t">Pay in two</span>
+              <span class="pay-plan-v" data-plan-deposit>—</span>
+              <span class="pay-plan-n" data-plan-split-note>Balance on resumption, within the first four weeks.</span>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
       <div class="pay-amount">
-        <span class="pay-amount-k">Tuition</span>
-        <!-- aria-live so the figure is announced once it arrives, since it is
-             filled in after the markup has already been read. -->
+        <span class="pay-amount-k" data-pay-label>Due now</span>
+        <!-- aria-live so the figure is announced when it changes, since it is
+             rewritten by the plan choice after the markup has been read. -->
         <strong class="pay-amount-v" data-pay-amount aria-live="polite">—</strong>
       </div>
 
@@ -1032,6 +1068,10 @@
         <div class="f">
           <label for="p-email">Email</label>
           <input id="p-email" name="email" type="email" inputmode="email" autocomplete="email" required>
+          <!-- Load-bearing, not decoration. The balance is found by email, so
+               a returning student who types a different address is charged a
+               second deposit instead of their ₦60,000. -->
+          <p class="f-note" data-pay-emailnote hidden>Paying a balance? Use the same email you paid the deposit with.</p>
           <p class="err" data-for="p-email" hidden></p>
         </div>
         <div class="f">

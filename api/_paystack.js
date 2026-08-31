@@ -22,20 +22,37 @@ export const PAYSTACK_API = 'https://api.paystack.co';
 export function config() {
   const secret = (process.env.PAYSTACK_SECRET_KEY || '').trim();
   const publicKey = (process.env.PAYSTACK_PUBLIC_KEY || '').trim();
-  const raw = (process.env.PAYSTACK_AMOUNT_KOBO || '').trim();
+  const raw = (process.env.PAYSTACK_TUITION_KOBO || '').trim();
   const currency = (process.env.PAYSTACK_CURRENCY || 'NGN').trim().toUpperCase();
+  const pctRaw = (process.env.PAYSTACK_DEPOSIT_PERCENT || '70').trim();
 
   /* Kobo, and an INTEGER. Paystack rejects fractional amounts outright, and a
      float here would come back from their API as a different number than the
      one compared against on verify, which reads as "amount mismatch" on a
      payment that was actually correct. */
-  const amountKobo = /^\d+$/.test(raw) ? parseInt(raw, 10) : null;
+  const tuitionKobo = /^\d+$/.test(raw) ? parseInt(raw, 10) : null;
+  const total = tuitionKobo && tuitionKobo > 0 ? tuitionKobo : null;
+
+  /* THE DEPOSIT IS DERIVED, NEVER CONFIGURED SEPARATELY, and the balance is
+     the subtraction rather than the other percentage. Two independently
+     entered figures are two figures that can be edited apart, and the failure
+     mode is silent: 70% + 30% of a number nobody re-checked leaves a student
+     owing 1 kobo forever, or paying 1 kobo too much, and the "have they
+     finished paying" comparison never comes out clean.
+     deposit + balance === total is arithmetic here, not a convention. */
+  const pct = /^\d{1,2}$/.test(pctRaw) ? parseInt(pctRaw, 10) : 70;
+  const depositKobo = total ? Math.round((total * pct) / 100) : null;
+  const balanceKobo = total ? total - depositKobo : null;
 
   return {
     secret,
     publicKey,
     currency,
-    amountKobo: amountKobo && amountKobo > 0 ? amountKobo : null,
+    /* the whole cost of the course, however it gets paid */
+    totalKobo: total,
+    depositPercent: pct,
+    depositKobo,
+    balanceKobo,
     /* live vs test is not a separate switch — it is whichever key pair the
        environment holds. Vercel: test values on Preview/Development, live
        values on Production. One less thing that can disagree with itself. */
@@ -49,8 +66,36 @@ export function config() {
    reading it is the one who can fix it. */
 export function configProblem(c) {
   if (!c.hasKeys) return 'Paystack keys are not set. Add PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY.';
-  if (c.amountKobo === null) return 'PAYSTACK_AMOUNT_KOBO is not set to a positive whole number of kobo.';
+  if (c.totalKobo === null) return 'PAYSTACK_TUITION_KOBO is not set to a positive whole number of kobo.';
   return null;
+}
+
+/* ---------- what someone owes ----------
+   ONE function, used by init to decide what to charge and by verify and the
+   webhook to decide whether a payment was the right size. If these three ever
+   computed it separately they would drift, and the symptom would be a student
+   told they still owe money they have already paid.
+
+   `paidKobo` is the sum of their successful payments so far, from the store.
+   With no store it is 0 and the split plan is not offered at all — see
+   api/_store.js. */
+export function owed({ paidKobo, plan, cfg }) {
+  const paid = Math.max(0, paidKobo | 0);
+  const outstanding = cfg.totalKobo - paid;
+
+  if (outstanding <= 0) {
+    return { done: true, amountKobo: 0, purpose: 'none', outstanding: 0 };
+  }
+  /* Anyone who has already paid something is finishing, whatever the form
+     said. The plan choice only means something on a first payment — you do
+     not get to re-pick "70% now" when 70% is already behind you. */
+  if (paid > 0) {
+    return { done: false, amountKobo: outstanding, purpose: 'balance', outstanding };
+  }
+  if (plan === 'split') {
+    return { done: false, amountKobo: cfg.depositKobo, purpose: 'deposit', outstanding };
+  }
+  return { done: false, amountKobo: cfg.totalKobo, purpose: 'full', outstanding };
 }
 
 export function json(body, status = 200, extraHeaders = {}) {

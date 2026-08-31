@@ -930,18 +930,30 @@ vercel.json                        no-store on /api/*
 
 ## Payments (Paystack)
 
-**The page can take tuition. It is switched off until a price is set** — see
-"the one thing left" at the end of this section.
+**Tuition is ₦200,000.** Pay in full, or 70% down (₦140,000) with the ₦60,000
+balance on resumption inside the first four weeks. Both come to the same total;
+splitting costs nothing extra.
+
+The deposit and balance are **derived from the total**, never configured
+separately — `PAYSTACK_DEPOSIT_PERCENT=70` gives the deposit and the balance is
+the subtraction. Two independently typed figures are two figures that can be
+edited apart, and the failure is silent: a student left owing 1 kobo never
+reads as "paid in full" and gets chased forever. `deposit + balance === total`
+is arithmetic here, not a convention, and the self-test checks it on figures
+that do not divide cleanly.
 
 ### How it is put together
 
 ```
 pay.js                     the browser side. Trusted with nothing.
-api/_paystack.js           shared helpers (underscore = not a route)
-api/paystack/config.js     GET  -> public key, price, is it switched on
-api/paystack/init.js       POST -> starts a transaction, returns access_code
+api/_paystack.js           config, the 70/30 arithmetic, HMAC, who-owes-what
+api/_store.js              Supabase over REST (underscore = not a route)
+api/_mail.js               Resend
+api/paystack/config.js     GET  -> public key, plans, is it switched on
+api/paystack/init.js       POST -> decides what you owe, returns access_code
 api/paystack/verify.js     GET  -> asks Paystack what really happened
-api/paystack/webhook.js    POST -> signed events, the durable record
+api/paystack/webhook.js    POST -> signed events; writes the record, sends mail
+tools/supabase-schema.sql  one table, two views. Paste into the SQL editor.
 ```
 
 ```
@@ -979,9 +991,66 @@ the secret key. Three things are checked there, not one — status, amount, and
 currency — because a transaction can be genuinely successful and still be the
 wrong payment.
 
+**3. The browser does not say what STAGE you are at either.** It sends a plan
+— `full` or `split` — and the server looks up what that email has already paid
+and charges the difference. So a student returning for their balance is charged
+₦60,000 automatically: same form, same email, no second "pay balance" button to
+get wrong, and no way to re-pick "70% now" when 70% is already behind them.
+A store that is down does **not** fall through to "nothing paid" — that would
+charge a returning student the full ₦200,000 on top of their deposit — it
+returns 503 and asks them to try again.
+
 The webhook exists because the callback path only runs if the payer's browser
 survives long enough to run it. Cards get charged and then the phone dies. The
 webhook arrives anyway, and Paystack retries it.
+
+### The record (Supabase)
+
+Supabase rather than a Postgres driver for a hard reason: **these are Edge
+functions, and the Edge runtime has no raw TCP.** `pg`, `postgres.js` and
+friends open a socket and simply do not run there. Supabase exposes the
+database over HTTPS (PostgREST), so it is a plain `fetch` like the calls to
+Paystack — nothing to install, and the repo stays at zero dependencies. Its
+table editor is also the answer to "who still owes me money" without writing
+SQL, which is the actual daily need.
+
+Run `tools/supabase-schema.sql` once in the SQL editor. It creates:
+
+| | |
+|---|---|
+| `payments` | one row per successful charge, `reference` unique |
+| `enrolment_status` | one row per student: paid, outstanding, `paid in full` / `balance due` |
+| `balances_outstanding` | just the people to chase |
+
+Two things in that file are load-bearing:
+
+- **`reference` is unique.** Paystack retries webhook delivery until it gets a
+  200, so the same `charge.success` arrives repeatedly. The constraint plus
+  `Prefer: resolution=ignore-duplicates` is what stops one payment being
+  counted three times and the student being recorded as having overpaid.
+- **RLS is on with no policies.** The anon/public key then reads nothing, and
+  only the `service_role` key — server-side only — gets through. Without that
+  line, anyone with the project URL and the public key can read every
+  student's name, phone number and payment history.
+
+**Free tier caveat:** Supabase pauses a free project after ~7 days of
+inactivity. Between cohorts that is plausible, and a paused database means the
+webhook write fails. It fails *loudly* (`POST-PAYMENT WRITE FAILED` in the
+function log) and the money is still safe in Paystack, but the row is missing
+until you replay it. If this matters, keep the project warm or move to a paid
+tier before taking real money.
+
+### Email (Resend)
+
+Optional, and deliberately narrow. **Paystack already emails a receipt for
+every successful charge**, so this does not send receipts — a second one would
+be noise that contradicts the first the moment the two disagree. It sends the
+thing Paystack cannot know: that ₦140,000 was a *deposit*, that ₦60,000 is
+still owed, and that it is due in the first four weeks.
+
+Sent only when the row was newly inserted, so a Paystack retry does not email
+the same person four times. `MAIL_FROM` must be on a domain verified in Resend.
+Unset the key and payments still work; no mail goes out.
 
 ### Keys
 
@@ -1001,6 +1070,19 @@ secret key starts with `sk_live_`, the pay section shows a "Test mode" note.
 `.env.local` is gitignored and holds your local (test) keys. `.env.example` is
 the committed template and carries no values. `.gitignore` covers `.env`,
 `.env.local` and `.env.*.local`.
+
+| variable | | |
+|---|---|---|
+| `PAYSTACK_PUBLIC_KEY` | public | required |
+| `PAYSTACK_SECRET_KEY` | **server only** | required |
+| `PAYSTACK_TUITION_KOBO` | | required — `20000000` for ₦200,000 |
+| `PAYSTACK_DEPOSIT_PERCENT` | | defaults to `70` |
+| `PAYSTACK_CURRENCY` | | defaults to `NGN` |
+| `SUPABASE_URL` | | required for the split plan |
+| `SUPABASE_SERVICE_ROLE_KEY` | **server only** | required for the split plan |
+| `RESEND_API_KEY` | **server only** | optional |
+| `MAIL_FROM` | | required if Resend is set; verified domain |
+| `MAIL_BCC` | | optional copy to the school |
 
 ### Running it locally
 
@@ -1029,18 +1111,20 @@ PAYSTACK_AMOUNT_KOBO=50000000 node tools/dev-api.mjs 3000
 npm run test:paystack       # or: node tools/paystack-selftest.mjs
 ```
 
-27 assertions, no keys and no network needed. Covers the webhook HMAC against
-an independently computed signature, the kobo parser, and the amount guard.
-It cannot tell you a real card will clear — only a test transaction does that.
+53 assertions, no keys and no network needed. Covers the webhook HMAC against
+an independently computed signature, the kobo parser, the 70/30 arithmetic on
+figures that do not divide cleanly, who-owes-what in every state, and the
+amount guard. It cannot tell you a real card will clear — only a test
+transaction does that.
 
 ### Deploying
 
 1. Push. Import the repo at vercel.com; `api/` is detected automatically and
    `package.json` exists so the functions build. The page itself is static and
    has no build step.
-2. Set `PAYSTACK_PUBLIC_KEY`, `PAYSTACK_SECRET_KEY`, `PAYSTACK_AMOUNT_KOBO`,
-   `PAYSTACK_CURRENCY` in Project Settings -> Environment Variables. Test
-   values for Preview/Development, live values for Production.
+2. Set the variables from the table above in Project Settings -> Environment
+   Variables. Test values for Preview/Development, live values for Production.
+   Run `tools/supabase-schema.sql` in the Supabase SQL editor first.
 3. Point the webhook at `https://YOUR-DOMAIN/api/paystack/webhook` in the
    Paystack dashboard (Settings -> API Keys & Webhooks).
 4. Run a real test transaction with a
@@ -1049,19 +1133,20 @@ It cannot tell you a real card will clear — only a test transaction does that.
 
 ### Still to do before this takes real money
 
-- **Set the price.** `PAYSTACK_AMOUNT_KOBO` is empty, because `content.md`
-  still reads `[TO CONFIRM — tuition, deposit, payment plan]` and the rule in
-  that file is never to invent one. Until it is set, `/api/paystack/init`
-  returns 503 and the button is disabled and says so. **Nothing else in this
-  section is waiting on anything.**
-- **Make the webhook durable and idempotent.** It currently only writes to the
-  function log, which is enough to reconcile by hand against the dashboard but
-  is not a system of record — Vercel logs roll off. Paystack retries on any
-  non-200, so the same `charge.success` will arrive more than once; key
-  fulfilment on `data.reference` before it emails a receipt or allocates a seat.
-- **Decide about instalments.** This charges the full amount in one go. Paying
-  in parts needs Paystack Plans/Subscriptions, or your own part-payment
-  records, and neither is wired.
+- **Paste the keys.** Everything is wired and inert until `.env.local` (local)
+  and the Vercel environment (deployed) hold real values. Nothing else is
+  waiting on anything.
+- **Run one real test transaction.** No live transaction has ever been run
+  against this code — the 53 self-test assertions stub the network. Use a
+  [test card](https://paystack.com/docs/payments/test-payments), pay a deposit,
+  confirm the row lands in `payments` and the balance email arrives, then come
+  back with the same email and check you are charged ₦60,000 and not ₦140,000.
+- **Watch the free-tier pause.** See the Supabase caveat above.
+- **Nobody chases the balance automatically.** The deposit email states the
+  deadline once; there is no scheduled reminder. `balances_outstanding` is the
+  list to work from, and a Vercel cron over it would be the obvious next step.
+- **Refunds and failed charges are not modelled.** Only `charge.success` is
+  handled; a refund in the Paystack dashboard will not decrement the record.
 - **The apply form is still not connected** (`FORM_ENDPOINT` is `null` in
   `script.js`). That is unrelated to payments and unchanged.
 

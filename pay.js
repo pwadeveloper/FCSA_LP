@@ -28,9 +28,18 @@
   var btn      = sec.querySelector('[data-pay-btn]');
   var msg      = document.getElementById('pay-msg');
   var amountEl = sec.querySelector('[data-pay-amount]');
+  var labelEl  = sec.querySelector('[data-pay-label]');
   var introEl  = sec.querySelector('[data-pay-intro]');
   var testEl   = sec.querySelector('[data-pay-testmode]');
+  var plansEl  = sec.querySelector('[data-pay-plans]');
+  var splitRow = sec.querySelector('[data-plan-split-row]');
+  var emailNote= sec.querySelector('[data-pay-emailnote]');
   var cfg      = null;
+
+  function chosenPlan() {
+    var r = form.querySelector('input[name="plan"]:checked');
+    return r ? r.value : 'full';
+  }
 
   function say(text, state) {
     msg.textContent = text;
@@ -71,7 +80,16 @@
         return;
       }
 
-      amountEl.textContent = money(c.amountKobo, c.currency);
+      /* Every figure is written here, from the server's numbers. */
+      sec.querySelector('[data-plan-full]').textContent = money(c.totalKobo, c.currency);
+      sec.querySelector('[data-plan-deposit]').textContent = money(c.depositKobo, c.currency) + ' now';
+      sec.querySelector('[data-plan-split-note]').textContent =
+        money(c.balanceKobo, c.currency) + ' on resumption, within the first four weeks.';
+
+      plansEl.hidden = false;
+      if (c.splitAvailable) { splitRow.hidden = false; emailNote.hidden = false; }
+      paint();
+
       btn.disabled = false;
       if (!c.live) testEl.hidden = false;
     })
@@ -85,6 +103,21 @@
       btn.disabled = true;
       btn.textContent = 'Unavailable';
     });
+
+  /* Reflect the chosen plan in the "due now" box. This is display only —
+     what is actually charged is decided by the server in
+     /api/paystack/init, which also overrides both of these for anyone
+     returning to pay a balance. */
+  function paint() {
+    if (!cfg || !cfg.configured) return;
+    var split = chosenPlan() === 'split';
+    amountEl.textContent = money(split ? cfg.depositKobo : cfg.totalKobo, cfg.currency);
+    labelEl.textContent = split ? 'Due now (of ' + money(cfg.totalKobo, cfg.currency) + ')' : 'Due now';
+    btn.textContent = split ? 'Pay deposit' : 'Pay tuition';
+  }
+  form.addEventListener('change', function (ev) {
+    if (ev.target && ev.target.name === 'plan') { quiet(); paint(); }
+  });
 
   /* ---------- 2. validation, matching the apply form's behaviour ---------- */
   function fieldOf(el) { return el.closest ? el.closest('.f') : null; }
@@ -145,19 +178,29 @@
     fetch('/api/paystack/init', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      /* No amount in this body. Deliberately. If one were here the server
-         would ignore it, but sending it at all invites someone to change it
-         and conclude it worked. */
+      /* A PLAN, never an amount. The server maps the plan to money from its
+         own environment and ignores any figure sent from here — sending one
+         at all would only invite somebody to change it and conclude it
+         worked. */
       body: JSON.stringify({
         name:  form.querySelector('#p-name').value.trim(),
         email: form.querySelector('#p-email').value.trim(),
         phone: form.querySelector('#p-phone').value.trim(),
-        track: form.querySelector('#p-track').value
+        track: form.querySelector('#p-track').value,
+        plan:  chosenPlan()
       })
     })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
       .then(function (res) {
         if (!res.ok) throw new Error(res.body && res.body.error);
+
+        /* The server may be charging something other than the plan the page
+           displayed — a returning student gets their balance. Say so before
+           Paystack's window opens, so the figure in it is never a surprise. */
+        if (res.body.purpose === 'balance') {
+          say('You have already paid ' + money(res.body.alreadyPaidKobo, cfg.currency) +
+              '. Charging your remaining ' + money(res.body.amountKobo, cfg.currency) + '.');
+        }
 
         btn.textContent = 'Waiting for payment…';
 
@@ -196,13 +239,22 @@
       .then(function (v) {
         if (v.paid) {
           form.reset();
-          btn.textContent = 'Paid';
-          say('Payment confirmed. Your receipt is on its way to your email. ' +
-              'Reference ' + reference + ' — keep it.');
+          btn.disabled = true;
+          if (v.remainingKobo > 0) {
+            btn.textContent = 'Deposit paid';
+            say('Deposit received — your place is held. The remaining ' +
+                money(v.remainingKobo, cfg.currency) + ' is due on resumption, within the ' +
+                'first four weeks. Come back here and pay it with the same email address. ' +
+                'Reference ' + reference + '.');
+          } else {
+            btn.textContent = 'Paid in full';
+            say('Tuition paid in full. Nothing further is owed. Your receipt is on its way ' +
+                'to your email. Reference ' + reference + ' — keep it.');
+          }
           return;
         }
         btn.disabled = false;
-        btn.textContent = 'Pay tuition';
+        paint();
         /* Money may well have left the account even here — a mismatch is not
            a refusal. So the reference is printed and the wording never claims
            nothing was charged. */
@@ -211,7 +263,7 @@
       })
       .catch(function () {
         btn.disabled = false;
-        btn.textContent = 'Pay tuition';
+        paint();
         say('Your payment may have gone through, but we could not reach the server to confirm it. ' +
             'Do not pay again — send us reference ' + reference + '.', 'err');
       });

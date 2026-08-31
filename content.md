@@ -277,7 +277,7 @@ Finished work, screened publicly on premiere night — a short film, an editor's
 [TO CONFIRM — venue address in Kaduna]
 
 **What does it cost?**
-[TO CONFIRM — tuition, deposit, payment plan]
+Tuition is ₦200,000 for the twelve weeks. You can pay it in full, or pay 70% — ₦140,000 — to hold your place and the remaining ₦60,000 on resumption, within the first four weeks. Both come to the same ₦200,000; there is no surcharge for splitting it.
 
 **When do applications close?**
 [TO CONFIRM — application deadline]
