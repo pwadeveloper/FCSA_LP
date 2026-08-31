@@ -923,6 +923,7 @@ tools/
   finisher-track.py                regenerates the seven Finisher frames
   dev-api.mjs                      local server that actually runs api/
   paystack-selftest.mjs            36 assertions, no keys needed
+  tally-form.mjs                   creates/updates the receipt form
 .env.example                       template. .env.local is gitignored.
 package.json                       exists so Vercel builds api/; no dependencies
 vercel.json                        no-store on /api/*
@@ -1000,11 +1001,13 @@ reconciliation.
 ### The transfer route
 
 Two constants at the top of `pay.js`, following the same `FORM_ENDPOINT` idiom
-`script.js` already uses:
+`script.js` already uses. Both are set:
 
 ```js
-var BANK = null;        // { bank, account, number }
-var TALLY_URL = null;   // 'https://tally.so/r/xxxxxx'
+var BANK = { bank: 'Guaranty Trust Bank',
+             account: 'KayKav Creative Studio LTD',
+             number: '3004903455', note: '…' };
+var TALLY_URL = 'https://tally.so/r/kdPAX6';
 ```
 
 **Left null, the instalment option is hidden entirely** and the page offers
@@ -1016,9 +1019,36 @@ nowhere to go, a form with no bank leaves the money nowhere to go.
 They are not in `.env.local` because they are not secrets. They are printed on
 the page for anyone to read, like the details on an invoice.
 
-The Tally form needs a **file upload field** for the receipt, and its
-notification email set to the `filmschool.africa` address, so a submission
-lands in both Tally and the inbox.
+**`BANK.note` exists because the account name is not the school's name.**
+Someone about to transfer ₦140,000 sees "KayKav Creative Studio LTD" where
+they expected "The Film & Content School Africa", and the correct instinct on
+seeing that is to stop and check they are not being phished. The note answers
+it before the doubt lands. Do not remove it without replacing it.
+
+### The Tally form
+
+Created by `node tools/tally-form.mjs --create`, which is re-runnable and
+documents why each question exists. It asks for name, email, phone, track,
+**which** payment (a ₦140,000 credit is a deposit and a ₦60,000 credit is a
+balance, but a bank statement only shows a number and a date), the receipt
+itself, and a free-text note — that last one because transfers routinely
+arrive from a sibling's or a parent's account, and then the name on the
+statement matches nobody on the list.
+
+Tally's own docs only publish the `FORM_TITLE` block shape. The rest of the
+structure came off the OpenAPI schema at
+`developers.tally.so/api-reference/openapi.json` and off a real form on the
+account, which is how the pairing became clear: a question is a `TITLE` block
+with `groupType: QUESTION` followed by its input block, and choice options all
+share one `groupUuid` carrying `index` / `isFirst` / `isLast`.
+
+**Email notifications are OFF.** Submissions land in the Tally dashboard, but
+nothing reaches an inbox until an address is set. One command, and it does not
+recreate the form or change its URL:
+
+```bash
+node tools/tally-form.mjs --notify kdPAX6 fees@filmschool.africa
+```
 
 ### Keys
 
@@ -1085,10 +1115,13 @@ card will clear — only a test transaction does that.
 
 ### Still to do
 
-- **Paste the Paystack keys**, and fill in `BANK` and `TALLY_URL` in `pay.js`.
-  Until the second pair is set, the instalment option does not appear.
-- **Run one real test transaction.** No live transaction has ever run against
-  this code — the 36 assertions stub the network.
+- **Set the Tally notification email** (see above). Until then submissions are
+  only visible inside Tally.
+- **The Paystack keys in `.env.local` are LIVE keys** (`sk_live_`/`pk_live_`),
+  and no transaction — test or real — has ever run against this code. The next
+  card entered on that page is charged ₦200,000 for real, and the "Test mode"
+  note correctly does not show. Swap in the test pair, run one transaction end
+  to end, then swap back.
 - **Instalments reconcile by hand.** Nothing tracks who has paid ₦140,000 and
   still owes ₦60,000; that lives in Tally submissions and your bank statement.
   This is the accepted cost of not running a database, and it is fine at one

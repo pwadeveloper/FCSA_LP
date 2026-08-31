@@ -14,23 +14,25 @@
 /* Printed on the page for anyone to read — not secrets, these are the details
    on an invoice.
 
-   THE ACCOUNT NAME IS NOT THE SCHOOL'S NAME, and that is worth knowing rather
-   than discovering. Someone about to transfer ₦140,000 sees "KayKav Creative
-   Studio LTD" where they expected "The Film & Content School Africa", and the
-   honest reaction to that is to stop. `note` below is printed under the
-   details to close that gap; edit it to whatever is actually true of the
-   relationship between the two names, or set it to null to drop the line. */
+   THE ACCOUNT NAME IS NOT THE SCHOOL'S NAME, and that gap has to be closed on
+   the page rather than discovered mid-transfer. Someone about to send ₦140,000
+   sees "KayKav Creative Studio LTD" where they expected "The Film & Content
+   School Africa", and the correct instinct on seeing that is to stop and check
+   they are not being phished. `note` is printed directly under the details so
+   the answer arrives before the doubt does. Set it to null to drop the line. */
 var BANK = {
-  bank:    'GT Bank',
+  bank:    'Guaranty Trust Bank',
   account: 'KayKav Creative Studio LTD',
   number:  '3004903455',
-  note:    'KayKav Creative Studio LTD is the company behind the school — this is the right account.'
+  note:    'KayKav Creative Studio LTD is the school\u2019s technology partner, and tuition is collected through its account. This is the right account.'
 };
 
 /* The Tally form that collects the receipt. Create it at tally.so with a file
    upload field, and set its notification email to the filmschool.africa
    address so a submission reaches both Tally and your inbox. */
-var TALLY_URL = null;   /* e.g. 'https://tally.so/r/xxxxxx' */
+/* Created by tools/tally-form.mjs — re-runnable, and that file documents why
+   each question on it exists. Submissions land in the Tally dashboard. */
+var TALLY_URL = 'https://tally.so/r/kdPAX6';
 
 /* ==========================================================================
    THE ONE THING TO UNDERSTAND ABOUT THE CARD ROUTE: this file is not trusted,
