@@ -1042,13 +1042,20 @@ account, which is how the pairing became clear: a question is a `TITLE` block
 with `groupType: QUESTION` followed by its input block, and choice options all
 share one `groupUuid` carrying `index` / `isFirst` / `isLast`.
 
-**Email notifications are OFF.** Submissions land in the Tally dashboard, but
-nothing reaches an inbox until an address is set. One command, and it does not
-recreate the form or change its URL:
+**Email notifications are ON**, going to the Tally account owner
+(`sirmudiadavid@gmail.com`). Turn them on for a form without recreating it:
 
 ```bash
-node tools/tally-form.mjs --notify kdPAX6 fees@filmschool.africa
+node tools/tally-form.mjs --notify kdPAX6 someone@example.com
 ```
+
+One caveat, measured rather than assumed: Tally accepts `selfEmailTo`, answers
+200, and then stores `null` — tried as `{html:'a@b.com'}`, as `'<p>a@b.com</p>'`,
+and with a `mentions` array. Its schema marks the field nullable, and null means
+the default, which is the account owner. So the API reliably switches
+notifications **on**, and reliably sends them to whoever owns the key; it does
+not reliably redirect them elsewhere. To move them to a `filmschool.africa`
+address, set it in the Tally UI or forward from the owner's inbox.
 
 ### Keys
 
@@ -1099,8 +1106,26 @@ npm run test:paystack       # 36 assertions, no keys and no network needed
 ```
 
 Covers the webhook HMAC against an independently computed signature, the kobo
-parser, the 70/30 arithmetic, and the amount guard. It cannot tell you a real
-card will clear — only a test transaction does that.
+parser, the 70/30 arithmetic, and the amount guard.
+
+**A real transaction has now been run** against Paystack's test environment,
+which the self-test cannot cover:
+
+| | |
+|---|---|
+| `init` | returned a genuine `access_code`; the inline modal opened on the page |
+| `verify` before paying | `paid:false`, `"abandoned"` — no false positive |
+| ₦200,000 test card charge | `verify` → **`paid:true`** |
+| ₦140,000 charge (successful, but short) | `verify` → **`paid:false`**, *"Paid 14000000 kobo, expected 20000000"* |
+
+That last row is the one that matters: Paystack reports the charge as
+`success`, and the site still refuses to treat it as tuition. A successful
+payment for the wrong amount does not buy a seat.
+
+Paystack's hosted checkout sits behind Cloudflare and cannot be driven by a
+headless browser, so the card itself was charged through Paystack's
+`/charge` API with their test card. The modal opening was verified separately
+on the page.
 
 ### Deploying
 
@@ -1115,13 +1140,14 @@ card will clear — only a test transaction does that.
 
 ### Still to do
 
-- **Set the Tally notification email** (see above). Until then submissions are
-  only visible inside Tally.
-- **The Paystack keys in `.env.local` are LIVE keys** (`sk_live_`/`pk_live_`),
-  and no transaction — test or real — has ever run against this code. The next
-  card entered on that page is charged ₦200,000 for real, and the "Test mode"
-  note correctly does not show. Swap in the test pair, run one transaction end
-  to end, then swap back.
+- **Move the Tally notifications to a `filmschool.africa` address** when you
+  want them off the personal Gmail — Tally UI, not the API (see the caveat
+  above).
+- **Switch to the live Paystack keys when you go live.** `.env.local` runs the
+  TEST pair; the live pair is parked, commented out, in the same file. On
+  Vercel, set the live values as Production environment variables rather than
+  moving them through any file. The "Test mode" note on the pay section
+  disappears on its own once the secret key starts `sk_live_`.
 - **Instalments reconcile by hand.** Nothing tracks who has paid ₦140,000 and
   still owes ₦60,000; that lives in Tally submissions and your bank statement.
   This is the accepted cost of not running a database, and it is fine at one

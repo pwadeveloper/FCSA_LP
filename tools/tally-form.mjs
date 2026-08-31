@@ -137,7 +137,15 @@ console.log(`account: ${me.email}`);
 /* Point an EXISTING form's notifications at an address, without recreating it.
    Recreating would mint a new form id, which would change the public URL, which
    would mean editing pay.js and redeploying — a lot of moving parts to add one
-   email address. */
+   email address.
+
+   MEASURED, NOT ASSUMED: Tally accepts selfEmailTo, answers 200, and then
+   stores null — tried as {html:'a@b.com'}, as '<p>a@b.com</p>', and with a
+   mentions array. Per its own schema that field is nullable, and null means
+   the default, which is the account owner. So this reliably switches
+   notifications ON and reliably sends them to whoever owns the API key; it
+   does NOT reliably redirect them somewhere else. To send to a different
+   address, set it in the Tally UI, or forward from the owner's inbox. */
 const notifyIdx = process.argv.indexOf('--notify');
 if (notifyIdx !== -1) {
   const formId = process.argv[notifyIdx + 1];
@@ -156,7 +164,9 @@ if (notifyIdx !== -1) {
       },
     }),
   });
-  console.log(`\nnotifications for ${formId} now go to ${addr}`);
+  console.log(`\nnotifications ON for ${formId}`);
+  console.log(`Requested ${addr}; Tally stores no override, so they go to the`);
+  console.log(`account owner (${me.email}). Change it in the Tally UI if that is wrong.`);
   process.exit(0);
 }
 
