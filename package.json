@@ -1,0 +1,12 @@
+{
+  "name": "fcsa-landing",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The Film & Content School Africa — landing page. The page itself is static; this file exists so Vercel builds the api/ directory.",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev": "python3 tools/serve.py",
+    "test:paystack": "node tools/paystack-selftest.mjs"
+  }
+}

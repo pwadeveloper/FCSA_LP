@@ -27,3 +27,11 @@ __pycache__/
 # Same rule for the seven Finisher Track frames: tools/finisher-track.py builds
 # the derivatives in assets/media/finisher/ and only those ship.
 assets/media/finisher track/
+
+# SECRETS. .env.local holds the Paystack keys and must never be committed —
+# a leaked sk_live_ key lets anyone charge cards, refund, and read every
+# customer record on the account. .env.example is the checked-in template and
+# carries placeholders only, never a real value.
+.env
+.env.local
+.env.*.local

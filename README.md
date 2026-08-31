@@ -909,18 +909,174 @@ assets/
   media/finisher track/            the seven masters, build inputs — gitignored
   tracks.js                        the three track sections reveal on enter (~1KB, no deps)
   finisher-track.js                the Finisher's 500ms frame cycle, paused on hover
+  pay.js                           Paystack checkout — trusted with nothing
+api/
+  _paystack.js                     shared helpers (underscore = not a route)
+  paystack/config.js               public key + price, so the page and the
+                                   charge read one variable
+  paystack/init.js                 starts a transaction; owns the amount
+  paystack/verify.js               the only thing that may say "paid"
+  paystack/webhook.js              signed events, arrives even if the payer left
 tools/
   hero-derivatives.py              regenerates the hero ladder + stamps index.html
   reel-poster.py                   regenerates the reel poster ladder
   finisher-track.py                regenerates the seven Finisher frames
+  dev-api.mjs                      local server that actually runs api/
+  paystack-selftest.mjs            27 assertions, no keys needed
+.env.example                       template. .env.local is gitignored.
+package.json                       exists so Vercel builds api/; no dependencies
+vercel.json                        no-store on /api/*
 ```
+
+## Payments (Paystack)
+
+**The page can take tuition. It is switched off until a price is set** — see
+"the one thing left" at the end of this section.
+
+### How it is put together
+
+```
+pay.js                     the browser side. Trusted with nothing.
+api/_paystack.js           shared helpers (underscore = not a route)
+api/paystack/config.js     GET  -> public key, price, is it switched on
+api/paystack/init.js       POST -> starts a transaction, returns access_code
+api/paystack/verify.js     GET  -> asks Paystack what really happened
+api/paystack/webhook.js    POST -> signed events, the durable record
+```
+
+```
+browser  --POST /api/paystack/init-->  server  --sk_ key-->  Paystack
+                                                              |
+         <----------- access_code ----------------------------+
+   |
+   +-- PaystackPop().resumeTransaction(access_code)  -> Paystack's own modal
+                                                        (card never touches
+                                                         this origin)
+         onSuccess(reference)
+   |
+   +--GET /api/paystack/verify?reference=..-->  server  --sk_ key-->  Paystack
+         <-- {paid:true} only if status AND amount AND currency all match
+
+   Paystack --POST /api/paystack/webhook--> server   (out of band, retried,
+                                                      arrives even if the
+                                                      payer's phone died)
+```
+
+### The two rules everything else follows from
+
+**1. The browser never says what things cost.** `api/paystack/init.js` reads
+the amount from the server's own environment and ignores any `amount` in the
+request body. This is the whole ballgame: send the price from the client and
+someone opens devtools, changes 50000000 to 100, and buys a term of film school
+for one naira — Paystack will charge exactly what it is told to charge. There
+is a test for this in `tools/paystack-selftest.mjs` that fires the actual
+attack at the actual handler and asserts the server price wins.
+
+**2. The browser never says a payment happened.** Paystack's `onSuccess` runs
+on the payer's machine and can be called by hand from a console. It is treated
+only as a hint to go and ask `/api/paystack/verify`, which asks Paystack with
+the secret key. Three things are checked there, not one — status, amount, and
+currency — because a transaction can be genuinely successful and still be the
+wrong payment.
+
+The webhook exists because the callback path only runs if the payer's browser
+survives long enough to run it. Cards get charged and then the phone dies. The
+webhook arrives anyway, and Paystack retries it.
+
+### Keys
+
+| | |
+|---|---|
+| `pk_…` public | safe in the browser, can only start a payment |
+| `sk_…` secret | **never** in the browser, in git, or in a screenshot |
+
+A leaked `sk_live_` key lets someone charge cards, refund, and export your
+customer list. If one leaks, roll it in the dashboard at once — rolling kills
+the old key immediately.
+
+There is **no test/live switch**. It is whichever keys the environment holds:
+test values on Vercel Preview/Development, live values on Production. Until the
+secret key starts with `sk_live_`, the pay section shows a "Test mode" note.
+
+`.env.local` is gitignored and holds your local (test) keys. `.env.example` is
+the committed template and carries no values. `.gitignore` covers `.env`,
+`.env.local` and `.env.*.local`.
+
+### Running it locally
+
+`tools/serve.py` is a static file server, so on its own `/api/paystack/config`
+404s and the pay section correctly reports itself unavailable. To run the
+functions too:
+
+```bash
+python3 tools/serve.py 8123          # terminal 1 — the page
+node tools/dev-api.mjs 3000          # terminal 2 — the api
+open http://localhost:3000/#pay
+```
+
+`dev-api.mjs` owns `/api/*` and proxies everything else to `serve.py` (it
+proxies rather than serving files itself because `serve.py` answers Range
+requests and the stock library server does not). The handlers are imported
+unchanged — Edge-runtime modules are standard `Request`/`Response` and Web
+Crypto, all of which Node has had since 18, so what runs locally is the same
+code Vercel runs. An env var overrides `.env.local` for a single run:
+
+```bash
+PAYSTACK_AMOUNT_KOBO=50000000 node tools/dev-api.mjs 3000
+```
+
+```bash
+npm run test:paystack       # or: node tools/paystack-selftest.mjs
+```
+
+27 assertions, no keys and no network needed. Covers the webhook HMAC against
+an independently computed signature, the kobo parser, and the amount guard.
+It cannot tell you a real card will clear — only a test transaction does that.
+
+### Deploying
+
+1. Push. Import the repo at vercel.com; `api/` is detected automatically and
+   `package.json` exists so the functions build. The page itself is static and
+   has no build step.
+2. Set `PAYSTACK_PUBLIC_KEY`, `PAYSTACK_SECRET_KEY`, `PAYSTACK_AMOUNT_KOBO`,
+   `PAYSTACK_CURRENCY` in Project Settings -> Environment Variables. Test
+   values for Preview/Development, live values for Production.
+3. Point the webhook at `https://YOUR-DOMAIN/api/paystack/webhook` in the
+   Paystack dashboard (Settings -> API Keys & Webhooks).
+4. Run a real test transaction with a
+   [test card](https://paystack.com/docs/payments/test-payments) before going
+   live.
+
+### Still to do before this takes real money
+
+- **Set the price.** `PAYSTACK_AMOUNT_KOBO` is empty, because `content.md`
+  still reads `[TO CONFIRM — tuition, deposit, payment plan]` and the rule in
+  that file is never to invent one. Until it is set, `/api/paystack/init`
+  returns 503 and the button is disabled and says so. **Nothing else in this
+  section is waiting on anything.**
+- **Make the webhook durable and idempotent.** It currently only writes to the
+  function log, which is enough to reconcile by hand against the dashboard but
+  is not a system of record — Vercel logs roll off. Paystack retries on any
+  non-200, so the same `charge.success` will arrive more than once; key
+  fulfilment on `data.reference` before it emails a receipt or allocates a seat.
+- **Decide about instalments.** This charges the full amount in one go. Paying
+  in parts needs Paystack Plans/Subscriptions, or your own part-payment
+  records, and neither is wired.
+- **The apply form is still not connected** (`FORM_ENDPOINT` is `null` in
+  `script.js`). That is unrelated to payments and unchanged.
 
 Fonts are self-hosted rather than called from Google Fonts: the audience is on
 mobile data, and self-hosting removes two DNS + TLS round trips before the
 first byte of font CSS arrives. Only the three weights the page actually uses
 are wired; `fonts/` at the repo root holds the rest of the family, unused.
 
-There are **no third-party JS libraries.** An earlier build drove the track
+There is **one third-party script, and only one**: Paystack's
+`js.paystack.co/v2/inline.js`, loaded deferred on the pay section. It is the
+exception because card fields cannot be hand-rolled — letting a card number
+touch this origin would pull the whole site into PCI scope. The modal is
+Paystack's, served from Paystack, and the PAN never reaches this page.
+
+Otherwise there are **no third-party JS libraries.** An earlier build drove the track
 sections with GSAP ScrollTrigger over a Lenis smooth-scroll (pinned
 scrollytelling); it felt slow and heavy, so it was removed. The sections now
 reveal on enter with a ~1KB IntersectionObserver (`tracks.js`) over native

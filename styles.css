@@ -1691,6 +1691,41 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 .form-msg { padding: 1rem 1.25rem; border: 1px solid var(--paper); background: var(--sunk); color: var(--paper); font-size: var(--t0); line-height: 1.5; border-radius: 6px; }
 .form-msg[data-state="err"] { border-color: var(--rule); color: var(--body); }
 
+/* ---------- PAY TUITION ----------
+   The figure gets the page's largest non-headline weight, because it is the
+   one number in this section anyone is looking for. It is NOT yellow: the
+   accent means the CTA, and pricing that shouts louder than the button it
+   sits above inverts the order people should read them in.
+
+   tabular-nums so the amount does not shift width while it is being written
+   in by pay.js. */
+.pay-amount {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+  padding: 1.125rem 1.25rem;
+  border: 1px solid var(--rule); border-radius: 6px;
+  background: var(--sunk);
+}
+.pay-amount-k {
+  color: var(--mute); font-size: var(--t-1);
+  text-transform: uppercase; letter-spacing: .08em; font-weight: 700;
+}
+.pay-amount-v {
+  color: var(--paper); font-weight: 900;
+  font-size: clamp(1.375rem, 3.2vw, 1.875rem);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Test mode has to be impossible to miss and impossible to mistake for the
+   page's own voice — it is a note to the operator that reached production by
+   accident if anyone else is reading it. */
+.pay-testmode {
+  margin-top: .875rem; padding: .75rem 1rem;
+  border: 1px dashed var(--rule); border-radius: 6px;
+  color: var(--mute); font-size: var(--t-1); line-height: 1.5;
+}
+.pay-testmode strong { color: var(--paper); }
+
 /* ---------- FOOTER ---------- */
 .foot { border-top: 1px solid var(--rule); padding-block: clamp(3rem, 7vw, 5rem); }
 .foot-name { font-size: var(--t2); font-weight: 900; color: var(--paper); line-height: 1.05; letter-spacing: -0.032em; }
