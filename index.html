@@ -13,8 +13,9 @@
 <meta property="og:locale" content="en_NG">
 <!-- ============================================================
      LAUNCH BLOCKER — OPEN GRAPH IMAGE. 1200×630 on black #000000,
-     the TFCS.AFRIC mark (use assets/tfcs-afric-logo.png) and the
-     headline. Yellow #FFEA33 only if it carries the CTA meaning.
+     the school mark (use assets/tfcs-afric-logo.png, 316x137) and the
+     headline. The mark now carries #FFEA33 in its sun, so do NOT add
+     yellow anywhere else in the card.
      Add assets/og-image.png, uncomment, set the live domain. See README.
      <meta property="og:url" content="https://REPLACE-ME/">
      <meta property="og:image" content="https://REPLACE-ME/assets/og-image.png">
@@ -36,8 +37,14 @@
 
 <header class="site-head" id="site-head">
   <div class="wrap head-inner">
-    <a class="head-mark" href="#main" aria-label="TFCS.AFRIC — The Film and Content School Africa, home">
-      <img src="assets/tfcs-afric-logo.svg" alt="TFCS.AFRIC" class="head-logo" width="354" height="183">
+    <a class="head-mark" href="#main" aria-label="The Film &amp; Content School Africa, home">
+      <!-- 316x137 is the mark's own viewBox. It has to match, because the CSS
+           sets HEIGHT and leaves width auto — the browser reserves the box from
+           these two numbers before the SVG arrives, and a stale ratio reserves
+           the wrong width and shoves the Apply pill sideways on first paint.
+           alt is empty on purpose: the <a> above already carries the name, and
+           a non-empty alt here would have the link announced twice. -->
+      <img src="assets/tfcs-afric-logo.svg" alt="" class="head-logo" width="316" height="137">
     </a>
     <a class="btn btn-sm btn-apply" href="#apply">Apply now</a>
   </div>
@@ -989,7 +996,9 @@
 
 <footer class="foot">
   <div class="wrap">
-    <img src="assets/tfcs-afric-logo.svg" alt="TFCS.AFRIC" class="foot-logo" width="354" height="183">
+    <!-- Decorative here: .foot-name below states the school's name in text, and
+         the mark now spells out that same name, so an alt would read it twice. -->
+    <img src="assets/tfcs-afric-logo.svg" alt="" class="foot-logo" width="316" height="137">
 
     <div class="foot-top">
       <p class="foot-name">The Film &amp; Content School Africa</p>

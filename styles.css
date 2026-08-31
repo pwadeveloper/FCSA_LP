@@ -296,18 +296,47 @@ a { color: inherit; }
 }
 .head-mark, .site-head .btn { pointer-events: auto; }
 .head-mark { margin-right: auto; display: block; line-height: 0; }
-.head-logo { height: var(--head-mark-h); width: auto; }
+/* The mark is sized by WIDTH with an auto height, not by a pinned height.
+   That is what keeps it from being squashed on a narrow phone.
+
+   .head-inner is a flex row, so .head-mark shrinks when the Apply pill needs
+   the room; the global `img { max-width: 100% }` up at the top then clamps the
+   image's WIDTH to whatever the anchor was left with. Against a pinned HEIGHT
+   that is a distortion — the two constraints fight and the mark comes out
+   horizontally compressed, measured at 27% on a 320px viewport. A definite
+   WIDTH with height:auto does not fight: max-width clamps the width and the
+   height follows the ratio down with it, so the mark just gets smaller.
+   Measured holding 2.307 (its 316/137) at 300, 320, 390, 414, 1024, 1440
+   and 1920.
+
+   This was always latent — the retired mark was 1.93:1 and lost 14% at the
+   same width — but the current mark is 2.31:1, so it eats more of the row and
+   the squash became obvious.
+
+   WIDTH is the driver, not max-height, because --head-mark-h has to be able to
+   scale the mark UP as well as down: it reaches 150px on a wide screen and the
+   SVG's intrinsic height is only 137, so an auto height would have quietly
+   capped the mark 13px short of the design. Deriving width from the height var
+   through the viewBox ratio keeps the var meaning what it says, and height:auto
+   then follows the ratio in both directions. If the mark's viewBox changes,
+   change 316/137 here too. */
+.head-logo {
+  width: calc(var(--head-mark-h) * 316 / 137);   /* the mark's own viewBox */
+  height: auto;
+  max-width: 100%;
+}
 
 /* Two stacked shadows: a tight one for edge definition, a wide soft one for
    ambient density. On the SVG mark drop-shadow follows the alpha channel, so
-   it traces the crocodile and reel outline instead of boxing them.
+   it traces the sun and the arcs instead of boxing them.
 
    The values are SCALED to the state. Tested at 3x over a blown-out frame:
    the 16px ambient blur is right against a 150px mark and reads as a lift,
    but against the 44px compact mark it is 36% of the mark's own height and
-   turns into a grey cloud. The linework survives either way — the spokes and
-   teeth stay separate — but the compact mark is visibly cleaner on the
-   smaller pair. A fixed shadow cannot serve a mark that changes size 3.4x. */
+   turns into a grey cloud. A fixed shadow cannot serve a mark that changes
+   size 3.4x. (The "spokes and teeth stay separate" note here described the
+   retired reel mark; the current mark's arcs are heavier and hold up better
+   at the compact size than its four lines of caps do — see below.) */
 .head-mark, .head-nav a {
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.55))
           drop-shadow(0 4px 16px rgb(0 0 0 / 0.45));
@@ -328,7 +357,7 @@ a { color: inherit; }
   padding-inline: 1.3rem;
   font-size: var(--t-1);
 }
-.head-logo { transition: height .2s var(--ease); }
+.head-logo { transition: width .2s var(--ease); }   /* width is the driver now — see above */
 .head-mark { transition: filter .2s var(--ease); }
 /* prefers-reduced-motion zeroes every transition-duration globally further
    down, so under that setting the header simply snaps between the two states. */
@@ -1667,7 +1696,13 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 .foot-name { font-size: var(--t2); font-weight: 900; color: var(--paper); line-height: 1.05; letter-spacing: -0.032em; }
 .foot-sub { color: var(--mute); font-size: var(--t-1); margin-top: .6rem; }
 .foot-founded { margin-block: clamp(2.5rem, 6vw, 3.5rem); padding-block: clamp(2rem, 5vw, 2.75rem); border-block: 1px solid var(--rule); }
-.foot-logo { height: 44px; width: auto; margin-bottom: clamp(1.5rem, 4vw, 2rem); }
+/* Same two-max-constraint sizing as .head-logo, for the same reason. */
+.foot-logo {
+  width: calc(44px * 316 / 137);
+  height: auto;
+  max-width: 100%;
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+}
 
 /* ==========================================================================
    MOTION — one orchestrated load, then near-nothing.

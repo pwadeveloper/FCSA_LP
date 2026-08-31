@@ -487,7 +487,7 @@ currently repo placeholders to be swapped — the shape each one needs:
 | `production-05` | Production | `assets/media/production-05.jpg` | 16:9 | 1920×1080 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
 | `production-06` | Production | `assets/media/production-06.jpg` | 9:16 | 1080×1920 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
 | `apply-still` | Apply | `assets/media/apply-still.jpg` | 3:2 | 1800×1200 | STILL | A premiere audience, or a room watching a screen. Warm, full of people. |  |
-| `og-image` | Social | `assets/media/og-image.jpg` | 1.91:1 | 1200×630 | STILL | Black ground, TFCS.AFRIC mark, headline. Built, not photographed. |  |
+| `og-image` | Social | `assets/media/og-image.jpg` | 1.91:1 | 1200×630 | STILL | Black ground, school mark, headline. Built, not photographed. |  |
 
 ### The background loop — section 2 at rest
 
@@ -889,8 +889,8 @@ index.html
 styles.css
 script.js
 assets/
-  favicon.svg
-  tfcs-afric-logo.svg              header + footer mark
+  favicon.svg                      the roundel alone, cut from the logo below
+  tfcs-afric-logo.svg              header + footer mark, 316x137
   tfcs-afric-logo.png              raster fallback, for the OG image
   fonts/delight-regular.woff2      400
   fonts/delight-bold.woff2         700
@@ -928,15 +928,25 @@ scroll — faster, ~128KB lighter, and it degrades to fully visible with no JS.
 
 ## Notes for whoever picks this up
 
-- **Black, white, one yellow.** `--ground #000000`, `--paper #FFFFFF`,
+- **Black, white, one yellow** — plus, since the 2026-08-31 mark, a sand
+  `#D6C8A5` that lives only inside the logo artwork and is not tokenised.
+  `--ground #000000`, `--paper #FFFFFF`,
   `--accent #FFEA33` (sampled from the supplied comp), `--on-accent #000000`.
   A supporting grey ladder (`--body --mute --rule --surface --sunk`) is derived
   against pure black and documented inline in `styles.css`.
-- **Yellow appears in exactly one place: the Apply CTA** — the header pill and
-  the submit button. It is referenced once in the whole stylesheet
-  (`.btn-apply`). If it shows up in a second place it stops meaning anything.
-  The PREMIERE block in the timeline is `--paper` like the other whole-school
-  blocks; it no longer carries an accent.
+- **Yellow is referenced once in the stylesheet: the Apply CTA** — the header
+  pill and the submit button (`.btn-apply`). If it shows up in a second styled
+  place it stops meaning anything. The PREMIERE block in the timeline is
+  `--paper` like the other whole-school blocks; it no longer carries an accent.
+- **UNRESOLVED — the mark now carries yellow too.** The logo installed on
+  2026-08-31 puts `#FFEA33` in its sun and is otherwise `#D6C8A5`, a sand that
+  is not in the palette above. So on the page the accent is no longer unique to
+  the CTA: at the header the mark's sun and the Apply pill are the same yellow,
+  16px apart on a 390px phone. That is a straight conflict with the rule
+  directly above, and it is a brand decision, not a bug — resolve it one way or
+  the other rather than letting the two notes sit here contradicting each other.
+  Either the mark's sun changes, or this rule becomes "yellow is the mark and
+  the CTA" and the CTA gets its distinction from shape instead of colour.
 - **Never white on yellow.** `#FFFFFF` on `#FFEA33` is **1.23:1** — effectively
   invisible. Black on it is 17.07:1. The focus ring stays white and carries a
   black halo so it survives landing on the yellow pill or on the hero image.
