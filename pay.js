@@ -11,16 +11,21 @@
    top of script.js.
    ========================================================================== */
 
-/* From your bank. These are printed on the page for anyone to read — they are
-   not secrets, they are the details on an invoice. */
-var BANK = null;
-/* e.g.
+/* Printed on the page for anyone to read — not secrets, these are the details
+   on an invoice.
+
+   THE ACCOUNT NAME IS NOT THE SCHOOL'S NAME, and that is worth knowing rather
+   than discovering. Someone about to transfer ₦140,000 sees "KayKav Creative
+   Studio LTD" where they expected "The Film & Content School Africa", and the
+   honest reaction to that is to stop. `note` below is printed under the
+   details to close that gap; edit it to whatever is actually true of the
+   relationship between the two names, or set it to null to drop the line. */
 var BANK = {
-  bank:    'Guaranty Trust Bank',
-  account: 'The Film & Content School Africa',
-  number:  '0123456789'
+  bank:    'GT Bank',
+  account: 'KayKav Creative Studio LTD',
+  number:  '3004903455',
+  note:    'KayKav Creative Studio LTD is the company behind the school — this is the right account.'
 };
-*/
 
 /* The Tally form that collects the receipt. Create it at tally.so with a file
    upload field, and set its notification email to the filmschool.africa
@@ -124,6 +129,11 @@ var TALLY_URL = null;   /* e.g. 'https://tally.so/r/xxxxxx' */
         sec.querySelector('[data-bank-name]').textContent = BANK.bank;
         sec.querySelector('[data-bank-account]').textContent = BANK.account;
         sec.querySelector('[data-bank-number]').textContent = BANK.number;
+        if (BANK.note) {
+          var n = sec.querySelector('[data-bank-note]');
+          n.textContent = BANK.note;
+          n.hidden = false;
+        }
         sec.querySelector('[data-tally-link]').href = TALLY_URL;
         sec.querySelector('[data-transfer-amount]').textContent = money(c.depositKobo, c.currency);
         sec.querySelector('[data-transfer-amount-2]').textContent = money(c.depositKobo, c.currency);
