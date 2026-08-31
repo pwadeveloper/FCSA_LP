@@ -1,9 +1,36 @@
 /* ==========================================================================
-   PAY TUITION — Paystack inline checkout.
+   PAY TUITION — two routes.
 
-   THE ONE THING TO UNDERSTAND ABOUT THIS FILE: it is not trusted, and it is
-   not supposed to be. It runs on the payer's machine, where every line can be
-   edited, so nothing it says is taken as fact by the server.
+     Pay in full   -> Paystack card checkout (api/paystack/*)
+     Pay in two    -> bank transfer, then a Tally form carrying the receipt
+
+   FILL THESE TWO IN AND THE INSTALMENT OPTION APPEARS. Left null, it is
+   hidden entirely and the page offers pay-in-full only — deliberately, because
+   the alternative is publishing a placeholder account number, and money sent
+   to a wrong account number is money gone. Same idiom as FORM_ENDPOINT at the
+   top of script.js.
+   ========================================================================== */
+
+/* From your bank. These are printed on the page for anyone to read — they are
+   not secrets, they are the details on an invoice. */
+var BANK = null;
+/* e.g.
+var BANK = {
+  bank:    'Guaranty Trust Bank',
+  account: 'The Film & Content School Africa',
+  number:  '0123456789'
+};
+*/
+
+/* The Tally form that collects the receipt. Create it at tally.so with a file
+   upload field, and set its notification email to the filmschool.africa
+   address so a submission reaches both Tally and your inbox. */
+var TALLY_URL = null;   /* e.g. 'https://tally.so/r/xxxxxx' */
+
+/* ==========================================================================
+   THE ONE THING TO UNDERSTAND ABOUT THE CARD ROUTE: this file is not trusted,
+   and is not supposed to be. It runs on the payer's machine, where every line
+   can be edited, so nothing it says is taken as fact by the server.
 
      - it does not know or send the price. The amount is set by
        /api/paystack/init from the server's own environment, and the figure
@@ -11,12 +38,8 @@
        disagree.
      - it does not decide that a payment happened. Paystack's onSuccess is a
        message from this same untrusted machine and can be called by hand from
-       a console. It is only ever used as a nudge to go and ASK the server, via
+       a console. It is only ever a nudge to go and ASK the server, via
        /api/paystack/verify, which asks Paystack.
-
-   So the flow is: server starts the transaction -> Paystack's modal takes the
-   card -> the server confirms with Paystack that money actually moved. The
-   browser is a courier between those three, nothing more.
    ========================================================================== */
 (function () {
   'use strict';
@@ -28,16 +51,24 @@
   var btn      = sec.querySelector('[data-pay-btn]');
   var msg      = document.getElementById('pay-msg');
   var amountEl = sec.querySelector('[data-pay-amount]');
-  var labelEl  = sec.querySelector('[data-pay-label]');
   var introEl  = sec.querySelector('[data-pay-intro]');
   var testEl   = sec.querySelector('[data-pay-testmode]');
   var plansEl  = sec.querySelector('[data-pay-plans]');
   var splitRow = sec.querySelector('[data-plan-split-row]');
-  var emailNote= sec.querySelector('[data-pay-emailnote]');
+  var routeFull  = sec.querySelector('[data-route-full]');
+  var routeSplit = sec.querySelector('[data-route-split]');
   var cfg      = null;
 
+  /* Both halves have to be present. A bank with no form leaves the receipt
+     nowhere to go; a form with no bank leaves the money nowhere to go. */
+  var splitReady = Boolean(BANK && BANK.bank && BANK.account && BANK.number && TALLY_URL);
+
+  /* Queried from the SECTION, not the form. The plan radios sit outside
+     #pay-form on purpose — they choose which route is on screen, and one of
+     those routes is not a form at all — so a form-scoped lookup finds nothing
+     and the panel never swaps. */
   function chosenPlan() {
-    var r = form.querySelector('input[name="plan"]:checked');
+    var r = sec.querySelector('input[name="plan"]:checked');
     return r ? r.value : 'full';
   }
 
@@ -84,10 +115,24 @@
       sec.querySelector('[data-plan-full]').textContent = money(c.totalKobo, c.currency);
       sec.querySelector('[data-plan-deposit]').textContent = money(c.depositKobo, c.currency) + ' now';
       sec.querySelector('[data-plan-split-note]').textContent =
-        money(c.balanceKobo, c.currency) + ' on resumption, within the first four weeks.';
+        'Bank transfer, then send us the receipt. ' +
+        money(c.balanceKobo, c.currency) + ' on resumption.';
+      amountEl.textContent = money(c.totalKobo, c.currency);
+
+      if (splitReady) {
+        splitRow.hidden = false;
+        sec.querySelector('[data-bank-name]').textContent = BANK.bank;
+        sec.querySelector('[data-bank-account]').textContent = BANK.account;
+        sec.querySelector('[data-bank-number]').textContent = BANK.number;
+        sec.querySelector('[data-tally-link]').href = TALLY_URL;
+        sec.querySelector('[data-transfer-amount]').textContent = money(c.depositKobo, c.currency);
+        sec.querySelector('[data-transfer-amount-2]').textContent = money(c.depositKobo, c.currency);
+        sec.querySelector('[data-split-balance]').textContent =
+          'The remaining ' + money(c.balanceKobo, c.currency) + ' is due on resumption, within the ' +
+          'first four weeks — same account, same form.';
+      }
 
       plansEl.hidden = false;
-      if (c.splitAvailable) { splitRow.hidden = false; emailNote.hidden = false; }
       paint();
 
       btn.disabled = false;
@@ -108,14 +153,16 @@
      what is actually charged is decided by the server in
      /api/paystack/init, which also overrides both of these for anyone
      returning to pay a balance. */
+  /* Swap which route is on screen. The two are different mechanisms, not two
+     labels on one button, so they get different panels rather than a form
+     that changes meaning under you. */
   function paint() {
     if (!cfg || !cfg.configured) return;
     var split = chosenPlan() === 'split';
-    amountEl.textContent = money(split ? cfg.depositKobo : cfg.totalKobo, cfg.currency);
-    labelEl.textContent = split ? 'Due now (of ' + money(cfg.totalKobo, cfg.currency) + ')' : 'Due now';
-    btn.textContent = split ? 'Pay deposit' : 'Pay tuition';
+    routeFull.hidden = split;
+    routeSplit.hidden = !split;
   }
-  form.addEventListener('change', function (ev) {
+  sec.addEventListener('change', function (ev) {
     if (ev.target && ev.target.name === 'plan') { quiet(); paint(); }
   });
 
@@ -186,21 +233,12 @@
         name:  form.querySelector('#p-name').value.trim(),
         email: form.querySelector('#p-email').value.trim(),
         phone: form.querySelector('#p-phone').value.trim(),
-        track: form.querySelector('#p-track').value,
-        plan:  chosenPlan()
+        track: form.querySelector('#p-track').value
       })
     })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
       .then(function (res) {
         if (!res.ok) throw new Error(res.body && res.body.error);
-
-        /* The server may be charging something other than the plan the page
-           displayed — a returning student gets their balance. Say so before
-           Paystack's window opens, so the figure in it is never a surprise. */
-        if (res.body.purpose === 'balance') {
-          say('You have already paid ' + money(res.body.alreadyPaidKobo, cfg.currency) +
-              '. Charging your remaining ' + money(res.body.amountKobo, cfg.currency) + '.');
-        }
 
         btn.textContent = 'Waiting for payment…';
 
@@ -240,17 +278,9 @@
         if (v.paid) {
           form.reset();
           btn.disabled = true;
-          if (v.remainingKobo > 0) {
-            btn.textContent = 'Deposit paid';
-            say('Deposit received — your place is held. The remaining ' +
-                money(v.remainingKobo, cfg.currency) + ' is due on resumption, within the ' +
-                'first four weeks. Come back here and pay it with the same email address. ' +
-                'Reference ' + reference + '.');
-          } else {
-            btn.textContent = 'Paid in full';
-            say('Tuition paid in full. Nothing further is owed. Your receipt is on its way ' +
-                'to your email. Reference ' + reference + ' — keep it.');
-          }
+          btn.textContent = 'Paid in full';
+          say('Tuition paid in full. Nothing further is owed. Your receipt is on its way ' +
+              'to your email. Reference ' + reference + ' — keep it.');
           return;
         }
         btn.disabled = false;
@@ -267,6 +297,32 @@
         say('Your payment may have gone through, but we could not reach the server to confirm it. ' +
             'Do not pay again — send us reference ' + reference + '.', 'err');
       });
+  }
+
+  /* Copy the account number. This gets retyped into a banking app on a phone,
+     and one wrong digit is money sent to a stranger. clipboard.writeText needs
+     a secure context (https or localhost); where it is unavailable the button
+     selects the number instead so it can still be copied by hand. */
+  var copyBtn = sec.querySelector('[data-bank-copy]');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      var numEl = sec.querySelector('[data-bank-number]');
+      var done = function () {
+        copyBtn.textContent = 'Copied';
+        window.setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(numEl.textContent.trim()).then(done, select);
+      } else { select(); }
+      function select() {
+        var r = document.createRange();
+        r.selectNodeContents(numEl);
+        var sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(r);
+        copyBtn.textContent = 'Select & copy';
+        window.setTimeout(function () { copyBtn.textContent = 'Copy'; }, 2400);
+      }
+    });
   }
 
   /* clear a field's error as soon as it is corrected — same as the apply form */

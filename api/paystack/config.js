@@ -1,14 +1,13 @@
 /* GET /api/paystack/config
-   What the page is allowed to know: the public key, the plans and their
-   prices, and whether the whole thing is switched on.
+   What the page is allowed to know: the public key and the figures.
 
    EVERY FIGURE ON THE PAY SECTION COMES FROM HERE rather than being written
-   into index.html, so the number shown and the number charged read the same
+   into index.html, so the price shown and the price charged read one
    environment variable and cannot drift. The deposit and balance are derived
-   from the total (see api/_paystack.js), so they cannot drift from each other
-   either. */
+   from the total (see api/_paystack.js) so they cannot drift from each other
+   either — they are display-only, since the instalment route is a bank
+   transfer and nothing charges them. */
 import { config, configProblem, json } from '../_paystack.js';
-import { storeConfig } from '../_store.js';
 
 export const runtime = 'edge';
 
@@ -17,7 +16,6 @@ export default async function handler(request) {
 
   const c = config();
   const problem = configProblem(c);
-  const store = storeConfig();
 
   return json({
     configured: !problem,
@@ -29,13 +27,5 @@ export default async function handler(request) {
     depositKobo: c.depositKobo,
     balanceKobo: c.balanceKobo,
     depositPercent: c.depositPercent,
-
-    /* THE SPLIT PLAN IS OFFERED ONLY IF THERE IS SOMEWHERE TO RECORD IT.
-       Part payment without a durable record is a promise to track something
-       you have no way of tracking: the deposit arrives, the browser closes,
-       and nothing anywhere knows ₦60,000 is still owed. So with no database
-       configured the page shows pay-in-full only, which is honest, instead of
-       a plan it cannot honour. */
-    splitAvailable: !problem && store.enabled,
   });
 }

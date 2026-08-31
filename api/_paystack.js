@@ -34,12 +34,11 @@ export function config() {
   const total = tuitionKobo && tuitionKobo > 0 ? tuitionKobo : null;
 
   /* THE DEPOSIT IS DERIVED, NEVER CONFIGURED SEPARATELY, and the balance is
-     the subtraction rather than the other percentage. Two independently
-     entered figures are two figures that can be edited apart, and the failure
-     mode is silent: 70% + 30% of a number nobody re-checked leaves a student
-     owing 1 kobo forever, or paying 1 kobo too much, and the "have they
-     finished paying" comparison never comes out clean.
-     deposit + balance === total is arithmetic here, not a convention. */
+     the subtraction rather than the other percentage, so the two always sum to
+     exactly the tuition. Nothing charges these — the split plan is paid by
+     bank transfer — but they are the figures PRINTED ON THE PAGE, and a page
+     whose two instalments do not add up to its own total is the kind of thing
+     a student notices and an accountant remembers. */
   const pct = /^\d{1,2}$/.test(pctRaw) ? parseInt(pctRaw, 10) : 70;
   const depositKobo = total ? Math.round((total * pct) / 100) : null;
   const balanceKobo = total ? total - depositKobo : null;
@@ -68,34 +67,6 @@ export function configProblem(c) {
   if (!c.hasKeys) return 'Paystack keys are not set. Add PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY.';
   if (c.totalKobo === null) return 'PAYSTACK_TUITION_KOBO is not set to a positive whole number of kobo.';
   return null;
-}
-
-/* ---------- what someone owes ----------
-   ONE function, used by init to decide what to charge and by verify and the
-   webhook to decide whether a payment was the right size. If these three ever
-   computed it separately they would drift, and the symptom would be a student
-   told they still owe money they have already paid.
-
-   `paidKobo` is the sum of their successful payments so far, from the store.
-   With no store it is 0 and the split plan is not offered at all — see
-   api/_store.js. */
-export function owed({ paidKobo, plan, cfg }) {
-  const paid = Math.max(0, paidKobo | 0);
-  const outstanding = cfg.totalKobo - paid;
-
-  if (outstanding <= 0) {
-    return { done: true, amountKobo: 0, purpose: 'none', outstanding: 0 };
-  }
-  /* Anyone who has already paid something is finishing, whatever the form
-     said. The plan choice only means something on a first payment — you do
-     not get to re-pick "70% now" when 70% is already behind you. */
-  if (paid > 0) {
-    return { done: false, amountKobo: outstanding, purpose: 'balance', outstanding };
-  }
-  if (plan === 'split') {
-    return { done: false, amountKobo: cfg.depositKobo, purpose: 'deposit', outstanding };
-  }
-  return { done: false, amountKobo: cfg.totalKobo, purpose: 'full', outstanding };
 }
 
 export function json(body, status = 200, extraHeaders = {}) {

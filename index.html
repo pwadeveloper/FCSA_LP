@@ -999,36 +999,36 @@
 </section>
 
 <!-- ============ PAY TUITION ============
-     A separate surface from the application on purpose. The form above is
-     free to send; this is the step someone takes once they have a place, and
-     nothing here is a condition of applying.
+     TWO ROUTES, and they are not the same mechanism.
 
-     EVERY NUMBER ON THIS SECTION IS FILLED IN BY pay.js FROM
-     /api/paystack/config, never written into the markup. The figure shown and
-     the figure charged then come from one environment variable and cannot
-     drift apart. Until that variable is set the section renders in its
-     unconfigured state: the amount reads as a dash, the button is disabled,
-     and the note says fees have not been published — which is the truth while
-     content.md still says "[TO CONFIRM — tuition, deposit, payment plan]".
+       Pay in full   -> Paystack card checkout, handled by api/paystack/*
+       Pay in two    -> bank transfer, then a Tally form carrying the receipt
 
-     The section is hidden with [hidden] until pay.js has heard back, so a
-     visitor never sees a price flash from empty to a number. -->
+     The instalment route is deliberately NOT a card payment. Charging 70% now
+     and 30% later means knowing, months apart, who has paid what — which
+     needs a database, and there isn't one. A transfer plus a receipt on a
+     Tally form puts that record where a human already looks, at the cost of
+     reconciling by hand.
+
+     EVERY FIGURE HERE IS WRITTEN BY pay.js FROM /api/paystack/config. None of
+     these numbers live in this file, so the price on the page and the price
+     charged cannot drift, and the two instalments cannot stop adding up to
+     the total.
+
+     The bank details and the Tally link are the two things that are NOT
+     served from the API — they are constants at the top of pay.js, following
+     the same FORM_ENDPOINT idiom script.js already uses. Until both are
+     filled in, the instalment option is hidden rather than shown with a
+     placeholder account number, because a wrong account number is money sent
+     to a stranger. -->
 <section class="sec sec-pay" id="pay" aria-labelledby="pay-h" hidden data-pay>
   <div class="wrap wrap-narrow">
     <div class="apply-head reveal">
       <h2 id="pay-h" class="h2">Pay your tuition</h2>
-      <p class="sec-intro" data-pay-intro>Card, bank transfer or USSD, through Paystack. You will get a receipt by email straight away.</p>
+      <p class="sec-intro" data-pay-intro>Card, bank transfer or USSD. Pay it all at once, or split it in two.</p>
     </div>
 
-    <form class="form reveal" id="pay-form" novalidate>
-      <!-- THE PLANS. Every figure inside is written by pay.js from
-           /api/paystack/config — none of these numbers exist in this file, so
-           the price on the page and the price charged cannot disagree, and the
-           deposit and balance cannot disagree with the total.
-
-           The split option is REMOVED, not disabled, when the server says the
-           payment record is unavailable: part payment with nowhere to record
-           the balance is a promise to track something untrackable. -->
+    <div class="form reveal">
       <fieldset class="f f-fs pay-plans" data-pay-plans hidden>
         <legend>How would you like to pay?</legend>
         <div class="pay-plan-list">
@@ -1036,73 +1036,103 @@
             <input type="radio" name="plan" value="full" checked>
             <span class="pay-plan-b">
               <span class="pay-plan-t">Pay in full</span>
-              <span class="pay-plan-v" data-plan-full>—</span>
-              <span class="pay-plan-n">One payment, nothing else owed.</span>
+              <span class="pay-plan-v" data-plan-full>&mdash;</span>
+              <span class="pay-plan-n">Card, transfer or USSD, right here. Nothing else owed.</span>
             </span>
           </label>
           <label class="pay-plan" data-plan-split-row hidden>
             <input type="radio" name="plan" value="split">
             <span class="pay-plan-b">
               <span class="pay-plan-t">Pay in two</span>
-              <span class="pay-plan-v" data-plan-deposit>—</span>
-              <span class="pay-plan-n" data-plan-split-note>Balance on resumption, within the first four weeks.</span>
+              <span class="pay-plan-v" data-plan-deposit>&mdash;</span>
+              <span class="pay-plan-n" data-plan-split-note>Bank transfer, then send us the receipt.</span>
             </span>
           </label>
         </div>
       </fieldset>
 
-      <div class="pay-amount">
-        <span class="pay-amount-k" data-pay-label>Due now</span>
-        <!-- aria-live so the figure is announced when it changes, since it is
-             rewritten by the plan choice after the markup has been read. -->
-        <strong class="pay-amount-v" data-pay-amount aria-live="polite">—</strong>
-      </div>
-
-      <div class="f">
-        <label for="p-name">Full name</label>
-        <input id="p-name" name="name" type="text" autocomplete="name" required>
-        <p class="err" data-for="p-name" hidden></p>
-      </div>
-
-      <div class="f-row">
-        <div class="f">
-          <label for="p-email">Email</label>
-          <input id="p-email" name="email" type="email" inputmode="email" autocomplete="email" required>
-          <!-- Load-bearing, not decoration. The balance is found by email, so
-               a returning student who types a different address is charged a
-               second deposit instead of their ₦60,000. -->
-          <p class="f-note" data-pay-emailnote hidden>Paying a balance? Use the same email you paid the deposit with.</p>
-          <p class="err" data-for="p-email" hidden></p>
+      <!-- ---- ROUTE A: card checkout ---- -->
+      <form id="pay-form" novalidate data-route-full>
+        <div class="pay-amount">
+          <span class="pay-amount-k">Due now</span>
+          <strong class="pay-amount-v" data-pay-amount aria-live="polite">&mdash;</strong>
         </div>
+
         <div class="f">
-          <label for="p-phone">Phone / WhatsApp</label>
-          <input id="p-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required>
-          <p class="err" data-for="p-phone" hidden></p>
+          <label for="p-name">Full name</label>
+          <input id="p-name" name="name" type="text" autocomplete="name" required>
+          <p class="err" data-for="p-name" hidden></p>
         </div>
+
+        <div class="f-row">
+          <div class="f">
+            <label for="p-email">Email</label>
+            <input id="p-email" name="email" type="email" inputmode="email" autocomplete="email" required>
+            <p class="err" data-for="p-email" hidden></p>
+          </div>
+          <div class="f">
+            <label for="p-phone">Phone / WhatsApp</label>
+            <input id="p-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required>
+            <p class="err" data-for="p-phone" hidden></p>
+          </div>
+        </div>
+
+        <div class="f">
+          <label for="p-track">Track</label>
+          <select id="p-track" name="track" required>
+            <option value="" selected disabled>Choose one</option>
+            <option>Film Production</option>
+            <option>Content Creation</option>
+            <option>The Finisher&rsquo;s Track</option>
+          </select>
+          <p class="err" data-for="p-track" hidden></p>
+        </div>
+
+        <button class="btn btn-apply btn-block" type="submit" data-pay-btn disabled>Pay tuition</button>
+
+        <p class="form-msg" id="pay-msg" role="status" aria-live="polite" hidden></p>
+
+        <!-- Test mode takes test cards and moves no money. The one thing you
+             must not do is ship it live without noticing. -->
+        <p class="pay-testmode" data-pay-testmode hidden>
+          <strong>Test mode.</strong> No money moves. Use Paystack&rsquo;s test cards.
+        </p>
+      </form>
+
+      <!-- ---- ROUTE B: transfer + receipt ---- -->
+      <div class="pay-transfer" data-route-split hidden>
+        <div class="pay-amount">
+          <span class="pay-amount-k">Transfer now</span>
+          <strong class="pay-amount-v" data-transfer-amount>&mdash;</strong>
+        </div>
+
+        <dl class="pay-bank">
+          <div><dt>Bank</dt><dd data-bank-name>&mdash;</dd></div>
+          <div><dt>Account name</dt><dd data-bank-account>&mdash;</dd></div>
+          <div>
+            <dt>Account number</dt>
+            <!-- tabular-nums and a copy button, because this gets retyped into
+                 a banking app on a phone and a mistyped digit is money gone. -->
+            <dd class="pay-bank-num">
+              <span data-bank-number>&mdash;</span>
+              <button type="button" class="pay-copy" data-bank-copy>Copy</button>
+            </dd>
+          </div>
+        </dl>
+
+        <ol class="pay-steps">
+          <li>Transfer <strong data-transfer-amount-2>&mdash;</strong> to the account above.</li>
+          <li>Fill in the short form below and attach your receipt or a screenshot.</li>
+          <li>We confirm by WhatsApp, usually the same day.</li>
+        </ol>
+
+        <a class="btn btn-apply btn-block" data-tally-link href="#" target="_blank" rel="noopener">
+          Send your receipt
+        </a>
+
+        <p class="pay-note" data-split-balance>&mdash;</p>
       </div>
-
-      <div class="f">
-        <label for="p-track">Track</label>
-        <select id="p-track" name="track" required>
-          <option value="" selected disabled>Choose one</option>
-          <option>Film Production</option>
-          <option>Content Creation</option>
-          <option>The Finisher&rsquo;s Track</option>
-        </select>
-        <p class="err" data-for="p-track" hidden></p>
-      </div>
-
-      <button class="btn btn-apply btn-block" type="submit" data-pay-btn disabled>Pay tuition</button>
-
-      <p class="form-msg" id="pay-msg" role="status" aria-live="polite" hidden></p>
-
-      <!-- Shown only while the keys are Paystack's test pair. Test mode takes
-           test cards and moves no money, and the one thing you must not do is
-           ship it live without noticing. -->
-      <p class="pay-testmode" data-pay-testmode hidden>
-        <strong>Test mode.</strong> No money moves. Use Paystack&rsquo;s test cards.
-      </p>
-    </form>
+    </div>
   </div>
 </section>
 

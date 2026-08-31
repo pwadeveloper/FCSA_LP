@@ -1754,6 +1754,48 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   font-variant-numeric: tabular-nums;
 }
 
+/* ---- the transfer route ---- */
+.pay-transfer { display: grid; gap: 1.25rem; }
+
+/* The bank details. A definition list because that is what they are, and
+   because it degrades to readable label/value pairs with no CSS at all. */
+.pay-bank { display: grid; gap: .0625rem; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.pay-bank > div {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+  padding: .875rem 1.125rem; background: var(--sunk);
+}
+.pay-bank dt { color: var(--mute); font-size: var(--t-1); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.pay-bank dd { margin: 0; color: var(--paper); font-weight: 700; font-size: var(--t0); text-align: right; }
+/* tabular-nums on the account number specifically: it is a string of digits
+   someone is reading one at a time into a phone, and proportional figures make
+   1 and 7 and 4 sit at different widths while they do it. */
+.pay-bank-num { display: flex; align-items: center; gap: .75rem; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.pay-copy {
+  flex: none; min-height: 32px; padding: .25rem .625rem;
+  border: 1px solid var(--rule); border-radius: 4px;
+  background: transparent; color: var(--body);
+  font: inherit; font-size: var(--t-1); font-weight: 700; cursor: pointer;
+  transition: border-color .18s var(--ease), color .18s var(--ease);
+}
+.pay-copy:hover { border-color: var(--paper); color: var(--paper); }
+.pay-copy:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+
+/* The global reset strips list markers, and these steps need theirs back —
+   they are a sequence, and "transfer, then send the receipt, then we confirm"
+   read as three unrelated sentences without the numbers. display:grid would
+   also swallow the markers, so the gap comes from the items instead. */
+.pay-steps {
+  margin: 0; padding-left: 1.375rem;
+  list-style: decimal outside;
+  color: var(--body); font-size: var(--t0); line-height: 1.55;
+}
+.pay-steps li { padding-left: .25rem; }
+.pay-steps li + li { margin-top: .5rem; }
+.pay-steps::marker, .pay-steps li::marker { color: var(--mute); font-weight: 700; }
+.pay-steps strong { color: var(--paper); font-variant-numeric: tabular-nums; }
+.pay-note { color: var(--mute); font-size: var(--t-1); line-height: 1.5; }
+
 /* Test mode has to be impossible to miss and impossible to mistake for the
    page's own voice — it is a note to the operator that reached production by
    accident if anyone else is reading it. */

@@ -6,14 +6,10 @@
    and can be called by hand from a console. Paystack's own docs say the same:
    never deliver value on the client callback alone.
 
-   WHAT "CORRECT" MEANS WITH TWO PLANS. It is no longer "did they pay the
-   total". A ₦140,000 charge is exactly right for a deposit and wrong for
-   anything else, so the amount is checked against the AMOUNT THAT
-   TRANSACTION WAS CREATED FOR, which Paystack echoes back in metadata.
-   Checking against the total instead would reject every legitimate deposit.
-
-   This endpoint reads and reports. It does NOT write the payment record —
-   the webhook does, because this only runs if the payer's browser survived. */
+   Three things are checked, not one, because a transaction can be genuinely
+   "successful" and still be the wrong payment: status, amount, and currency.
+   Card checkout only ever collects the full tuition, so the expected amount
+   is simply the total. */
 import { config, configProblem, json, paystack } from '../_paystack.js';
 
 export const runtime = 'edge';
@@ -34,23 +30,10 @@ export default async function handler(request) {
   if (!res.ok) return json({ paid: false, error: res.message }, 502);
 
   const d = res.data;
-  const meta = d.metadata || {};
-  const purpose = meta.purpose || 'full';
-
-  /* What this particular transaction was supposed to collect. */
-  const expected =
-    purpose === 'deposit' ? c.depositKobo :
-    purpose === 'balance' ? d.amount :        // a balance is whatever remained at init
-    c.totalKobo;
-
   const paid =
     d.status === 'success' &&
-    d.amount === expected &&
+    d.amount === c.totalKobo &&
     String(d.currency).toUpperCase() === c.currency;
-
-  /* After a balance is settled there is nothing left; after a deposit there
-     is. Drives the wording the page shows, not any decision. */
-  const remaining = purpose === 'deposit' && paid ? c.balanceKobo : 0;
 
   return json({
     paid,
@@ -58,16 +41,15 @@ export default async function handler(request) {
     reference: d.reference,
     amountKobo: d.amount,
     currency: d.currency,
-    purpose,
-    remainingKobo: remaining,
-    totalKobo: c.totalKobo,
     paidAt: d.paid_at || null,
+    /* Says WHICH check failed, so a support conversation does not start from
+       "it says it didn't work". */
     mismatch: paid
       ? null
       : d.status !== 'success'
         ? `Paystack reports this transaction as "${d.status}".`
-        : d.amount !== expected
-          ? `Paid ${d.amount} kobo, expected ${expected}.`
+        : d.amount !== c.totalKobo
+          ? `Paid ${d.amount} kobo, expected ${c.totalKobo}.`
           : `Paid in ${d.currency}, expected ${c.currency}.`,
   });
 }
