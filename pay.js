@@ -86,6 +86,22 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
   }
   function quiet() { msg.hidden = true; msg.textContent = ''; msg.removeAttribute('data-state'); }
 
+  /* Both fallback branches below need to blank the prices, and both used to do
+     it through an `amountEl` that stopped existing when the duplicate amount
+     summary was removed. A stale reference in a CATCH block is the worst place
+     for one: it throws inside the handler that exists to cope with failure, so
+     the section unhid (first line) and then never got its explanation or its
+     disabled button. Reaching for the elements by name here means there is one
+     place to update if the markup changes again. */
+  function blankPrices() {
+    ['[data-plan-full]', '[data-plan-deposit]'].forEach(function (sel) {
+      var e = sec.querySelector(sel);
+      if (e) e.textContent = '—';
+    });
+    var n = sec.querySelector('[data-plan-split-note]');
+    if (n) n.textContent = '';
+  }
+
   /* Kobo to naira. Intl gives the ₦ and the grouping; the fallback covers a
      browser without the NGN currency data rather than printing "50000000". */
   function money(kobo, currency) {
@@ -99,9 +115,34 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
     }
   }
 
-  /* ---------- 1. what does it cost, and are we switched on ---------- */
-  fetch('/api/paystack/config', { headers: { Accept: 'application/json' } })
-    .then(function (r) { return r.json(); })
+  /* ---------- 1. what does it cost, and are we switched on ----------
+
+     THE TIMEOUT IS THE POINT. This section starts with the `hidden` attribute
+     and only reveals itself once this call settles, so that a price never
+     flashes from "—" to a number. That is fine when the endpoint answers and
+     fine when it 404s — but a request that HANGS neither resolves nor rejects,
+     no branch below ever runs, and the entire pay section stays invisible with
+     no error anywhere.
+
+     That is not hypothetical: the functions were deployed with the wrong
+     runtime declaration, Vercel ran them as Node handlers that never wrote a
+     response, and every request sat there until the gateway gave up. The whole
+     section was missing in production while the page reported no errors at
+     all.
+
+     So the fetch is bounded. Six seconds is well past a slow phone on a bad
+     connection and well short of a visitor deciding the page is broken; past
+     it, the request is aborted, the catch below runs, and the section appears
+     saying honestly that payment is unavailable. A backend problem must never
+     be able to delete a section of the page. */
+  var ctl = window.AbortController ? new AbortController() : null;
+  var bail = window.setTimeout(function () { if (ctl) ctl.abort(); }, 6000);
+
+  fetch('/api/paystack/config', {
+    headers: { Accept: 'application/json' },
+    signal: ctl ? ctl.signal : undefined
+  })
+    .then(function (r) { window.clearTimeout(bail); return r.json(); })
     .then(function (c) {
       cfg = c;
       sec.hidden = false;
@@ -109,7 +150,7 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
       if (!c.configured) {
         /* Not an error state. Before a price exists this is simply the truth,
            and it says so instead of showing a dead button. */
-        amountEl.textContent = '—';
+        blankPrices();
         introEl.textContent = 'Fees for the 2026 term have not been published yet. ' +
                               'Send an application above and we will be in touch with the figure.';
         btn.disabled = true;
@@ -148,12 +189,15 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
       if (!c.live) testEl.hidden = false;
     })
     .catch(function () {
-      /* The endpoint is missing entirely — the static page is being served
-         without the functions, which is exactly what happens on the local
-         python server. Say so rather than showing a button that cannot work. */
+      /* Missing, broken, or too slow to wait for — the static page served
+         without its functions, a 404, or the abort above. Whichever it is, the
+         section still appears and says so, rather than silently not existing.
+         Say it rather than showing a button that cannot work. */
+      window.clearTimeout(bail);
       sec.hidden = false;
-      amountEl.textContent = '—';
-      introEl.textContent = 'Payment is not available on this build.';
+      blankPrices();
+      introEl.textContent = 'Payment is not available right now. ' +
+                            'Send us a message and we will take it from there.';
       btn.disabled = true;
       btn.textContent = 'Unavailable';
     });

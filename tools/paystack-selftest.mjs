@@ -11,7 +11,7 @@
    The fetch to Paystack is stubbed, so nothing here touches the network or
    moves money.
    ========================================================================== */
-import { signatureValid, emailLooksReal, config } from '../api/_paystack.js';
+import { signatureValid, emailLooksReal, settings } from '../api/_paystack.js';
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = '') => {
@@ -52,7 +52,7 @@ console.log('\namount parsing (kobo must be a positive integer)');
     process.env.PAYSTACK_SECRET_KEY = SECRET;
     process.env.PAYSTACK_PUBLIC_KEY = 'pk_test_x';
     process.env.PAYSTACK_TUITION_KOBO = v;
-    return config().totalKobo;
+    return settings().totalKobo;
   };
   ok('accepts a whole number', withEnv('50000000') === 50000000);
   ok('rejects a decimal', withEnv('50000.5') === null);
@@ -79,7 +79,7 @@ console.log('\nthe 70/30 split — deposit + balance must equal the total EXACTL
     process.env.PAYSTACK_PUBLIC_KEY = 'pk_test_x';
     process.env.PAYSTACK_TUITION_KOBO = String(total);
     process.env.PAYSTACK_DEPOSIT_PERCENT = String(pct);
-    return config();
+    return settings();
   };
   const c = at(20000000, 70);            // the real numbers: N200,000
   ok('total is N200,000',   c.totalKobo   === 20000000);

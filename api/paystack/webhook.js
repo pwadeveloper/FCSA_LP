@@ -17,14 +17,22 @@
    HMAC is the only thing between a real Paystack event and a stranger with
    curl. That matters even though nothing here grants anything: a forged
    "payment" in your log is a forged payment in your reconciliation. */
-import { config, json, signatureValid } from '../_paystack.js';
+import { settings, json, signatureValid } from '../_paystack.js';
 
-export const runtime = 'edge';
+/* THE NAME MATTERS. Vercel Functions in /api read the Edge runtime off
+   `export const config = { runtime: 'edge' }`. `export const runtime = 'edge'`
+   is the Next.js App Router form and Vercel ignores it here — it then builds
+   this as a NODE function, calls handler(req, res), and the Response object
+   returned below goes nowhere. Nothing is ever written to res, so the request
+   HANGS until the gateway times out. That is not a 500 you can see in a log;
+   it is a fetch in the browser that never settles, which left the whole pay
+   section stuck behind its `hidden` attribute in production. */
+export const config = { runtime: 'edge' };
 
 export default async function handler(request) {
   if (request.method !== 'POST') return json({ error: 'Use POST.' }, 405);
 
-  const c = config();
+  const c = settings();
   if (!c.hasKeys) return json({ error: 'Not configured.' }, 503);
 
   /* The RAW bytes — see the note at the top of api/_paystack.js for why these

@@ -19,7 +19,7 @@ export const PAYSTACK_API = 'https://api.paystack.co';
    Read at call time, never at module load: on Vercel a missing variable added
    later should start working on the next request, not require a redeploy to
    be noticed. */
-export function config() {
+export function settings() {
   const secret = (process.env.PAYSTACK_SECRET_KEY || '').trim();
   const publicKey = (process.env.PAYSTACK_PUBLIC_KEY || '').trim();
   const raw = (process.env.PAYSTACK_TUITION_KOBO || '').trim();
