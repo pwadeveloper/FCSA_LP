@@ -1043,7 +1043,11 @@ a { color: inherit; }
   overflow: hidden;
   background: #0A0A0A;
 }
-.slot-box > img, .slot-box > video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.slot-box > img, .slot-box > video, .slot-box > picture > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* A <picture> is not itself a replaced element — it is an inline wrapper whose
+   <img> does the drawing. Without these two it collapses to its line box and
+   the image inside it sizes to the intrinsic file, not the ratio box. */
+.slot-box > picture { display: block; width: 100%; height: 100%; }
 
 .slot-ph {
   position: absolute; inset: 0;
@@ -1310,17 +1314,25 @@ a { color: inherit; }
 }
 .showcase .slot { width: 100%; max-width: none; }
 .slot-fig { margin: 0; }
-/* the bordered placeholder tile — a subtle rule and a centred label. Real
-   media dropped into .slot-box covers the label and the border reads as the
-   media edge. */
+/* NO BORDER. Same call, and the same reason, as .trk-grid .slot-box above: the
+   1px rule was the dashed placeholder tile's edge, and it was written on the
+   assumption that real media would make it read as the media's own. It does
+   not — with eight clips filling their boxes it reads as a grey frame drawn
+   around each one. The centring stays, because it costs nothing against a
+   video that fills the box. */
 .showcase .slot-box {
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--rule); background: #0A0A0A;
+  background: #0A0A0A;
 }
 .slot-tag {
   font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
   font-weight: 700; color: #9a9a9a;
 }
+/* The credit line under each tile. NOTHING USES THIS YET — the eight tiles
+   ship without captions because no one has supplied who made what, and a
+   guessed credit on someone's film is worse than none. Kept, not deleted:
+   adding the credits is one <figcaption class="slot-cap"> per tile and this is
+   what makes it land right. See the comment on the list in index.html. */
 .showcase .slot-cap {
   margin-top: .9rem; color: var(--paper); font-weight: 400;
   font-size: clamp(.875rem, 1vw, 1rem); line-height: 1.35;
@@ -2182,20 +2194,42 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   .tl-hint { display: none; }
 
   /* showcase — the 8-tile masonry from the comp. Three groups of the 12-col
-     rail: (5,3,4), (4,3,5) then (6,6). Each group's tiles fill the row exactly,
+     rail: (6,2,4), (5,2,5) then (6,6). Each group's tiles fill the row exactly,
      so auto-flow drops them into three visual rows; align-items:start lets the
      differing aspect ratios stagger the bottoms. A tall row-gap opens the air
-     between groups. */
+     between groups.
+
+     THE SPANS WERE RE-CUT WHEN THE REAL CLIPS LANDED, and the reason is worth
+     keeping. A tile's height is its span times its ratio — the two are not
+     independent — so the comp's (5,3,4) was only balanced against the ratios
+     the PLACEHOLDERS carried (16/10, 5/8, 4/5). The delivered clips are 16:9,
+     9:16 and 4:3, and at 1440 that same (5,3,4) measured 305 / 561 / 322: a
+     256px spread inside one row, which is not a stagger, it is a hole. The
+     honest fixes are to crop the footage or to move the spans, and cropping a
+     9:16 clip into a landscape box throws away most of the frame.
+
+     So the portraits drop to span 2 and the landscapes widen to take the
+     column back. Measured at 1440 (88.6px column, 24.8px gap):
+
+         row 1   sc-01 16:9 @6 = 369    sc-02 9:16 @2 = 359    sc-03 4:3 @4 = 322
+         row 2   sc-04 4:3  @5 = 407    sc-05 9:16 @2 = 359    sc-06 4:3  @5 = 407
+         row 3   sc-07 16:9 @6 = 369    sc-08 16:9 @6 = 369
+
+     ~50px of stagger instead of 256. The ratios are pure ratios, so this holds
+     at every width from 1024 up, not just at 1440.
+
+     IF A CLIP IS EVER SWAPPED, re-measure. A new ratio in an unchanged span
+     re-opens exactly the hole this closed. */
   .showcase {
     grid-template-columns: repeat(12, minmax(0, 1fr));
     column-gap: clamp(1rem, 1.72vw, 1.625rem);
     row-gap: clamp(3rem, 6vw, 5.5rem);
   }
-  .sc-01 { grid-column: span 5; }
-  .sc-02 { grid-column: span 3; }
+  .sc-01 { grid-column: span 6; }
+  .sc-02 { grid-column: span 2; }
   .sc-03 { grid-column: span 4; }
-  .sc-04 { grid-column: span 4; }
-  .sc-05 { grid-column: span 3; }
+  .sc-04 { grid-column: span 5; }
+  .sc-05 { grid-column: span 2; }
   .sc-06 { grid-column: span 5; }
   .sc-07 { grid-column: span 6; }
   .sc-08 { grid-column: span 6; }

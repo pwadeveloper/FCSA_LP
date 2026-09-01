@@ -481,8 +481,18 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
   }
 
   /* Loop playback, wherever a real <video> lands.
-     No autoplay below 1024px and none under prefers-reduced-motion — this
-     audience is on mobile data. Those cases get the poster and a play button. */
+     No autoplay below 1024px, none under prefers-reduced-motion, and none on
+     Save-Data or 2g — this audience is on mobile data. Those cases get the
+     poster and a play button, and no byte of video is fetched until it is
+     pressed.
+
+     THE SHOWCASE IS THE FIRST REAL CONSUMER of this handler — until those
+     eight clips landed the selector below matched nothing, because the reel
+     and the rest-state loop live outside .slot and stillReel() owns them. What
+     eight of them forced, which one would not have, is that a slot video now
+     assigns its own poster and its own src rather than shipping either in the
+     markup, and plays only while it is on screen. See the three functions
+     inside wireSlotVideo. */
   var wideMq = window.matchMedia('(min-width: 1024px)');
   /* :not(.trk-vid) — RE-APPLIED, and load-bearing. The Content Track's three
      clips are decorative, sit in an aria-hidden grid, and measure ~110px on a
@@ -494,6 +504,24 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
      simultaneously trying to play. content-track.js owns them. */
   var vids = document.querySelectorAll('.slot video:not(.trk-vid)');
 
+  /* Same reading as stillReel() above and as content-track.js: saveData is the
+     explicit request and the 2g buckets are the implicit one. 3g is DELIBERATELY
+     NOT in here — see the note on loopThrifty(): Chrome buckets any link over
+     270ms RTT as 3g regardless of the technology behind it, and these clips
+     carry a 640 rung that fits such a link comfortably. 3g gets the small file,
+     not nothing. */
+  function slotConn() {
+    return navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  }
+  function slotBlocked() {
+    var c = slotConn();
+    return !!(c && (c.saveData === true || /^(slow-2g|2g)$/.test(c.effectiveType || '')));
+  }
+  function slotSmallRung() {
+    var c = slotConn();
+    return !wideMq.matches || !!(c && c.effectiveType === '3g');
+  }
+
   function wireSlotVideo(v) {
     var fig = v.closest('.slot');
     var box = v.closest('.slot-box') || fig;   /* the positioned ratio box */
@@ -504,25 +532,85 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
       btn.className = 'slot-play';
       box.appendChild(btn);
     }
+    /* A <video> takes no alt, so the description rides on aria-label in the
+       markup. Reused here because eight buttons all reading "Play this clip" is
+       a control a screen-reader user cannot choose between. */
+    var name = v.getAttribute('aria-label') || '';
     var label = function () {
       var playing = !v.paused && !v.ended;
       btn.textContent = playing ? 'Pause' : 'Play';
-      btn.setAttribute('aria-label', (playing ? 'Pause' : 'Play') + ' this clip');
+      btn.setAttribute('aria-label',
+        (playing ? 'Pause' : 'Play') + (name ? ' — ' + name : ' this clip'));
     };
+
+    /* THE POSTER IS ASSIGNED, NOT SHIPPED IN THE MARKUP. There is no
+       loading="lazy" for a poster — the attribute is fetched as soon as the
+       element is parsed — so withholding the attribute is the only way to
+       defer it. The eight showcase tiles carry 277KB of posters between them,
+       in a band a lot of visitors never scroll to. */
+    function poster() {
+      var p = v.getAttribute('data-poster');
+      if (!p) return;
+      v.removeAttribute('data-poster');
+      v.poster = p;
+    }
+
+    /* Rung chosen ONCE, at first assignment, and never re-chosen. Swapping src
+       mid-playback restarts the clip, and a video that jumps back to frame one
+       because someone dragged a window edge is worse than a slightly wrong
+       rung. Same call as content-track.js. Returns whether there is anything
+       to play at all. */
+    function source() {
+      if (v.src || v.currentSrc || v.querySelector('source')) return true;
+      var src = v.getAttribute(slotSmallRung() ? 'data-src-sm' : 'data-src-lg') ||
+                v.getAttribute('data-src-lg') || v.getAttribute('data-src-sm');
+      if (!src) return false;
+      v.src = src;
+      return true;
+    }
+
     btn.addEventListener('click', function () {
-      if (v.paused) { v.play().catch(function () {}); } else { v.pause(); }
+      /* A press overrides slotBlocked(). Save-Data is a standing request not to
+         spend bytes unasked; it is not a refusal to ever play anything, and
+         treating it as one would leave a dead button on the tile. */
+      if (v.paused) { if (source()) { v.play().catch(function () {}); } }
+      else { v.pause(); }
       label();
     });
     v.addEventListener('play', label);
     v.addEventListener('pause', label);
 
+    /* ONLY WHAT SOMEONE IS LOOKING AT DECODES. The showcase is eight clips in
+       one band, and without this every one of them would be fetched and
+       decoded the moment the page loaded — 5.7MB and eight simultaneous
+       decodes for a section three screens down. 300px of margin is enough that
+       a tile is playing by the time it is actually looked at. */
+    var inView = !('IntersectionObserver' in window);
+
     var sync = function () {
-      var mayAutoplay = wideMq.matches && !reduced;
+      var mayAutoplay = wideMq.matches && !reduced && !slotBlocked();
       fig.classList.toggle('has-control', !mayAutoplay);
-      if (mayAutoplay) { v.play().catch(function () {}); }
-      else { v.pause(); v.currentTime = 0; }
+      if (mayAutoplay && inView) {
+        if (source()) { v.play().catch(function () {}); }
+      } else if (!v.paused) {
+        v.pause();
+        /* Rewind only where there is something to rewind. Setting currentTime
+           on an element that was never given a src throws in some engines. */
+        if (v.src && !mayAutoplay) { v.currentTime = 0; }
+      }
       label();
     };
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) {
+        inView = es[es.length - 1].isIntersecting;
+        if (inView) { poster(); }
+        sync();
+      }, { rootMargin: '300px 0px' }).observe(fig);
+    } else {
+      poster();
+    }
+
     sync();
     if (wideMq.addEventListener) wideMq.addEventListener('change', sync);
   }

@@ -41,3 +41,11 @@ assets/media/finisher track/
 assets/media/build a network.mp4
 assets/media/compintel mini.mp4
 assets/media/world gov see ai.mp4
+# Same rule for the eight Showcase clips: tools/showcase-clips.py builds the
+# renditions and posters in assets/media/showcase/ and only those ship. The
+# masters are HEVC and total 20.4MB. (The eight .mp4 files are already caught
+# by the assets/media/*.mp4 rule at the top; this note is here so the next
+# person looking for them knows where they went and how to rebuild.)
+# The closing section's still is the same story — tools/apply-still.py builds
+# assets/media/apply/ from it, and the 1920x1440 master is a build input.
+assets/media/See you in class.jpg

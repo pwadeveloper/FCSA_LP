@@ -467,13 +467,16 @@ a bug to fix elsewhere.
 
 ## MEDIA MANIFEST
 
-The showcase, production, apply and social slots below render on the page as
-labelled dashed placeholders; drop assets in at the exact paths and they appear
-with no code change. Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the
-same name. `og-image` is a capture of the live hero, not a drawn card; the reel is
-shot, cut and delivered and has its own section. **Every slot needs original or
-licensed material.** The hero reference comp must not ship — it is a publicity
-still of a recognisable actor.
+**EVERY SLOT ON THE PAGE NOW HOLDS REAL MEDIA.** There is not one dashed
+placeholder left in `index.html` — the eight Showcase clips and the closing
+still were the last of them, and the production strip (six behind-the-scenes
+slots that could not be shot before launch) was removed from the markup rather
+than shipped empty. `og-image` is a capture of the live hero, not a drawn card;
+the reel is shot, cut and delivered and has its own section. **Every slot needs
+original or licensed material.**
+
+The consequence for `SHOW_MEDIA_PLACEHOLDERS` is under "Before launch: close
+the gate" below.
 
 The three **track sections** carry their own media inline (not dashed slots),
 currently repo placeholders to be swapped — the shape each one needs:
@@ -487,19 +490,15 @@ currently repo placeholders to be swapped — the shape each one needs:
 
 | Slot | Section | Path | Ratio | Dimensions | Type | What it is | Status |
 |---|---|---|---|---|---|---|---|
-| `showcase-01` | Showcase | `assets/media/showcase-01.mp4` | 16:9 | 1920×1080 | LOOP | Tutor work. |  |
-| `showcase-02` | Showcase | `assets/media/showcase-02.jpg` | 9:16 | 1080×1920 | STILL | Tutor work. |  |
-| `showcase-03` | Showcase | `assets/media/showcase-03.jpg` | 4:5 | 1080×1350 | STILL | Tutor work. |  |
-| `showcase-04` | Showcase | `assets/media/showcase-04.jpg` | 16:9 | 1920×1080 | STILL | Tutor work. |  |
-| `showcase-05` | Showcase | `assets/media/showcase-05.mp4` | 9:16 | 1080×1920 | LOOP | Tutor work. |  |
-| `showcase-06` | Showcase | `assets/media/showcase-06.jpg` | 1:1 | 1200×1200 | STILL | Tutor work. |  |
-| `production-01` | Production | `assets/media/production-01.jpg` | 16:9 | 1920×1080 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
-| `production-02` | Production | `assets/media/production-02.jpg` | 9:16 | 1080×1920 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
-| `production-03` | Production | `assets/media/production-03.jpg` | 16:9 | 1920×1080 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
-| `production-04` | Production | `assets/media/production-04.jpg` | 9:16 | 1080×1920 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
-| `production-05` | Production | `assets/media/production-05.jpg` | 16:9 | 1920×1080 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
-| `production-06` | Production | `assets/media/production-06.jpg` | 9:16 | 1080×1920 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
-| `apply-still` | Apply | `assets/media/apply-still.jpg` | 3:2 | 1800×1200 | STILL | A premiere audience, or a room watching a screen. Warm, full of people. |  |
+| `showcase-01` | Showcase | `assets/media/showcase/showcase-01-*` | 16:9 | 1280 / 640 | LOOP | Short film — a harvested field, then figures in fog. | DONE |
+| `showcase-02` | Showcase | `assets/media/showcase/showcase-02-*` | 9:16 | 720 / 360 | LOOP | Street piece to camera, Lagos market. | DONE |
+| `showcase-03` | Showcase | `assets/media/showcase/showcase-03-*` | 4:3 | 1280 / 640 | LOOP | Documentary montage. | DONE |
+| `showcase-04` | Showcase | `assets/media/showcase/showcase-04-*` | 4:3 | 1280 / 640 | LOOP | Fashion portrait, bamboo grove. | DONE |
+| `showcase-05` | Showcase | `assets/media/showcase/showcase-05-*` | 9:16 | 720 / 360 | LOOP | Subtitled podcast interview. | DONE |
+| `showcase-06` | Showcase | `assets/media/showcase/showcase-06-*` | 4:3 | 1280 / 640 | LOOP | Health documentary, clinic. | DONE |
+| `showcase-07` | Showcase | `assets/media/showcase/showcase-07-*` | 16:9 | 1280 / 640 | LOOP | UNICEF field film. | DONE |
+| `showcase-08` | Showcase | `assets/media/showcase/showcase-08-*` | 16:9 | 1280 / 640 | LOOP | Durbar festival documentary. | DONE |
+| `apply-still` | Apply | `assets/media/apply/apply-still-*` | 4:3 | 1920×1440 | STILL | A television studio floor, cameras parked. | DONE |
 | `og-image` | Social | `assets/og-image.jpg` | 1.91:1 | 1200×630 | DONE | A capture of the live hero — `node tools/og-image.mjs`. |  |
 
 ### The background loop — section 2 at rest
@@ -852,6 +851,64 @@ five that carry the most weight, compress hard (WebP/AVIF with JPEG fallback,
 sized to the actual rendered box, not the source dimensions), and delete the
 rest. **Four real assets beat sixteen briefs.**
 
+### The showcase band — eight clips, and the ratio trap
+
+`python3 tools/showcase-clips.py` rebuilds all of it from the eight HEVC
+masters. Same three reasons as the Content Track clips (HEVC is Safari-only,
+the audio is dead weight under muted autoplay, the bitrate is sized for a
+cinema) with one difference: **24fps is kept.** These are cut from finished
+film work and 24 is the rate they were graded at. Resampling a 24fps camera
+move to 30 duplicates every fifth frame, and the judder shows on exactly the
+slow moves these clips are made of. The Content clips are phone-shot verticals
+where 30 is native and 24 reads as a stumble. Different source, different
+answer.
+
+**THE RATIO TRAP, and it is the thing to be careful of here.** `.slot-box`
+takes its aspect from `--ar` on the `<li>` and `object-fit: cover` on the
+video. A wrong `--ar` does not letterbox — it **crops, silently**. The
+placeholders shipped with guessed ratios (16/10, 5/8, 4/5, 2/3, 1/1, 2/1) and
+the delivered clips are 16:9, 9:16 and 4:3, so taking the markup at its word
+would have thrown away up to 72% of a frame with nothing on screen to say so.
+Every `--ar` is now the measured ratio of its clip.
+
+**THE SPANS MOVED WITH THEM.** A tile's height is its span times its ratio, so
+the comp's `(5,3,4) (4,3,5) (6,6)` was only balanced against the ratios the
+placeholders carried. Against the real ones it measured 305 / 561 / 322 in row
+one at 1440 — a 256px hole, not a stagger. The portraits dropped to span 2 and
+the landscapes took the column back: `(6,2,4) (5,2,5) (6,6)`, which measures
+~50px of stagger and holds at every width from 1024 up. The arithmetic is in
+the `.showcase` block in `styles.css`. **Swap a clip and you must re-measure**
+— a new ratio in an unchanged span re-opens the hole.
+
+**Budget.** 5.7MB across the eight at the 1280 rung, 1.9MB at 640, 277KB of
+posters. Nobody pays all of it: no `src` and no `poster` is assigned until a
+tile is within 300px of the viewport, playback pauses on the way out, and below
+1024 no video byte is fetched at all until a play button is pressed.
+
+**Two things in the footage, not in the code.** Showcase 1 opens with ~1s of
+2.35:1 letterbox that then opens to full 16:9 — that is the edit, and it is why
+`cropdetect` on the first frames reports no bars. Showcase 3 contains a shot
+that is itself letterboxed inside its 4:3 frame. Neither is croppable without
+wrecking the other shots in the same montage.
+
+**STILL OPEN: the credits.** The comp has a credit line under each tile and
+`.showcase .slot-cap` is still in the stylesheet waiting for it, but nobody has
+supplied who made what. The tiles ship without captions — eight repetitions of
+"Partner Name And Project" on a live page is worse than none, and a guessed
+credit on somebody's film is worse than both. Adding them is one
+`<figcaption class="slot-cap">` per tile. Two of the clips carry visible
+attribution in the footage itself (a `@soshaibutv` watermark on 2, a UNICEF bug
+on 7), which is a starting point and not a clearance.
+
+### The closing still
+
+`python3 tools/apply-still.py`. The master is 1920x1440 — 4:3, not the 3:2 the
+placeholder briefed — and the slot moved to match rather than cropping 120px
+off the frame, because what those 120px hold is the top of the lighting grid
+and the bottom of the studio floor, which is most of what makes the shot read
+as a studio. The ladder stops at 1920 because the master does; the block sits
+in `.wrap-narrow` (820px), so 1440 already covers it at 1.76x.
+
 ### Before launch: close the gate
 
 `script.js` has a constant at the top:
@@ -869,6 +926,13 @@ gate never touches it.
 
 **Do not ship dashed boxes to a live page.**
 
+**As of the showcase landing, flipping this is a no-op** — every slot in
+`index.html` holds a real `<img>` or `<video>`, so there is nothing left for
+the gate to strip. It is still worth closing, as a guard against the next
+placeholder rather than as a fix for a current one. It is left `true` because
+turning it off changes nothing you can see today and someone should make that
+call deliberately.
+
 ### How the slots behave
 
 - Every slot holds its ratio with CSS `aspect-ratio`, so nothing shifts when an
@@ -876,10 +940,26 @@ gate never touches it.
   same rule: the box is `aspect-ratio: 16/9` and both the poster and the video
   are absolutely positioned inside it, so its height is known before a byte of
   either arrives.
-- `<video>` is `muted`, `loop`, `playsinline`, with a required poster.
-- **No autoplay below 1024px, and none under `prefers-reduced-motion`** — those
-  cases get the poster and a play/pause control instead. `script.js` wires this
-  automatically for any `<video>` inside a slot.
+- `<video>` is `muted`, `loop`, `playsinline`, and carries **no `src` and no
+  `poster` attribute in the markup**. `script.js` assigns both, and only once
+  the tile is within 300px of the viewport. There is no `loading="lazy"` for a
+  poster — the attribute is fetched the moment the element is parsed — so
+  withholding the attribute is the only way to defer it, and eight showcase
+  tiles is 277KB of posters in a band a lot of visitors never reach.
+- **Playback is gated on visibility**, not just on load. Eight autoplaying
+  clips in one band is eight simultaneous decodes; each one starts when its
+  tile comes into view and pauses when it leaves.
+- **No autoplay below 1024px, none under `prefers-reduced-motion`, and none on
+  Save-Data or 2g** — those cases get the poster and a play/pause control
+  instead, and not one byte of video is fetched until it is pressed. A press
+  overrides Save-Data: it is a standing request not to spend bytes unasked, not
+  a refusal to ever play anything.
+- 3g is deliberately NOT suppressed, for the reason spelled out under the reel:
+  Chrome buckets any link over 270ms RTT as 3g regardless of the technology.
+  3g gets the small rung, not nothing.
+- A `<video>` takes no `alt`, so each one carries an **`aria-label`** describing
+  the clip. `script.js` reuses it for the play button, because eight buttons all
+  reading "Play this clip" is a control nobody can choose between.
 - Everything below the fold carries `loading="lazy"` and `decoding="async"`.
 - Stills take real alt text. The reel poster takes empty `alt` — it is the
   play button's backdrop, and the caption beneath already names the work.
@@ -920,6 +1000,11 @@ assets/
   media/reel/reel-poster-master.png   frame 42.5, build input — gitignored
   media/finisher/fin-0N-*-{640,960,1280}.{avif,webp,jpg}   the Finisher's cycling frames
   media/finisher track/            the seven masters, build inputs — gitignored
+  media/showcase/showcase-0N-{640,1280}.mp4       the eight Showcase clips
+  media/showcase/showcase-0N-poster.jpg           one poster each, assigned lazily
+  media/Showcase N.mp4             the eight masters, build inputs — gitignored
+  media/apply/apply-still-{900,1440,1920}.{avif,webp,jpg}   the closing still
+  media/See you in class.jpg       its 1920x1440 master, build input — gitignored
   tracks.js                        the three track sections reveal on enter (~1KB, no deps)
   finisher-track.js                the Finisher's 500ms frame cycle, paused on hover
   content-track.js                 the Content Track's three clips; gates the
@@ -942,6 +1027,8 @@ tools/
   paystack-selftest.mjs            36 assertions, no keys needed
   tally-form.mjs                   creates/updates the receipt form
   content-clips.py                 transcodes the three Content Track clips
+  showcase-clips.py                transcodes the eight Showcase clips + posters
+  apply-still.py                   regenerates the closing still's ladder
   og-image.mjs                     regenerates the social card from the hero
 .env.example                       template. .env.local is gitignored.
 package.json                       exists so Vercel builds api/; no dependencies

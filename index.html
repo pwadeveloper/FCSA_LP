@@ -690,54 +690,102 @@
   </div>
 
   <div class="wrap">
+    <!-- Eight finished clips, not placeholders. Each <video> ships with NO src
+         and NO poster attribute — script.js assigns both, and only once the
+         tile is within 300px of the viewport. Eight autoplaying decodes at
+         once is not a section that scrolls, and eight posters fetched at page
+         load is 277KB of images for a band most visitors never reach.
+
+         --ar ON THE <li> IS THE REAL RATIO OF THE CLIP, measured, not the
+         ratio the placeholder guessed at. .slot-box takes its aspect from that
+         variable and .slot-box > video is object-fit: cover, so a wrong value
+         here does not letterbox — it CROPS, silently. The placeholder set
+         (16/10, 5/8, 4/5, 2/3, 1/1, 2/1) would have thrown away up to 72% of
+         a frame. Re-measure with tools/showcase-clips.py before changing one.
+
+         NO CAPTIONS YET. The comp has a credit line under each tile and the
+         .showcase .slot-cap rule is still there waiting for it, but nobody has
+         supplied who made what. Eight repetitions of "Partner Name And
+         Project" on a live page is worse than none, and a guessed credit on
+         someone's film is worse than both. Add a <figcaption class="slot-cap">
+         per tile when the real credits arrive.
+
+         aria-label CARRIES THE DESCRIPTION. A <video> takes no alt, and with
+         the captions gone these eight tiles would otherwise be unnamed to a
+         screen reader — and the play button script.js injects for phones and
+         reduced-motion would read "Play this clip" eight identical times. -->
     <ul class="showcase reveal">
-      <li class="slot sc-01" style="--ar:16/10" data-slot="showcase-01">
-        <figure class="slot-fig">
-          <div class="slot-box"><span class="slot-tag">Showcase 1</span></div>
-          <figcaption class="slot-cap">Partner Name And Project</figcaption>
-        </figure>
+      <li class="slot sc-01" style="--ar:16/9" data-slot="showcase-01">
+        <div class="slot-box">
+          <video muted loop playsinline webkit-playsinline preload="none"
+                 width="1280" height="720" aria-label="A short film: bare feet crossing a harvested field, then robed figures standing in fog."
+                 data-poster="assets/media/showcase/showcase-01-poster.jpg"
+                 data-src-lg="assets/media/showcase/showcase-01-1280.mp4"
+                 data-src-sm="assets/media/showcase/showcase-01-640.mp4"></video>
+        </div>
       </li>
-      <li class="slot sc-02" style="--ar:5/8" data-slot="showcase-02">
-        <figure class="slot-fig">
-          <div class="slot-box"><span class="slot-tag">Showcase 2</span></div>
-          <figcaption class="slot-cap">Partner Name And Project</figcaption>
-        </figure>
+      <li class="slot sc-02" style="--ar:9/16" data-slot="showcase-02">
+        <div class="slot-box">
+          <video muted loop playsinline webkit-playsinline preload="none"
+                 width="720" height="1280" aria-label="A street piece to camera from a crowded Lagos market, titled Balogun."
+                 data-poster="assets/media/showcase/showcase-02-poster.jpg"
+                 data-src-lg="assets/media/showcase/showcase-02-1280.mp4"
+                 data-src-sm="assets/media/showcase/showcase-02-640.mp4"></video>
+        </div>
       </li>
-      <li class="slot sc-03" style="--ar:4/5" data-slot="showcase-03">
-        <figure class="slot-fig">
-          <div class="slot-box"><span class="slot-tag">Showcase 3</span></div>
-          <figcaption class="slot-cap">Partner Name And Project</figcaption>
-        </figure>
+      <li class="slot sc-03" style="--ar:4/3" data-slot="showcase-03">
+        <div class="slot-box">
+          <video muted loop playsinline webkit-playsinline preload="none"
+                 width="1280" height="960" aria-label="A documentary montage: a dirt-pitch football game, two men talking outside a glass building, and a work crew in the bush."
+                 data-poster="assets/media/showcase/showcase-03-poster.jpg"
+                 data-src-lg="assets/media/showcase/showcase-03-1280.mp4"
+                 data-src-sm="assets/media/showcase/showcase-03-640.mp4"></video>
+        </div>
       </li>
       <li class="slot sc-04" style="--ar:4/3" data-slot="showcase-04">
-        <figure class="slot-fig">
-          <div class="slot-box"><span class="slot-tag">Showcase 4</span></div>
-          <figcaption class="slot-cap">Partner Name And Project</figcaption>
-        </figure>
+        <div class="slot-box">
+          <video muted loop playsinline webkit-playsinline preload="none"
+                 width="1280" height="960" aria-label="A fashion portrait shoot in a bamboo grove — a woven cap, white trainers and silver rings."
+                 data-poster="assets/media/showcase/showcase-04-poster.jpg"
+                 data-src-lg="assets/media/showcase/showcase-04-1280.mp4"
+                 data-src-sm="assets/media/showcase/showcase-04-640.mp4"></video>
+        </div>
       </li>
-      <li class="slot sc-05" style="--ar:2/3" data-slot="showcase-05">
-        <figure class="slot-fig">
-          <div class="slot-box"><span class="slot-tag">Showcase 5</span></div>
-          <figcaption class="slot-cap">Partner Name And Project</figcaption>
-        </figure>
+      <li class="slot sc-05" style="--ar:9/16" data-slot="showcase-05">
+        <div class="slot-box">
+          <video muted loop playsinline webkit-playsinline preload="none"
+                 width="720" height="1280" aria-label="A subtitled podcast interview, cut against a painted relief turning in window light."
+                 data-poster="assets/media/showcase/showcase-05-poster.jpg"
+                 data-src-lg="assets/media/showcase/showcase-05-1280.mp4"
+                 data-src-sm="assets/media/showcase/showcase-05-640.mp4"></video>
+        </div>
       </li>
-      <li class="slot sc-06" style="--ar:1/1" data-slot="showcase-06">
-        <figure class="slot-fig">
-          <div class="slot-box"><span class="slot-tag">Showcase 6</span></div>
-          <figcaption class="slot-cap">Partner Name And Project</figcaption>
-        </figure>
+      <li class="slot sc-06" style="--ar:4/3" data-slot="showcase-06">
+        <div class="slot-box">
+          <video muted loop playsinline webkit-playsinline preload="none"
+                 width="1280" height="960" aria-label="A health documentary: a blood pressure reading taken in a busy clinic."
+                 data-poster="assets/media/showcase/showcase-06-poster.jpg"
+                 data-src-lg="assets/media/showcase/showcase-06-1280.mp4"
+                 data-src-sm="assets/media/showcase/showcase-06-640.mp4"></video>
+        </div>
       </li>
-      <li class="slot sc-07" style="--ar:2/1" data-slot="showcase-07">
-        <figure class="slot-fig">
-          <div class="slot-box"><span class="slot-tag">Showcase 7</span></div>
-          <figcaption class="slot-cap">Partner Name And Project</figcaption>
-        </figure>
+      <li class="slot sc-07" style="--ar:16/9" data-slot="showcase-07">
+        <div class="slot-box">
+          <video muted loop playsinline webkit-playsinline preload="none"
+                 width="1280" height="720" aria-label="A UNICEF field film: a girl in a yellow hijab in the doorway of a mud-brick compound."
+                 data-poster="assets/media/showcase/showcase-07-poster.jpg"
+                 data-src-lg="assets/media/showcase/showcase-07-1280.mp4"
+                 data-src-sm="assets/media/showcase/showcase-07-640.mp4"></video>
+        </div>
       </li>
-      <li class="slot sc-08" style="--ar:2/1" data-slot="showcase-08">
-        <figure class="slot-fig">
-          <div class="slot-box"><span class="slot-tag">Showcase 8</span></div>
-          <figcaption class="slot-cap">Partner Name And Project</figcaption>
-        </figure>
+      <li class="slot sc-08" style="--ar:16/9" data-slot="showcase-08">
+        <div class="slot-box">
+          <video muted loop playsinline webkit-playsinline preload="none"
+                 width="1280" height="720" aria-label="A festival documentary of a Durbar — horsemen and royal processions filling the road."
+                 data-poster="assets/media/showcase/showcase-08-poster.jpg"
+                 data-src-lg="assets/media/showcase/showcase-08-1280.mp4"
+                 data-src-sm="assets/media/showcase/showcase-08-640.mp4"></video>
+        </div>
       </li>
     </ul>
   </div>
@@ -1094,13 +1142,31 @@
       <p class="sec-intro">Classes begin Friday 25 September 2026 in Kaduna. Tracks are chosen at the end of week three, and registration closes Saturday 10 October.</p>
     </div>
 
-<figure class="slot slot-apply" style="--ar:3/2" data-slot="apply-still">
+<figure class="slot slot-apply" style="--ar:4/3" data-slot="apply-still">
       <div class="slot-box">
-        <div class="slot-ph">
-          <span class="slot-meta">apply-still · 3:2 · 1800×1200 · STILL</span>
-          <span class="slot-desc">A premiere audience, or a room watching a screen. Warm, full of people.</span>
-          <span class="slot-path">assets/media/apply-still.jpg</span>
-        </div>
+        <!-- sizes: this block sits in .wrap-narrow, which is 820px from an
+             883px viewport up (92.8vw before that, once the 3.6vw gutters take
+             over from the 25px floor) and viewport-minus-50px on a phone. -->
+        <picture>
+          <source type="image/avif"
+                  sizes="(min-width: 883px) 820px, calc(100vw - 50px)"
+                  srcset="assets/media/apply/apply-still-900.avif 900w,
+                          assets/media/apply/apply-still-1440.avif 1440w,
+                          assets/media/apply/apply-still-1920.avif 1920w">
+          <source type="image/webp"
+                  sizes="(min-width: 883px) 820px, calc(100vw - 50px)"
+                  srcset="assets/media/apply/apply-still-900.webp 900w,
+                          assets/media/apply/apply-still-1440.webp 1440w,
+                          assets/media/apply/apply-still-1920.webp 1920w">
+          <img alt="An empty television studio floor: a red cyclorama wall and white cove on the left, a lighting grid overhead, and a jib arm and a cluster of camera pedestals parked and waiting."
+               width="1920" height="1440"
+               sizes="(min-width: 883px) 820px, calc(100vw - 50px)"
+               src="assets/media/apply/apply-still-1440.jpg"
+               srcset="assets/media/apply/apply-still-900.jpg 900w,
+                       assets/media/apply/apply-still-1440.jpg 1440w,
+                       assets/media/apply/apply-still-1920.jpg 1920w"
+               loading="lazy" decoding="async">
+        </picture>
       </div>
     </figure>
 
