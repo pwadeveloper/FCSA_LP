@@ -1,13 +1,6 @@
 /* ==========================================================================
    THE FILM AND CONTENT SCHOOL
-
-   Swap this for a real endpoint when one is chosen — Formspree, Tally,
-   Google Form or a Netlify function. The form posts FormData by POST and
-   expects any 2xx as success, which is what all three accept.
-   Leave as null and the form validates, then reports that it isn't wired
-   yet rather than pretending to send.
    ========================================================================== */
-var FORM_ENDPOINT = null; /* e.g. 'https://formspree.io/f/xxxxxxxx' */
 
 /* ==========================================================================
    LAUNCH GATE — do not ship dashed boxes to a live page.
@@ -598,100 +591,8 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
     }, { passive: true });
   }
 
-  /* ---------- 6. application form ---------- */
-  var form = document.getElementById('apply-form');
-  if (!form) return;
-
-  var msg = document.getElementById('form-msg');
-  var btn = form.querySelector('button[type="submit"]');
-
-  function fieldOf(el) { return el.closest('.f'); }
-
-  function showErr(name, text) {
-    var slot = form.querySelector('.err[data-for="' + name + '"]');
-    if (!slot) return;
-    slot.textContent = text;
-    slot.hidden = false;
-    var wrap = slot.closest('.f');
-    if (wrap) wrap.classList.add('has-err');
-  }
-
-  function clearErrs() {
-    form.querySelectorAll('.err').forEach(function (e) { e.hidden = true; e.textContent = ''; });
-    form.querySelectorAll('.has-err').forEach(function (e) { e.classList.remove('has-err'); });
-    if (msg) { msg.hidden = true; msg.removeAttribute('data-state'); }
-  }
-
-  function validate() {
-    var bad = [];
-    var v = function (id) { var el = form.querySelector('#' + id); return el ? el.value.trim() : ''; };
-
-    if (!v('f-name')) bad.push(['f-name', 'Please enter your name.']);
-    if (!v('f-phone')) bad.push(['f-phone', 'We need a phone or WhatsApp number.']);
-
-    var email = v('f-email');
-    if (!email) bad.push(['f-email', 'Please enter your email.']);
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) bad.push(['f-email', 'That email does not look right.']);
-
-    if (!v('f-track')) bad.push(['f-track', 'Choose a track, or "Not sure yet".']);
-    if (!form.querySelector('input[name="laptop"]:checked')) bad.push(['laptop', 'Please answer this.']);
-    if (!form.querySelector('input[name="camera"]:checked')) bad.push(['camera', 'Please answer this.']);
-    if (!form.querySelector('input[name="consent"]:checked')) bad.push(['consent', 'Please agree before sending.']);
-
-    return bad;
-  }
-
-  form.addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    clearErrs();
-
-    var bad = validate();
-    if (bad.length) {
-      bad.forEach(function (pair) { showErr(pair[0], pair[1]); });
-      var first = form.querySelector('.has-err input, .has-err select, .has-err textarea');
-      if (first) first.focus({ preventScroll: false });
-      return;
-    }
-
-    if (!FORM_ENDPOINT) {
-      msg.textContent = 'This form is not connected yet. Set FORM_ENDPOINT at the top of script.js.';
-      msg.setAttribute('data-state', 'err');
-      msg.hidden = false;
-      return;
-    }
-
-    btn.disabled = true;
-    var label = btn.textContent;
-    btn.textContent = 'Sending…';
-
-    fetch(FORM_ENDPOINT, {
-      method: 'POST',
-      body: new FormData(form),
-      headers: { Accept: 'application/json' }
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error(res.status);
-        form.reset();
-        msg.textContent = "Application sent. We'll be in touch on WhatsApp.";
-        msg.hidden = false;
-      })
-      .catch(function () {
-        msg.textContent = 'That didn’t send. Check your connection and try again.';
-        msg.setAttribute('data-state', 'err');
-        msg.hidden = false;
-      })
-      .finally(function () {
-        btn.disabled = false;
-        btn.textContent = label;
-      });
-  });
-
-  /* clear a field's error as soon as it is corrected */
-  form.addEventListener('input', function (ev) {
-    var f = ev.target.closest ? ev.target.closest('.f') : null;
-    if (!f || !f.classList.contains('has-err')) return;
-    f.classList.remove('has-err');
-    var slot = f.querySelector('.err');
-    if (slot) { slot.hidden = true; slot.textContent = ''; }
-  });
+  /* ---------- 6. the application form is gone ----------
+     Applying and paying were two forms on one page asking the same four
+     questions, and the payment one is the one that does something. The handler
+     and FORM_ENDPOINT went with it. pay.js owns the only form on the page. */
 })();

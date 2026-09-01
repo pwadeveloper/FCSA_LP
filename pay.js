@@ -57,7 +57,6 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
   var form     = document.getElementById('pay-form');
   var btn      = sec.querySelector('[data-pay-btn]');
   var msg      = document.getElementById('pay-msg');
-  var amountEl = sec.querySelector('[data-pay-amount]');
   var introEl  = sec.querySelector('[data-pay-intro]');
   var testEl   = sec.querySelector('[data-pay-testmode]');
   var plansEl  = sec.querySelector('[data-pay-plans]');
@@ -124,7 +123,6 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
       sec.querySelector('[data-plan-split-note]').textContent =
         'Bank transfer, then send us the receipt. ' +
         money(c.balanceKobo, c.currency) + ' on resumption.';
-      amountEl.textContent = money(c.totalKobo, c.currency);
 
       if (splitReady) {
         splitRow.hidden = false;
@@ -137,7 +135,6 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
           n.hidden = false;
         }
         sec.querySelector('[data-tally-link]').href = TALLY_URL;
-        sec.querySelector('[data-transfer-amount]').textContent = money(c.depositKobo, c.currency);
         sec.querySelector('[data-transfer-amount-2]').textContent = money(c.depositKobo, c.currency);
         sec.querySelector('[data-split-balance]').textContent =
           'The remaining ' + money(c.balanceKobo, c.currency) + ' is due on resumption, within the ' +
@@ -173,6 +170,10 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
     var split = chosenPlan() === 'split';
     routeFull.hidden = split;
     routeSplit.hidden = !split;
+    /* The button states the amount, so the last thing read before pressing is
+       the figure being charged. It comes from the same config value as the
+       card, so the two cannot disagree. */
+    if (!split) btn.textContent = 'Pay ' + money(cfg.totalKobo, cfg.currency);
   }
   sec.addEventListener('change', function (ev) {
     if (ev.target && ev.target.name === 'plan') { quiet(); paint(); }

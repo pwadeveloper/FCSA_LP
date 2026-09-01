@@ -35,3 +35,9 @@ assets/media/finisher track/
 .env
 .env.local
 .env.*.local
+# Same rule for the three Content Track clips: tools/content-clips.py builds
+# the renditions in assets/media/content/ and only those ship. The masters are
+# 1080x1920 HEVC and total 7.3MB.
+assets/media/build a network.mp4
+assets/media/compintel mini.mp4
+assets/media/world gov see ai.mp4

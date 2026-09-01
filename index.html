@@ -46,7 +46,7 @@
            a non-empty alt here would have the link announced twice. -->
       <img src="assets/tfcs-afric-logo.svg" alt="" class="head-logo" width="316" height="137">
     </a>
-    <a class="btn btn-sm btn-apply" href="#apply">Apply now</a>
+    <a class="btn btn-sm btn-apply" href="#pay">Apply now</a>
   </div>
 </header>
 
@@ -479,26 +479,49 @@
         <p>A published body of work and a strategy that isn’t guesswork.</p>
       </section>
     </div>
-    <!-- THREE 9:16 VIDEO SLOTS, awaiting the real clips. These use the page's
-         standard .slot vocabulary rather than a bespoke box, for two reasons:
-         --ar drives the ratio through the same aspect-ratio rule every other
-         slot uses, so the row cannot shift when the videos land; and
-         SHOW_MEDIA_PLACEHOLDERS in script.js already knows how to strip a
-         .slot that never got its asset, so closing the launch gate cannot
-         ship three empty boxes.
+    <!-- THREE 9:16 CLIPS, looping. content-track.js hydrates src from the
+         data- attributes and plays them only while the section is on screen.
 
-         Dropping a <video> (poster + muted/loop/playsinline) inside .slot-box
-         covers the label, and the 1px rule then reads as the clip's edge.
-         Add all three to the MEDIA MANIFEST in README when they are briefed. -->
+         SRC IS NOT IN THE MARKUP, deliberately. Three autoplaying videos is
+         three simultaneous decodes, and on a phone or a metered connection
+         the right number of bytes to spend on decoration is zero — so on
+         mobile, save-data, or 2g/3g nothing is fetched at all and the posters
+         stand in. That is the same policy script.js already applies to every
+         other video on the page, and the reason these carry a poster.
+
+         --ar:9/16 stays on the <li>: .slot-box takes its ratio from that
+         variable and falls back to 16/9 without it, which collapses these to
+         landscape letterboxes. NO PLAY BUTTON — the
+         generic .slot video handler in script.js adds one, which is right for
+         a showcase tile and absurd on a 110px card in a grid that is
+         aria-hidden. It skips .trk-vid for exactly that reason. -->
     <ul class="trk-grid trk-anim" style="--i:3" aria-hidden="true">
       <li class="slot" style="--ar:9/16" data-slot="content-vid-01">
-        <div class="slot-box"><span class="slot-tag">vid 1</span><span class="slot-ratio">9:16</span></div>
+        <div class="slot-box">
+          <video class="trk-vid" muted loop playsinline webkit-playsinline
+                 preload="none" tabindex="-1" width="640" height="1138"
+                 poster="assets/media/content/content-01-network-poster.jpg"
+                 data-src-640="assets/media/content/content-01-network-640.mp4"
+                 data-src-360="assets/media/content/content-01-network-360.mp4"></video>
+        </div>
       </li>
       <li class="slot" style="--ar:9/16" data-slot="content-vid-02">
-        <div class="slot-box"><span class="slot-tag">vid 2</span><span class="slot-ratio">9:16</span></div>
+        <div class="slot-box">
+          <video class="trk-vid" muted loop playsinline webkit-playsinline
+                 preload="none" tabindex="-1" width="640" height="1138"
+                 poster="assets/media/content/content-02-compintel-poster.jpg"
+                 data-src-640="assets/media/content/content-02-compintel-640.mp4"
+                 data-src-360="assets/media/content/content-02-compintel-360.mp4"></video>
+        </div>
       </li>
       <li class="slot" style="--ar:9/16" data-slot="content-vid-03">
-        <div class="slot-box"><span class="slot-tag">vid 3</span><span class="slot-ratio">9:16</span></div>
+        <div class="slot-box">
+          <video class="trk-vid" muted loop playsinline webkit-playsinline
+                 preload="none" tabindex="-1" width="640" height="1138"
+                 poster="assets/media/content/content-03-worldgov-poster.jpg"
+                 data-src-640="assets/media/content/content-03-worldgov-640.mp4"
+                 data-src-360="assets/media/content/content-03-worldgov-360.mp4"></video>
+        </div>
       </li>
     </ul>
   </div>
@@ -809,7 +832,7 @@
         <p class="price-amount"><span class="price-cur">NGN</span><span class="price-fig">200,000</span></p>
         <p class="price-sub">Three tracks &middot; 12 weeks &middot; one premiere</p>
 
-        <a class="btn btn-apply btn-block price-cta" href="#apply">Claim your seat <span class="arr" aria-hidden="true">&rarr;</span></a>
+        <a class="btn btn-apply btn-block price-cta" href="#pay">Claim your seat <span class="arr" aria-hidden="true">&rarr;</span></a>
         <p class="price-note">Registration closes Saturday 10&nbsp;October 2026. Seats are capped so every student gets set time.</p>
       </div>
 
@@ -912,91 +935,7 @@
 </section>
 
 <!-- ============ APPLY ============ -->
-<section class="sec sec-apply" id="apply" aria-labelledby="apply-h">
-  <div class="wrap wrap-narrow">
-    <div class="apply-head reveal">
-      <h2 id="apply-h" class="h2 h2-big">Twelve weeks.<br>Then your work on a screen.</h2>
-      <p class="sec-intro">Classes begin Friday 25 September 2026 in Kaduna. Tracks are chosen at the end of week three, and registration closes Saturday 10 October.</p>
-    </div>
 
-<figure class="slot slot-apply" style="--ar:3/2" data-slot="apply-still">
-      <div class="slot-box">
-        <div class="slot-ph">
-          <span class="slot-meta">apply-still · 3:2 · 1800×1200 · STILL</span>
-          <span class="slot-desc">A premiere audience, or a room watching a screen. Warm, full of people.</span>
-          <span class="slot-path">assets/media/apply-still.jpg</span>
-        </div>
-      </div>
-    </figure>
-
-    <form class="form reveal" id="apply-form" novalidate>
-      <div class="f">
-        <label for="f-name">Full name</label>
-        <input id="f-name" name="name" type="text" autocomplete="name" required>
-        <p class="err" data-for="f-name" hidden></p>
-      </div>
-
-      <div class="f-row">
-        <div class="f">
-          <label for="f-phone">Phone / WhatsApp</label>
-          <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required>
-          <p class="err" data-for="f-phone" hidden></p>
-        </div>
-        <div class="f">
-          <label for="f-email">Email</label>
-          <input id="f-email" name="email" type="email" inputmode="email" autocomplete="email" required>
-          <p class="err" data-for="f-email" hidden></p>
-        </div>
-      </div>
-
-      <div class="f">
-        <label for="f-track">Which track interests you?</label>
-        <select id="f-track" name="track" required>
-          <option value="" selected disabled>Choose one</option>
-          <option>Film Production</option>
-          <option>Content Creation</option>
-          <option>The Finisher's Track</option>
-          <option>Not sure yet</option>
-        </select>
-        <p class="err" data-for="f-track" hidden></p>
-      </div>
-
-      <div class="f">
-        <label for="f-made">What have you made before? <span class="opt">Optional</span></label>
-        <textarea id="f-made" name="made" rows="3"></textarea>
-      </div>
-
-      <div class="f-row">
-        <fieldset class="f f-fs">
-          <legend>Do you have a laptop?</legend>
-          <div class="radios">
-            <label class="rad"><input type="radio" name="laptop" value="Yes" required><span>Yes</span></label>
-            <label class="rad"><input type="radio" name="laptop" value="No"><span>No</span></label>
-          </div>
-          <p class="err" data-for="laptop" hidden></p>
-        </fieldset>
-
-        <fieldset class="f f-fs">
-          <legend>Do you have a camera?</legend>
-          <div class="radios">
-            <label class="rad"><input type="radio" name="camera" value="Yes" required><span>Yes</span></label>
-            <label class="rad"><input type="radio" name="camera" value="No"><span>No</span></label>
-          </div>
-          <p class="err" data-for="camera" hidden></p>
-        </fieldset>
-      </div>
-
-      <div class="f">
-        <label class="chk"><input type="checkbox" name="consent" value="Yes" required><span>I agree that work I make during the program may be used by the school for promotion</span></label>
-        <p class="err" data-for="consent" hidden></p>
-      </div>
-
-      <button class="btn btn-apply btn-block" type="submit">Send my application</button>
-
-      <p class="form-msg" id="form-msg" role="status" aria-live="polite" hidden></p>
-    </form>
-  </div>
-</section>
 
 <!-- ============ PAY TUITION ============
      TWO ROUTES, and they are not the same mechanism.
@@ -1052,12 +991,12 @@
       </fieldset>
 
       <!-- ---- ROUTE A: card checkout ---- -->
+      <!-- No amount summary here. The plan card above is already the price,
+           and repeating it 130px lower turned a choice between two figures
+           into a page showing three. What you are about to be charged is on
+           the submit button instead, where it is read last and cannot drift
+           from the card. -->
       <form id="pay-form" novalidate data-route-full>
-        <div class="pay-amount">
-          <span class="pay-amount-k">Due now</span>
-          <strong class="pay-amount-v" data-pay-amount aria-live="polite">&mdash;</strong>
-        </div>
-
         <div class="f">
           <label for="p-name">Full name</label>
           <input id="p-name" name="name" type="text" autocomplete="name" required>
@@ -1101,11 +1040,6 @@
 
       <!-- ---- ROUTE B: transfer + receipt ---- -->
       <div class="pay-transfer" data-route-split hidden>
-        <div class="pay-amount">
-          <span class="pay-amount-k">Transfer now</span>
-          <strong class="pay-amount-v" data-transfer-amount>&mdash;</strong>
-        </div>
-
         <dl class="pay-bank">
           <div><dt>Bank</dt><dd data-bank-name>&mdash;</dd></div>
           <div><dt>Account name</dt><dd data-bank-account>&mdash;</dd></div>
@@ -1137,6 +1071,31 @@
         <p class="pay-note" data-split-balance>&mdash;</p>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="sec sec-apply" id="apply" aria-labelledby="apply-h">
+  <div class="wrap wrap-narrow">
+    <div class="apply-head reveal">
+      <h2 id="apply-h" class="h2 h2-big">Twelve weeks.<br>Then your work on a screen.</h2>
+      <p class="sec-intro">Classes begin Friday 25 September 2026 in Kaduna. Tracks are chosen at the end of week three, and registration closes Saturday 10 October.</p>
+    </div>
+
+<figure class="slot slot-apply" style="--ar:3/2" data-slot="apply-still">
+      <div class="slot-box">
+        <div class="slot-ph">
+          <span class="slot-meta">apply-still · 3:2 · 1800×1200 · STILL</span>
+          <span class="slot-desc">A premiere audience, or a room watching a screen. Warm, full of people.</span>
+          <span class="slot-path">assets/media/apply-still.jpg</span>
+        </div>
+      </div>
+    </figure>
+
+    <!-- The application form used to live here. It is gone: applying and
+         paying were two forms asking the same four questions on one page, and
+         the payment one is the one that does something. This section is now
+         the close — the last thing read before the footer. -->
+    <p class="apply-signoff reveal">See you in class.</p>
   </div>
 </section>
 
@@ -1188,6 +1147,11 @@
      frame, paused while the pointer is over it. Same in-view / tab-hidden /
      reduced-motion gating as the film track. -->
 <script src="finisher-track.js" defer></script>
+
+<!-- Content track: three 9:16 clips. Decides whether to fetch them at all
+     (>=1024, motion allowed, connection not metered) and plays them only
+     while the section is on screen. -->
+<script src="content-track.js" defer></script>
 
 <!-- Paystack checkout. THE FIRST THIRD-PARTY SCRIPT ON THIS PAGE — the README
      otherwise records that there are none, and this is the exception, because

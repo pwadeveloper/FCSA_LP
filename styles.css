@@ -216,6 +216,16 @@ body {
 }
 
 img, svg, video { display: block; max-width: 100%; }
+
+/* [hidden] MUST WIN. The browser's own rule for it is `[hidden]{display:none}`
+   in the UA stylesheet, and any class selector that sets display outranks it —
+   so `.pay-transfer { display: grid }` left the bank-transfer panel on screen
+   the whole time it was marked hidden, and the page showed both payment routes
+   at once, ₦200,000 and ₦140,000 stacked. It is the kind of bug that reads as
+   a JS failure and is not one: the attribute was set correctly throughout.
+   One !important here closes it for every use of the attribute on the page,
+   which is worth more than fixing the one selector that exposed it. */
+[hidden] { display: none !important; }
 button, input, select, textarea { font: inherit; color: inherit; }
 ul, ol { list-style: none; padding: 0; }
 a { color: inherit; }
@@ -912,6 +922,17 @@ a { color: inherit; }
   margin-top: 2.25rem;
 }
 .trk-grid img { aspect-ratio: 9 / 16; }
+/* The three Content clips. object-fit:cover because the card's height is set
+   by the grid and its width by the column — the 9:16 source will not match
+   that box exactly at every width, and letterboxing three cards inside a row
+   of three would read as a mistake. */
+.trk-grid .trk-vid {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover; background: #0A0A0A;
+}
+/* A clip whose play() was refused keeps its poster rather than showing a
+   frozen first frame that pretends to be a still. */
+.trk-grid .trk-vid.is-blocked { visibility: hidden; }
 
 /* The video placeholders. Presentation lives HERE, at base, not in the >=1024
    block — the cards exist at every width, and while the flex centring was
@@ -1693,6 +1714,21 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 .err::before { content: '— '; color: var(--mute); }
 .f.has-err input, .f.has-err select, .f.has-err textarea { border-color: var(--paper); }
 .f.has-err .rad span { border-color: var(--paper); }
+/* The closing line. It sits where the application form used to, and it is the
+   last thing on the page before the footer — so it gets the weight of a
+   statement rather than the size of a caption, and enough air above it that it
+   reads as an ending and not as a stray label under the image. */
+.apply-signoff {
+  margin-top: clamp(1.75rem, 4vw, 2.75rem);
+  color: var(--paper);
+  font-weight: 900;
+  font-size: clamp(1.5rem, 3.6vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-wrap: balance;
+}
+
 .form-msg { padding: 1rem 1.25rem; border: 1px solid var(--paper); background: var(--sunk); color: var(--paper); font-size: var(--t0); line-height: 1.5; border-radius: 6px; }
 .form-msg[data-state="err"] { border-color: var(--rule); color: var(--body); }
 
@@ -1721,13 +1757,26 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   padding: 1rem 1.125rem;
   border: 1px solid var(--rule); border-radius: 6px;
   background: var(--sunk);
-  transition: border-color .18s var(--ease), background .18s var(--ease);
+  transition: border-color .18s var(--ease), background .18s var(--ease),
+              box-shadow .18s var(--ease), transform .12s var(--ease);
 }
 .pay-plan:hover .pay-plan-b { border-color: var(--body); }
 /* Selection is carried by the BORDER and a brighter ground, not by the accent
    — yellow means the button you press next, and a selected card that is also
    yellow competes with the thing it is meant to lead you to. */
-.pay-plan input:checked + .pay-plan-b { border-color: var(--paper); background: var(--surface); }
+/* The selected card is now the ONLY statement of what you are paying, so the
+   selected state has to be unmissable rather than merely visible: a 2px border
+   in --paper against 1px --rule on the unselected one, plus the lifted ground.
+   inset box-shadow rather than a real 2px border, so the card does not move
+   1px when it is chosen. */
+.pay-plan input:checked + .pay-plan-b {
+  border-color: var(--paper);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--paper);
+}
+.pay-plan input:checked + .pay-plan-b .pay-plan-n { color: var(--body); }
+/* Press feedback, matching .btn elsewhere on the page. */
+.pay-plan:active .pay-plan-b { transform: scale(.99); }
 .pay-plan input:focus-visible + .pay-plan-b { outline: 2px solid var(--paper); outline-offset: 2px; }
 .pay-plan-t { color: var(--paper); font-weight: 700; font-size: var(--t0); }
 .pay-plan-v { color: var(--paper); font-weight: 900; font-size: clamp(1.0625rem, 2.1vw, 1.25rem); font-variant-numeric: tabular-nums; }
@@ -1736,23 +1785,6 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 /* The "use the same email" note. Sits under the field it governs, in the
    body grey — it is guidance, not an error, and must not read as one. */
 .f-note { margin-top: .4375rem; color: var(--mute); font-size: var(--t-1); line-height: 1.45; }
-
-.pay-amount {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 1rem; flex-wrap: wrap;
-  padding: 1.125rem 1.25rem;
-  border: 1px solid var(--rule); border-radius: 6px;
-  background: var(--sunk);
-}
-.pay-amount-k {
-  color: var(--mute); font-size: var(--t-1);
-  text-transform: uppercase; letter-spacing: .08em; font-weight: 700;
-}
-.pay-amount-v {
-  color: var(--paper); font-weight: 900;
-  font-size: clamp(1.375rem, 3.2vw, 1.875rem);
-  font-variant-numeric: tabular-nums;
-}
 
 /* ---- the transfer route ---- */
 .pay-transfer { display: grid; gap: 1.25rem; }
