@@ -923,7 +923,9 @@ assets/
   tracks.js                        the three track sections reveal on enter (~1KB, no deps)
   finisher-track.js                the Finisher's 500ms frame cycle, paused on hover
   content-track.js                 the Content Track's three clips; gates the
-                                   fetch, not just playback
+                                   fetch, not just playback. PLAYS ON PHONES —
+                                   see "the one video that ignores the 1024
+                                   rule" below
   pay.js                           Paystack checkout — trusted with nothing
 api/
   _paystack.js                     shared helpers (underscore = not a route)
@@ -1212,6 +1214,31 @@ Fonts are self-hosted rather than called from Google Fonts: the audience is on
 mobile data, and self-hosting removes two DNS + TLS round trips before the
 first byte of font CSS arrives. Only the three weights the page actually uses
 are wired; `fonts/` at the repo root holds the rest of the family, unused.
+
+### The one video that ignores the 1024 rule
+
+Every other video on this page is suppressed below 1024px and under
+`prefers-reduced-motion` — "this audience is on mobile data", as the note in
+`script.js` puts it. **The three Content Track clips are the exception**, and
+the exception is deliberate.
+
+That rule guards a full-screen ambient backdrop that is 1MB+ and carries no
+information. Applying the same threshold to these was a category error. They
+are 150KB each at the 360 rung — 430KB for all three, less than one hero frame
+— and unlike a backdrop they *are* the section: the Content Track's whole claim
+is "work made for a phone screen", argued with three phone-shaped clips. On a
+phone that showed three still posters, which does not read as a considered
+fallback. It reads as broken, and it was reported as exactly that.
+
+What survives is the half of the policy that was about the person rather than
+the screen: **Save-Data, 2g/3g and reduced-motion still fetch nothing**, and the
+posters stand in. A narrow window is not a request; a Save-Data header is.
+
+The rung follows the measurement — the card is 110px wide at 390 and 314px at
+1920, so phones get the 360 and desktops the 640. It is chosen once, at first
+play, and never re-chosen on resize: swapping `src` mid-playback restarts the
+clip, and a video that jumps to frame one because someone dragged a window edge
+is worse than a slightly wrong rung.
 
 There is **one third-party script, and only one**: Paystack's
 `js.paystack.co/v2/inline.js`, loaded deferred on the pay section. It is the
