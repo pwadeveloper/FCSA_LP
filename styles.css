@@ -1656,6 +1656,12 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 /* ---------- APPLY ---------- */
 .sec-apply { border-top: 1px solid var(--rule); }
 .apply-head { margin-bottom: clamp(2.5rem, 5vw, 3.5rem); }
+/* Venue: the address where classes begin, plus a small outline button out to
+   Google Maps. Wraps to its own line under the intro; the button never
+   stretches. */
+.apply-venue { margin-top: clamp(1.25rem, 2.5vw, 1.75rem); display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1.25rem; }
+.apply-addr { font-style: normal; color: var(--body); font-size: var(--t0); line-height: 1.45; max-width: 34ch; }
+.apply-map { flex: none; }
 /* The vertical rhythm is the whole design here. A label belongs to the input
    BELOW it, so the gap inside a field has to be clearly tighter than the gap
    between fields — 8px against 22px. Where those two are equal, or worse
