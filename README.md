@@ -963,12 +963,14 @@ reminder mail. A transfer plus a receipt on a Tally form puts that record where
 a human already looks, at the cost of reconciling by hand. For one cohort that
 is the better trade.
 
-The deposit and balance are **derived from the total** —
-`PAYSTACK_DEPOSIT_PERCENT=70` gives the deposit and the balance is the
-subtraction, never the other percentage. Nothing charges them; they are the
-figures printed on the page, and a page whose two instalments do not add up to
-its own total is the kind of thing a student notices. The self-test checks
-`deposit + balance === total` on figures that do not divide cleanly.
+The deposit and balance are **derived from the total** — `DEPOSIT_PERCENT = 70`
+in `api/_paystack.js` gives the deposit, and the balance is the subtraction,
+never the other percentage. **Nothing charges either of them**: instalments are
+a bank transfer, so the only amount Paystack's API is ever sent is the full
+tuition. They exist to produce the figures printed on the page, and a page
+whose two instalments do not add up to its own total is the kind of thing a
+student notices. The self-test checks `deposit + balance === total` on figures
+that do not divide cleanly.
 
 ### The card route
 
@@ -1096,9 +1098,35 @@ carries no values. `.gitignore` covers `.env`, `.env.local`, `.env.*.local`.
 |---|---|---|
 | `PAYSTACK_PUBLIC_KEY` | public | required |
 | `PAYSTACK_SECRET_KEY` | **server only** | required |
-| `PAYSTACK_TUITION_KOBO` | | required — `20000000` for ₦200,000 |
-| `PAYSTACK_DEPOSIT_PERCENT` | | defaults to `70` |
-| `PAYSTACK_CURRENCY` | | defaults to `NGN` |
+
+**Two variables, and that is the whole list.** The price is not among them —
+see below.
+
+### Why the price is a constant, not an env var
+
+`TUITION_KOBO`, `DEPOSIT_PERCENT` and `CURRENCY` live at the top of
+`api/_paystack.js`. They were env vars while the price was genuinely unknown
+and `content.md` still said `[TO CONFIRM]`; an unset variable was the honest
+way to say "no price yet". That reason expired the moment the figure was
+decided.
+
+Environment variables are for secrets, and for values that differ between
+environments. The tuition is neither: it is public, it is printed on the page,
+and it is the same number in preview and production. Keeping it in env made it
+a **fourth** source of truth — alongside the pricing section, the FAQ and
+`content.md` — able to disagree with all three without anything noticing.
+
+`PAYSTACK_DEPOSIT_PERCENT` was the sharpest case. Since instalments moved to
+bank transfer, **Paystack never sees that number** — the only amount its API is
+ever sent is the full tuition (`init.js`). It exists purely to derive the
+₦140,000 and ₦60,000 the page prints, so the `PAYSTACK_` prefix was claiming an
+owner that had nothing to do with it.
+
+The three printed copies still have to be edited by hand, because the FAQ is
+static HTML with no build step and having JS rewrite it would leave the figure
+missing for anyone without JS and for every crawler. So `npm run test:paystack`
+**fails** until they agree with the constant — verified by changing the price
+in the code alone, which turns seven assertions red.
 
 ### Running it locally
 
@@ -1123,8 +1151,8 @@ code Vercel runs. An env var overrides `.env.local` for a single run.
 npm run test:paystack       # 36 assertions, no keys and no network needed
 ```
 
-Covers the webhook HMAC against an independently computed signature, the kobo
-parser, the 70/30 arithmetic, and the amount guard.
+Covers the webhook HMAC against an independently computed signature, the 70/30
+arithmetic, the amount guard, and the price-drift check described above.
 
 **A real transaction has now been run** against Paystack's test environment,
 which the self-test cannot cover:
@@ -1149,8 +1177,10 @@ on the page.
 
 1. Push. Import the repo at vercel.com; `api/` is detected automatically and
    `package.json` exists so the functions build. The page itself is static.
-2. Set the variables above in Project Settings -> Environment Variables. Test
-   values for Preview/Development, live values for Production.
+2. Set `PAYSTACK_PUBLIC_KEY` and `PAYSTACK_SECRET_KEY` in Project Settings ->
+   Environment Variables — test values for Preview/Development, live values for
+   Production. Nothing else needs setting; the price ships in the code.
+   **Environment variables only take effect on the next deploy.**
 3. Optionally point the webhook at `https://YOUR-DOMAIN/api/paystack/webhook`.
 4. Run a real test transaction with a
    [test card](https://paystack.com/docs/payments/test-payments) before going

@@ -12,6 +12,7 @@
    moves money.
    ========================================================================== */
 import { signatureValid, emailLooksReal, settings } from '../api/_paystack.js';
+import { readFileSync } from 'node:fs';
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = '') => {
@@ -46,23 +47,6 @@ console.log('\nwebhook signature');
   ok('matches an independently computed HMAC SHA-512', await signatureValid(body, good, SECRET));
 }
 
-console.log('\namount parsing (kobo must be a positive integer)');
-{
-  const withEnv = (v) => {
-    process.env.PAYSTACK_SECRET_KEY = SECRET;
-    process.env.PAYSTACK_PUBLIC_KEY = 'pk_test_x';
-    process.env.PAYSTACK_TUITION_KOBO = v;
-    return settings().totalKobo;
-  };
-  ok('accepts a whole number', withEnv('50000000') === 50000000);
-  ok('rejects a decimal', withEnv('50000.5') === null);
-  ok('rejects a negative', withEnv('-100') === null);
-  ok('rejects zero', withEnv('0') === null);
-  ok('rejects an empty value', withEnv('') === null);
-  ok('rejects text', withEnv('five hundred') === null);
-  ok('rejects a thousands separator', withEnv('500,000') === null);
-}
-
 console.log('\nemail sanity');
 {
   ok('accepts an ordinary address', emailLooksReal('ada@example.com'));
@@ -74,14 +58,17 @@ console.log('\nemail sanity');
 
 console.log('\nthe 70/30 split — deposit + balance must equal the total EXACTLY');
 {
+  process.env.PAYSTACK_SECRET_KEY = SECRET;
+  process.env.PAYSTACK_PUBLIC_KEY = 'pk_test_x';
+  /* The price is a constant now, so the awkward-rounding cases exercise the
+     derivation directly rather than by feeding settings() different env. What
+     matters is the RULE — deposit rounds, balance is the subtraction — and
+     that it never loses or invents a kobo. */
   const at = (total, pct) => {
-    process.env.PAYSTACK_SECRET_KEY = SECRET;
-    process.env.PAYSTACK_PUBLIC_KEY = 'pk_test_x';
-    process.env.PAYSTACK_TUITION_KOBO = String(total);
-    process.env.PAYSTACK_DEPOSIT_PERCENT = String(pct);
-    return settings();
+    const deposit = Math.round((total * pct) / 100);
+    return { totalKobo: total, depositKobo: deposit, balanceKobo: total - deposit };
   };
-  const c = at(20000000, 70);            // the real numbers: N200,000
+  const c = settings();                  // the real numbers: N200,000
   ok('total is N200,000',   c.totalKobo   === 20000000);
   ok('deposit is N140,000', c.depositKobo === 14000000);
   ok('balance is N60,000',  c.balanceKobo ===  6000000);
@@ -101,9 +88,6 @@ console.log('\nthe amount guard — a client MUST NOT be able to set the price')
 {
   process.env.PAYSTACK_SECRET_KEY = SECRET;
   process.env.PAYSTACK_PUBLIC_KEY = 'pk_test_x';
-  process.env.PAYSTACK_TUITION_KOBO = '20000000';
-  process.env.PAYSTACK_DEPOSIT_PERCENT = '70';
-  process.env.PAYSTACK_CURRENCY = 'NGN';
 
   let sent = null;
   const realFetch = globalThis.fetch;
@@ -135,11 +119,34 @@ console.log('\nthe amount guard — a client MUST NOT be able to set the price')
   ok('rejects GET with 405',
      (await init(new Request('https://x/api/paystack/init', { method: 'GET' }))).status === 405);
 
-  process.env.PAYSTACK_TUITION_KOBO = '';
-  ok('refuses to charge when no price is configured (503)',
-     (await post({ email: 'ada@example.com' })).status === 503);
-
   globalThis.fetch = realFetch;
+}
+
+console.log('\nprice drift — the page must print what the code charges');
+{
+  /* The price lives once in api/_paystack.js and is REPEATED, in prose, in
+     three places a human edits. Nothing at runtime can reconcile those: the
+     FAQ is static HTML with no build step, and having JS rewrite it would
+     leave the figure missing for anyone without JS and for every crawler.
+
+     So the guard is here. Change the constant and forget the copy — or edit
+     the copy and forget the constant — and this fails loudly, instead of the
+     site quietly advertising one price while charging another. */
+  const c = settings();
+  const naira = (kobo) => (kobo / 100).toLocaleString('en-US');
+  const total = naira(c.totalKobo), dep = naira(c.depositKobo), bal = naira(c.balanceKobo);
+
+  const html = readFileSync('index.html', 'utf8');
+  const copy = readFileSync('content.md', 'utf8');
+
+  ok(`pricing section prints ${total}`, html.includes(`>${total}<`));
+  ok(`FAQ prints ${total}`,            html.includes(`&#8358;${total}`));
+  ok(`FAQ prints the ${dep} deposit`,  html.includes(`&#8358;${dep}`));
+  ok(`FAQ prints the ${bal} balance`,  html.includes(`&#8358;${bal}`));
+  ok(`FAQ prints ${c.depositPercent}%`, html.includes(`${c.depositPercent}%`));
+  ok(`content.md prints ${total}`,     copy.includes(`₦${total}`));
+  ok(`content.md prints the ${dep} deposit`, copy.includes(`₦${dep}`));
+  ok(`content.md prints the ${bal} balance`, copy.includes(`₦${bal}`));
 }
 
 console.log(`\n${pass} passed, ${fail} failed\n`);

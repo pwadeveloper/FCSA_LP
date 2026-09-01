@@ -15,23 +15,51 @@
 
 export const PAYSTACK_API = 'https://api.paystack.co';
 
+/* ==========================================================================
+   THE PRICE. Constants, not environment variables — and that is a deliberate
+   move back.
+
+   They started as env vars for a good reason: the price was genuinely unknown,
+   content.md said "[TO CONFIRM]", and an unset variable was the honest way to
+   say so. That reason is gone. The figure is decided, it is PRINTED ON THE
+   PAGE in three other places (the pricing section, the FAQ, content.md), and
+   it is identical in every environment. Environment variables are for secrets
+   and for values that differ between environments; this is neither, and
+   keeping it in env made it a fourth source of truth able to disagree
+   silently with the three visible ones.
+
+   PAYSTACK_DEPOSIT_PERCENT was the clearest symptom of that. Since instalments
+   moved to bank transfer, PAYSTACK NEVER SEES THAT NUMBER — the only amount
+   sent to its API is the full tuition. It exists purely to derive the ₦140,000
+   and ₦60,000 the page prints, so a PAYSTACK_ prefix actively lied about which
+   system owns it.
+
+   Changing the price now means editing this block, and the drift check in
+   tools/paystack-selftest.mjs FAILS until the three printed copies agree with
+   it. That is more friction than a dashboard field, and the friction is the
+   point: a price changed in one place while three others go on advertising
+   the old one is a refund conversation.
+   ========================================================================== */
+const TUITION_KOBO    = 20000000;   // ₦200,000
+const DEPOSIT_PERCENT = 70;         // → ₦140,000 down, ₦60,000 on resumption
+const CURRENCY        = 'NGN';
+
 /* ---------- configuration ----------
-   Read at call time, never at module load: on Vercel a missing variable added
-   later should start working on the next request, not require a redeploy to
-   be noticed. */
+   The KEYS are read at call time, never at module load: on Vercel a variable
+   added later should start working on the next request rather than needing a
+   redeploy before anything notices it. */
 export function settings() {
   const secret = (process.env.PAYSTACK_SECRET_KEY || '').trim();
   const publicKey = (process.env.PAYSTACK_PUBLIC_KEY || '').trim();
-  const raw = (process.env.PAYSTACK_TUITION_KOBO || '').trim();
-  const currency = (process.env.PAYSTACK_CURRENCY || 'NGN').trim().toUpperCase();
-  const pctRaw = (process.env.PAYSTACK_DEPOSIT_PERCENT || '70').trim();
+  const currency = CURRENCY;
 
   /* Kobo, and an INTEGER. Paystack rejects fractional amounts outright, and a
      float here would come back from their API as a different number than the
      one compared against on verify, which reads as "amount mismatch" on a
-     payment that was actually correct. */
-  const tuitionKobo = /^\d+$/.test(raw) ? parseInt(raw, 10) : null;
-  const total = tuitionKobo && tuitionKobo > 0 ? tuitionKobo : null;
+     payment that was actually correct. Still validated even though it is a
+     literal above: the check costs nothing and catches the day someone types
+     20000000.5. */
+  const total = Number.isInteger(TUITION_KOBO) && TUITION_KOBO > 0 ? TUITION_KOBO : null;
 
   /* THE DEPOSIT IS DERIVED, NEVER CONFIGURED SEPARATELY, and the balance is
      the subtraction rather than the other percentage, so the two always sum to
@@ -39,7 +67,8 @@ export function settings() {
      bank transfer — but they are the figures PRINTED ON THE PAGE, and a page
      whose two instalments do not add up to its own total is the kind of thing
      a student notices and an accountant remembers. */
-  const pct = /^\d{1,2}$/.test(pctRaw) ? parseInt(pctRaw, 10) : 70;
+  const pct = Number.isInteger(DEPOSIT_PERCENT) && DEPOSIT_PERCENT > 0 && DEPOSIT_PERCENT < 100
+    ? DEPOSIT_PERCENT : 70;
   const depositKobo = total ? Math.round((total * pct) / 100) : null;
   const balanceKobo = total ? total - depositKobo : null;
 
@@ -65,7 +94,7 @@ export function settings() {
    reading it is the one who can fix it. */
 export function configProblem(c) {
   if (!c.hasKeys) return 'Paystack keys are not set. Add PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY.';
-  if (c.totalKobo === null) return 'PAYSTACK_TUITION_KOBO is not set to a positive whole number of kobo.';
+  if (c.totalKobo === null) return 'TUITION_KOBO in api/_paystack.js is not a positive whole number of kobo.';
   return null;
 }
 
