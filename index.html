@@ -11,18 +11,26 @@
 <meta property="og:title" content="The Film &amp; Content School Africa">
 <meta property="og:description" content="Three tracks. Twelve weeks. One premiere. A hands-on film and content school in Kaduna, Nigeria. 25 September — 12 December 2026.">
 <meta property="og:locale" content="en_NG">
-<!-- ============================================================
-     LAUNCH BLOCKER — OPEN GRAPH IMAGE. 1200×630 on black #000000,
-     the school mark (use assets/tfcs-afric-logo.png, 316x137) and the
-     headline. The mark now carries #FFEA33 in its sun, so do NOT add
-     yellow anywhere else in the card.
-     Add assets/og-image.png, uncomment, set the live domain. See README.
-     <meta property="og:url" content="https://REPLACE-ME/">
-     <meta property="og:image" content="https://REPLACE-ME/assets/og-image.png">
-     <meta property="og:image:width" content="1200">
-     <meta property="og:image:height" content="630">
-     <meta name="twitter:card" content="summary_large_image">
-     ============================================================ -->
+<!-- OPEN GRAPH IMAGE — the hero, captured at 1200x630 by
+     tools/og-image.mjs rather than drawn by hand. It is the real page: the
+     mark, the headline, the sub, the Apply pill, over hero frame 1. Two
+     things the capture does deliberately — it pins the carousel to frame 1
+     (a face reads at the ~500px a timeline preview actually renders, where
+     a wide landscape becomes a smear) and it hides the partner strip, which
+     the 630px cut otherwise slices through the middle of.
+
+     JPEG, not PNG: 103KB against 722KB for identical pixels, and every
+     scraper re-encodes it anyway.
+
+     ABSOLUTE URLs are required here — og:image is fetched by a crawler with
+     no page context, so a relative path silently yields no card at all. -->
+<meta property="og:url" content="https://filmschool.africa/">
+<meta property="og:image" content="https://filmschool.africa/assets/og-image.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Film &amp; Content School Africa — a hands-on film and content school in Kaduna, Nigeria.">
+<meta name="twitter:card" content="summary_large_image">
 
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/delight-black.woff2" as="font" type="font/woff2" crossorigin>
@@ -996,7 +1004,12 @@
            into a page showing three. What you are about to be charged is on
            the submit button instead, where it is read last and cannot drift
            from the card. -->
-      <form id="pay-form" novalidate data-route-full>
+      <!-- class="form" is load-bearing, not decoration: it carries
+           `display:grid; gap` and without it the fields stack with ZERO space
+           between them, so every label sits flush against the bottom of the
+           input above it and the submit button touches the select. It was
+           dropped when this section was split into two routes. -->
+      <form class="form" id="pay-form" novalidate data-route-full>
         <div class="f">
           <label for="p-name">Full name</label>
           <input id="p-name" name="name" type="text" autocomplete="name" required>

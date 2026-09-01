@@ -268,14 +268,25 @@ If applications ever need to be collected separately from payment, the Tally
 account already has `tools/tally-form.mjs` — a second form there is a smaller
 job than reinstating a hand-rolled one.
 
-### 4. Open Graph image
+### 4. ~~Open Graph image~~ — RESOLVED
 
-1200×630 on Soft Black `#2E1E1C`, both logos, headline. Add at
-`assets/og-image.png`, then uncomment the block in `<head>` and set the live
-domain. Carrot `#F3681A` is allowed on the card only if it carries the same
-meaning it does on the page — the action, or the destination. Not decoration. This link will be
-shared on WhatsApp far more than it will be found in search, so the preview
-card matters more than the SEO.
+**No longer a blocker.** `assets/og-image.jpg` is live, and the `<head>` block
+is uncommented and pointed at `https://filmschool.africa/`. (The description
+here previously specified a `#2E1E1C` ground and Carrot `#F3681A` — colours
+from an earlier palette that this site does not use. It is black, white and
+one yellow.)
+
+The card is a **screenshot of the real hero**, taken by `tools/og-image.mjs`,
+not a graphic drawn alongside it — so it cannot drift from the page. Change the
+headline or the mark, re-run the tool, and the card is right again. Two things
+it does on purpose: it pins the hero carousel to frame 1, because whichever
+frame happens to be up is otherwise a coin toss and a face survives the ~500px
+a timeline preview actually renders where a landscape turns to mush; and it
+hides the partner strip, which the 630px cut slices through the middle of.
+
+JPEG at 103KB rather than PNG at 722KB for the same pixels — every scraper
+re-encodes it anyway. This link is shared on WhatsApp far more than it is found
+in search, so the preview card matters more than the SEO.
 
 An analytics slot sits commented in `<head>`. Nothing is loaded.
 
@@ -459,7 +470,7 @@ a bug to fix elsewhere.
 The showcase, production, apply and social slots below render on the page as
 labelled dashed placeholders; drop assets in at the exact paths and they appear
 with no code change. Every `LOOP` needs a `.mp4` **and** a `.jpg` poster at the
-same name. `og-image` is the social card, built not photographed; the reel is
+same name. `og-image` is a capture of the live hero, not a drawn card; the reel is
 shot, cut and delivered and has its own section. **Every slot needs original or
 licensed material.** The hero reference comp must not ship — it is a publicity
 still of a recognisable actor.
@@ -489,7 +500,7 @@ currently repo placeholders to be swapped — the shape each one needs:
 | `production-05` | Production | `assets/media/production-05.jpg` | 16:9 | 1920×1080 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
 | `production-06` | Production | `assets/media/production-06.jpg` | 9:16 | 1080×1920 | STILL | Behind the scenes, production week. NOT YET SHOT. |  |
 | `apply-still` | Apply | `assets/media/apply-still.jpg` | 3:2 | 1800×1200 | STILL | A premiere audience, or a room watching a screen. Warm, full of people. |  |
-| `og-image` | Social | `assets/media/og-image.jpg` | 1.91:1 | 1200×630 | STILL | Black ground, school mark, headline. Built, not photographed. |  |
+| `og-image` | Social | `assets/og-image.jpg` | 1.91:1 | 1200×630 | DONE | A capture of the live hero — `node tools/og-image.mjs`. |  |
 
 ### The background loop — section 2 at rest
 
@@ -929,6 +940,7 @@ tools/
   paystack-selftest.mjs            36 assertions, no keys needed
   tally-form.mjs                   creates/updates the receipt form
   content-clips.py                 transcodes the three Content Track clips
+  og-image.mjs                     regenerates the social card from the hero
 .env.example                       template. .env.local is gitignored.
 package.json                       exists so Vercel builds api/; no dependencies
 vercel.json                        no-store on /api/*
