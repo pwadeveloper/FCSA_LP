@@ -426,6 +426,11 @@ a { color: inherit; }
 .btn-apply { background: var(--accent); color: var(--on-accent); }
 .btn-apply:hover { filter: brightness(1.07); }
 .btn-apply:active { filter: brightness(0.94); }
+/* The pay button reads "Pay ₦200,000". It is the one figure on the page's
+   primary action, and every other figure here is tabular — .pay-plan-v,
+   .pay-bank-num. Leaving this one proportional made the price the exception
+   on the control people actually press. */
+.btn-apply { font-variant-numeric: tabular-nums; }
 
 .btn-outline { border-color: var(--paper); color: var(--paper); background: transparent; }
 .btn-outline:hover { background: var(--paper); color: var(--ground); }

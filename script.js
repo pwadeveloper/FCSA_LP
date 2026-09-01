@@ -484,7 +484,15 @@ var SHOW_MEDIA_PLACEHOLDERS = true;
      No autoplay below 1024px and none under prefers-reduced-motion — this
      audience is on mobile data. Those cases get the poster and a play button. */
   var wideMq = window.matchMedia('(min-width: 1024px)');
-  var vids = document.querySelectorAll('.slot video');
+  /* :not(.trk-vid) — RE-APPLIED, and load-bearing. The Content Track's three
+     clips are decorative, sit in an aria-hidden grid, and measure ~110px on a
+     phone. Without this scope they each get a .slot-play button, and all three
+     of the following are true at once: a keyboard-focusable control lives
+     inside aria-hidden (which is the aria-hidden-focus violation), the button
+     is 65x40 against a 44px floor, and sync() below runs
+     `v.pause(); v.currentTime = 0` on elements content-track.js is
+     simultaneously trying to play. content-track.js owns them. */
+  var vids = document.querySelectorAll('.slot video:not(.trk-vid)');
 
   function wireSlotVideo(v) {
     var fig = v.closest('.slot');

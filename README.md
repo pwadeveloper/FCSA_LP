@@ -217,7 +217,7 @@ prints it.
 ### 1. ~~Cost~~ — RESOLVED, and the layout was chosen from a prototype
 
 NGN 200,000, in its own section (`#pricing`) between the timeline and the
-apply form. One fee, all three tracks, no per-track upsells.
+pay section. One fee, all three tracks, no per-track upsells.
 
 **Pricing section layout — decided from `/proto/pricing`**
 
@@ -249,22 +249,24 @@ apply form. One fee, all three tracks, no per-track upsells.
 | Item | Where it needs to go |
 |---|---|
 | Venue address in Kaduna | New FAQ entry |
-| Application deadline | New FAQ entry, and near the apply form |
+| Application deadline | New FAQ entry, and in the closing section |
 | Certificate — yes or no | New FAQ entry |
 | Reply time, in days | Under the submit button |
 | Contact — phone, WhatsApp, email | Footer |
 | Socials — school, Clan Yujo, Multimudia | Footer |
 | Tutor roster | Section was cut. Needs photos, credits and each person's sign-off before it earns a place back. |
 
-### 3. `FORM_ENDPOINT`
+### 3. There is no application form
 
-Top of `script.js`, currently `null`. Set it to a Formspree / Tally / Google
-Form URL. Until then the form validates fully and then says it is not
-connected, rather than pretending to send.
+`FORM_ENDPOINT` and the apply-form handler are gone. Applying and paying were
+two forms on one page asking the same four questions, and the payment one is
+the one that does something — so `#apply` is now the closing section (the
+headline, the still, and "See you in class.") and `pay.js` owns the only form
+on the page. The header CTA and "Claim your seat" point at `#pay`.
 
-The submit-failure message used to read "…or message us on \[TO CONFIRM]".
-It now ends at "Check your connection and try again." Add the contact channel
-back into that string in `script.js` once there is one.
+If applications ever need to be collected separately from payment, the Tally
+account already has `tools/tally-form.mjs` — a second form there is a smaller
+job than reinstating a hand-rolled one.
 
 ### 4. Open Graph image
 
@@ -909,6 +911,8 @@ assets/
   media/finisher track/            the seven masters, build inputs — gitignored
   tracks.js                        the three track sections reveal on enter (~1KB, no deps)
   finisher-track.js                the Finisher's 500ms frame cycle, paused on hover
+  content-track.js                 the Content Track's three clips; gates the
+                                   fetch, not just playback
   pay.js                           Paystack checkout — trusted with nothing
 api/
   _paystack.js                     shared helpers (underscore = not a route)
@@ -924,6 +928,7 @@ tools/
   dev-api.mjs                      local server that actually runs api/
   paystack-selftest.mjs            36 assertions, no keys needed
   tally-form.mjs                   creates/updates the receipt form
+  content-clips.py                 transcodes the three Content Track clips
 .env.example                       template. .env.local is gitignored.
 package.json                       exists so Vercel builds api/; no dependencies
 vercel.json                        no-store on /api/*
@@ -1000,8 +1005,9 @@ reconciliation.
 
 ### The transfer route
 
-Two constants at the top of `pay.js`, following the same `FORM_ENDPOINT` idiom
-`script.js` already uses. Both are set:
+Two constants at the top of `pay.js` — the "fill this in and it switches on"
+idiom `script.js` used to carry as `FORM_ENDPOINT`, before that form was
+removed. Both are set:
 
 ```js
 var BANK = { bank: 'Guaranty Trust Bank',
@@ -1156,9 +1162,9 @@ on the page.
   no reminder is sent.
 - **Refunds and failed charges are not modelled.** Only `charge.success` is
   logged.
-- **The apply form is still not connected** (`FORM_ENDPOINT` is `null` in
-  `script.js`) — unrelated to payments, and a second Tally form would be the
-  quickest fix there too.
+- **Applications are not collected anywhere.** The apply form was removed; the
+  only way onto the list is paying. If that is wrong, a second Tally form is
+  the quickest fix.
 
 Fonts are self-hosted rather than called from Google Fonts: the audience is on
 mobile data, and self-hosting removes two DNS + TLS round trips before the

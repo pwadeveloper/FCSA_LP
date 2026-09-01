@@ -49,7 +49,12 @@ FPS = 30
 # the frame the video itself begins on or starting reads as a cut.
 POSTER_W = 640
 CAP = 42 * 1024
-FMTS = [('AVIF', 'avif', 60, 26), ('WEBP', 'webp', 78, 34), ('JPEG', 'jpg', 76, 34)]
+# JPEG ONLY, and not by oversight. <video poster> takes a single URL — there is
+# no <picture> to negotiate a format with — so an avif and a webp alongside it
+# are files nothing can ever request. The first pass shipped 232KB of exactly
+# that. If these ever need to be avif, the poster has to become a real element
+# behind the video, the way the section-2 loop does it.
+FMTS = [('JPEG', 'jpg', 76, 34)]
 
 
 def run(args):
