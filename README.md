@@ -252,9 +252,16 @@ pay section. One fee, all three tracks, no per-track upsells.
 | Application deadline | New FAQ entry, and in the closing section |
 | Certificate — yes or no | New FAQ entry |
 | Reply time, in days | Under the submit button |
-| Contact — phone, WhatsApp, email | Footer |
 | Socials — school, Clan Yujo, Multimudia | Footer |
 | Tutor roster | Section was cut. Needs photos, credits and each person's sign-off before it earns a place back. |
+
+**Contact is done.** `.foot-contact` in the footer carries a WhatsApp link and
+an email. It is worth knowing why it is load-bearing rather than decorative:
+the transfer route in `#pay` tells people "We confirm by WhatsApp, usually the
+same day", and until this landed the page named no number for that to happen
+on. `wa.me` takes E.164 only, so the href is `2347030786526` while the text
+reads `0703 078 6526` — the local form, which is what this audience reads and
+retypes. **Change one and change the other.**
 
 ### 3. There is no application form
 
