@@ -1888,6 +1888,194 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 }
 .pay-testmode strong { color: var(--paper); }
 
+/* ==========================================================================
+   CURRICULUM — a bottom sheet on a phone, a full-screen panel on a desktop.
+
+   MOBILE FIRST, and here that is not a slogan: the sheet IS the base state and
+   the desktop panel is the override. A sheet that grows out of the bottom edge
+   and a panel that fills the viewport are the same box with different insets,
+   so the whole difference below is four properties in one media query.
+
+   THE HEIGHT IS A CUSTOM PROPERTY (--curr-h) rather than a class, because the
+   sheet has two rest heights and is dragged between them. Animating a variable
+   the height resolves from lets the drag write a live pixel value on every
+   pointer move and the release animate to a snap point, without the two ever
+   fighting over the same declaration.
+   ========================================================================== */
+.curr {
+  /* A <dialog> defaults to a centred, auto-sized, bordered box in the top
+     layer. All four have to go before it can be a sheet. */
+  margin: 0; padding: 0; border: 0; max-width: none; max-height: none;
+  width: 100%; position: fixed; inset: auto 0 0 0;
+  background: transparent; color: var(--body);
+  overscroll-behavior: contain;
+}
+/* .88, not the .5-.7 a backdrop usually gets. The page behind is already
+   black, so a light scrim dims nothing that reads as dimmed — except the one
+   yellow thing on it. At .72 the Apply pill was still legibly yellow behind
+   the sheet, which is an invitation to press a control the modal has made
+   inert. At .88 it is gone and the sheet floats on black. */
+.curr::backdrop { background: rgba(0,0,0,.88); }
+
+.curr-sheet {
+  --curr-h: 68svh;
+  display: flex; flex-direction: column;
+  height: var(--curr-h); max-height: 96svh;
+  background: var(--ground);
+  border-top: 1px solid var(--rule);
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+}
+/* The drag writes --curr-h on every pointer move, so the transition has to be
+   OFF while a finger is down or each move would animate toward the last one
+   and the sheet would lag the thumb. .is-dragging is added for the duration. */
+.curr-sheet { transition: height .34s var(--ease); }
+.curr.is-dragging .curr-sheet { transition: none; }
+
+.curr-grab {
+  flex: none; display: flex; align-items: center; justify-content: center;
+  height: 28px; cursor: grab; touch-action: none;
+}
+.curr-grab span { display: block; width: 42px; height: 4px; border-radius: 999px; background: var(--field); }
+.curr.is-dragging .curr-grab { cursor: grabbing; }
+
+.curr-head {
+  flex: none; padding: .25rem var(--edge-l) 1rem var(--edge-r);
+  border-bottom: 1px solid var(--rule);
+}
+.curr-head-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.curr-eyebrow { color: var(--mute); }
+.curr-h {
+  font-size: clamp(1.5rem, 5.4vw, 2rem); font-weight: 900; color: var(--paper);
+  line-height: 1.05; letter-spacing: -0.03em; margin-top: .35rem;
+}
+.curr-close {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; margin: -.25rem calc(-.5 * (44px - 24px)) 0 0;
+  background: transparent; border: 0; border-radius: 999px;
+  color: var(--paper); cursor: pointer;
+}
+.curr-close svg { width: 22px; height: 22px; }
+.curr-close:hover { background: rgba(255,255,255,.1); }
+
+/* The track filter. Scrolls sideways on a narrow phone rather than wrapping —
+   four pills on two lines pushes the first phase below the fold on a 568px
+   viewport, and the row reads as one control only while it is one row. */
+.curr-filter {
+  display: flex; gap: .5rem; margin-top: 1rem;
+  overflow-x: auto; scrollbar-width: none;
+  /* the gutter is on .curr-head, so the row can bleed into it and still start
+     on the same rail the heading does */
+  margin-inline: calc(-1 * var(--edge-l)) calc(-1 * var(--edge-r));
+  padding-inline: var(--edge-l) var(--edge-r);
+}
+.curr-filter::-webkit-scrollbar { display: none; }
+.curr-tab {
+  flex: none; min-height: 38px; padding: 0 1rem;
+  background: transparent; color: var(--mute);
+  border: 1px solid var(--field); border-radius: 999px;
+  font-size: var(--t-1); font-weight: 700; cursor: pointer;
+  transition: background-color .18s var(--ease), color .18s var(--ease), border-color .18s var(--ease);
+}
+.curr-tab:hover { color: var(--paper); border-color: var(--paper); }
+/* NO YELLOW. The accent is spoken for — .btn-apply is "the one place yellow
+   appears" and a selected filter chip is not worth spending it on. White fill
+   against the black ground is the strongest this palette gets without it. */
+.curr-tab.is-on { background: var(--paper); color: var(--ground); border-color: var(--paper); }
+
+.curr-body {
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: clamp(1.5rem, 5vw, 2.25rem) var(--edge-l) clamp(2.5rem, 8vw, 4rem) var(--edge-r);
+}
+
+.curr-phases { display: flex; flex-direction: column; }
+.curr-phase { padding-block: clamp(1.5rem, 4.5vw, 2rem); border-top: 1px solid var(--rule); }
+.curr-phase:first-child { border-top: 0; padding-top: 0; }
+/* A track block is one of three alternatives at the same point in the twelve
+   weeks, not a fourth step in the sequence. The rule down its left side is
+   what says so — it reads as a branch off the spine rather than more spine. */
+.curr-phase--track {
+  border-top: 0; padding-block: clamp(1rem, 3vw, 1.25rem);
+  padding-left: clamp(.875rem, 3vw, 1.25rem);
+  border-left: 2px solid var(--field);
+  margin-block: .25rem;
+}
+
+.curr-when { display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap; margin-bottom: .6rem; }
+.curr-wk {
+  font-size: clamp(1.125rem, 4vw, 1.375rem); font-weight: 900; color: var(--paper);
+  letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+}
+.curr-who { font-size: var(--t-2); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
+
+.curr-ph-h { font-size: var(--t1); font-weight: 700; color: var(--paper); line-height: 1.2; }
+.curr-ph-s { margin-top: .4rem; color: var(--mute); font-size: var(--t-1); line-height: 1.5; max-width: 60ch; }
+
+/* The numbers are the point. They are the source list's own indices, so a
+   reader can see there are 52 classes and that none of them went missing
+   between the syllabus and this page — which is why they are counters off the
+   <ol start> and not typed in. */
+.curr-list { list-style: none; margin: 1rem 0 0; padding: 0; counter-reset: none; }
+.curr-list li {
+  position: relative; padding: .5rem 0 .5rem 2.75rem;
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-1); line-height: 1.45; color: var(--body); text-wrap: pretty;
+}
+.curr-list li::before {
+  content: counter(list-item, decimal-leading-zero);
+  position: absolute; left: 0; top: .5rem;
+  color: var(--mute); font-size: var(--t-2); font-weight: 700;
+  font-variant-numeric: tabular-nums; letter-spacing: .04em;
+}
+
+.curr-foot {
+  margin-top: clamp(1.75rem, 5vw, 2.5rem); padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+  color: var(--mute); font-size: var(--t-2); line-height: 1.55; max-width: 62ch;
+}
+
+/* The button that opens it, in each track section. */
+.trk-cta { margin-top: .25rem; }
+
+/* ---------- >=1024: the sheet becomes a full-screen panel ----------
+   Four properties. The grab handle goes with them: there is nothing to drag
+   when the panel is already the size of the window. */
+@media (min-width: 1024px) {
+  .curr { inset: 0; height: 100%; }
+  .curr-sheet { --curr-h: 100%; max-height: none; border-radius: 0; border-top: 0; }
+  .curr-grab { display: none; }
+  .curr-head { padding-top: clamp(1.5rem, 3vw, 2.25rem); }
+
+  /* The week/phase split the mobile sheet stacks becomes two real columns, so
+     the eye runs down one rail of week numbers instead of hunting for them
+     between paragraphs. */
+  .curr-phase, .curr-phase--track {
+    display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    column-gap: clamp(1.5rem, 4vw, 3.5rem);
+  }
+  .curr-when { display: block; margin-bottom: 0; position: sticky; top: 0; align-self: start; }
+  .curr-wk { display: block; font-size: clamp(1.5rem, 2vw, 2rem); }
+  .curr-who { display: block; margin-top: .4rem; }
+
+  /* Two columns of classes once the measure would otherwise run past 60ch —
+     17 titles in one column is a 900px scroll for a list whose longest line is
+     58 characters. */
+  .curr-list { columns: 2; column-gap: clamp(1.5rem, 3vw, 2.5rem); }
+  .curr-list li { break-inside: avoid; }
+
+  .curr-body { padding-inline: var(--edge-l) var(--edge-r); }
+}
+
+/* Wide enough for the panel to hold a real measure rather than fill the frame
+   edge to edge — past this the list would run to 100+ characters. */
+@media (min-width: 1500px) {
+  .curr-phases, .curr-foot { max-width: 1400px; margin-inline: auto; }
+  .curr-head-top, .curr-filter { max-width: 1400px; margin-inline: auto; }
+  .curr-filter { padding-inline: 0; }
+}
+
 /* ---------- FOOTER ---------- */
 .foot { border-top: 1px solid var(--rule); padding-block: clamp(3rem, 7vw, 5rem); }
 .foot-name { font-size: var(--t2); font-weight: 900; color: var(--paper); line-height: 1.05; letter-spacing: -0.032em; }

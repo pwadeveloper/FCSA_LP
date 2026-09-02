@@ -433,11 +433,16 @@
         <h4 class="trk-k">What you leave with</h4>
         <p>A short film you wrote, produced and directed, premiered to an audience.</p>
       </section>
+      <div class="trk-cta trk-anim" style="--i:5">
+        <button type="button" class="btn btn-outline btn-sm" data-curr-open="film">
+          See full curriculum
+        </button>
+      </div>
     </div>
     <!-- The same three frames as the background. The one currently up is in
          colour; the other two sit in greyscale, so the strip reads as an
          indicator rather than three unrelated stills. -->
-    <ul class="trk-clips trk-anim" style="--i:5" aria-hidden="true">
+    <ul class="trk-clips trk-anim" style="--i:6" aria-hidden="true">
       <li class="trk-clip is-on" data-clip="0">
         <picture>
           <source type="image/avif" srcset="assets/media/film/film-bg-01-900.avif">
@@ -486,6 +491,11 @@
         <h4 class="trk-k">What you leave with</h4>
         <p>A published body of work and a strategy that isn’t guesswork.</p>
       </section>
+      <div class="trk-cta trk-anim" style="--i:5">
+        <button type="button" class="btn btn-outline btn-sm" data-curr-open="content">
+          See full curriculum
+        </button>
+      </div>
     </div>
     <!-- THREE 9:16 CLIPS, looping. content-track.js hydrates src from the
          data- attributes and plays them only while the section is on screen.
@@ -557,6 +567,11 @@
         <h4 class="trk-k">What you leave with</h4>
         <p>An editor’s reel, a scene, a music video, an interview, Instagram content, plus the finished film the whole school made.</p>
       </section>
+      <div class="trk-cta trk-anim" style="--i:5">
+        <button type="button" class="btn btn-outline btn-sm" data-curr-open="finisher">
+          See full curriculum
+        </button>
+      </div>
     </div>
     <!-- SEVEN FRAMES, cycling on a 500ms dwell — Resolve's own page order
          (Photo, Cut, Edit, Fusion, Color, Fairlight) and then the suite they
@@ -680,6 +695,242 @@
     </figure>
   </div>
 </section>
+
+<!-- ============ CURRICULUM ============
+     WHERE THE CONTENT COMES FROM, because a curriculum invented for a real
+     school would be a lie told to people spending 200,000 naira. Every class
+     title below is verbatim from content.md, which carries the instruction
+     "use verbatim, do not edit or reorder for tone". All 52 of them, in source
+     order, numbered so nothing can be quietly dropped.
+
+     THE WEEK RANGES ARE SOURCED TOO — the phase spine is the timeline table in
+     content.md, and each track's range is its own "Days" line (Film weeks 4-8,
+     Content and Finisher's 4-9). What content.md does NOT contain is a mapping
+     of individual titles to individual weeks, so this does not invent one:
+     titles hang off the PHASE that owns them, never off a week number. The
+     boundaries between the four runs are not guesswork either — each track's
+     "What you learn" paragraph quotes the first and last title of its own run,
+     which is what makes 17 / 12 / 13 / 10 the right split. If the source list
+     changes, re-derive it the same way.
+
+     A <dialog>, so the top layer, the backdrop, Esc and focus containment come
+     from the browser rather than from hand-rolled JS. The <noscript> block at
+     the foot turns it back into an ordinary section, because this is real
+     content and losing it to a failed script would be worse than losing a
+     carousel.
+
+     IT SITS HERE, immediately after the three track sections, because that is
+     where the buttons that open it are and because that is the order the
+     noscript fallback has to read in: you have just been told what the three
+     tracks are, and the next thing is every class inside them. -->
+<dialog id="curriculum" class="curr" aria-labelledby="curr-h">
+  <div class="curr-sheet">
+    <!-- The drag handle is the mobile sheet's, and it is decorative to a
+         screen reader: everything it does (expand, close) is also on the two
+         real buttons in the header. -->
+    <div class="curr-grab" data-curr-grab aria-hidden="true"><span></span></div>
+
+    <header class="curr-head">
+      <div class="curr-head-top">
+        <div class="curr-title">
+          <p class="eyebrow curr-eyebrow">Twelve weeks &middot; 52 classes</p>
+          <h2 id="curr-h" class="curr-h" tabindex="-1">The full curriculum</h2>
+        </div>
+        <button type="button" class="curr-close" data-curr-close aria-label="Close the curriculum">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Radio semantics, not four buttons: exactly one is always active, and
+           that is what a radio group means. aria-checked carries the state the
+           .is-on class only shows. -->
+      <div class="curr-filter" role="radiogroup" aria-label="Filter the curriculum by track">
+        <button type="button" class="curr-tab is-on" role="radio" aria-checked="true"  data-curr-track="all">All tracks</button>
+        <button type="button" class="curr-tab"       role="radio" aria-checked="false" data-curr-track="film">Film</button>
+        <button type="button" class="curr-tab"       role="radio" aria-checked="false" data-curr-track="content">Content</button>
+        <button type="button" class="curr-tab"       role="radio" aria-checked="false" data-curr-track="finisher">Finisher&rsquo;s</button>
+      </div>
+    </header>
+
+    <div class="curr-body" data-curr-scroll tabindex="0" role="group" aria-labelledby="curr-h">
+      <div class="curr-phases">
+        <section class="curr-phase" data-tracks="film content finisher">
+          <div class="curr-when">
+            <span class="curr-wk">01—03</span>
+            <span class="curr-who">All three tracks, together</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">Foundation</h3>
+            <p class="curr-ph-s">Story, camera, audio, lighting, screenplay. Fridays and Saturdays.</p>
+            <ol class="curr-list" start="1">
+              <li>The 3 elements of story — premise, character, conflict</li>
+              <li>How do these elements become visual storytelling?</li>
+              <li>How to use a camera — the exposure triangle</li>
+              <li>Getting the best results from your camera, phone or digital</li>
+              <li>Audio is the other half, and it is very important</li>
+              <li>Mic basics</li>
+              <li>Sound design and sound mixing</li>
+              <li>Slating and recording audio — to note</li>
+              <li>Movement and framing: the rule of thirds</li>
+              <li>A quest for stabilization — tripods and gimbals</li>
+              <li>I hit record, but all I see are shadows</li>
+              <li>Lighting basics — 3-point lighting, 2-point lighting</li>
+              <li>Histogram, focus peaking</li>
+              <li>What is a screenplay and why do we need it?</li>
+              <li>Screenplay formatting</li>
+              <li>Shots: types of shots</li>
+              <li>Shotlisting</li>
+            </ol>
+          </div>
+        </section>
+        <section class="curr-phase" data-tracks="film content finisher">
+          <div class="curr-when">
+            <span class="curr-wk">04—05</span>
+            <span class="curr-who">Tracks separate</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">Split &amp; crossover</h3>
+            <p class="curr-ph-s">The tracks separate here — but every student sits in on the post-production foundation, which is why some tracks attend up to four days in these two weeks.</p>
+          </div>
+        </section>
+        <section class="curr-phase curr-phase--track" data-tracks="film">
+          <div class="curr-when">
+            <span class="curr-wk">04—08</span>
+            <span class="curr-who">Mondays &amp; Saturdays</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">Film Production Track</h3>
+            <p class="curr-ph-s">For people who want to tell a story with a camera and a crew.</p>
+            <ol class="curr-list" start="18">
+              <li>Composition guidelines and basics</li>
+              <li>Master scene technique: coverage, the 180-degree rule, matching action</li>
+              <li>Roles in film production</li>
+              <li>Working with collaborators</li>
+              <li>Navigating rewrites</li>
+              <li>Art direction: production design and props</li>
+              <li>The full rundown of pre-production</li>
+              <li>Script breakdown</li>
+              <li>Budgeting</li>
+              <li>Location and legal: scouting, permits, and IP rights in Nigeria</li>
+              <li>Preparing for production</li>
+              <li>Rehearsals and directing actors</li>
+            </ol>
+          </div>
+        </section>
+        <section class="curr-phase curr-phase--track" data-tracks="content">
+          <div class="curr-when">
+            <span class="curr-wk">04—09</span>
+            <span class="curr-who">Tuesdays &amp; Thursdays</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">Content Creation Track</h3>
+            <p class="curr-ph-s">For people making work for a phone screen who want it to actually land.</p>
+            <ol class="curr-list" start="43">
+              <li>What you shoot: case studies and breakdowns</li>
+              <li>The importance of B-roll</li>
+              <li>How you shoot: movement and its importance</li>
+              <li>The editing — how you edit, case studies and breakdowns</li>
+              <li>The Hook Strategy: retention mechanics</li>
+              <li>Sound design for content</li>
+              <li>Lighting people, outdoor filming</li>
+              <li>Lighting products</li>
+              <li>Niche and SEO</li>
+              <li>Monetization</li>
+            </ol>
+          </div>
+        </section>
+        <section class="curr-phase curr-phase--track" data-tracks="finisher">
+          <div class="curr-when">
+            <span class="curr-wk">04—09</span>
+            <span class="curr-who">Wednesdays &amp; Fridays</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">The Finisher&rsquo;s Track</h3>
+            <p class="curr-ph-s">For people who&rsquo;d rather be in the edit than on set.</p>
+            <ol class="curr-list" start="30">
+              <li>Post-production in film — the stages</li>
+              <li>The editor&rsquo;s role</li>
+              <li>File organization</li>
+              <li>Basic editing: software, file organization, assembly</li>
+              <li>Cuts, transitions</li>
+              <li>Syncing audio and video</li>
+              <li>The Rule of Six — intention, rhythm</li>
+              <li>Where am I going, what am I saying?</li>
+              <li>Multicam editing, delivery</li>
+              <li>Colour grading</li>
+              <li>Sound editing</li>
+              <li>Titles, motion graphics, and basic VFX</li>
+              <li>Finishing and delivery</li>
+            </ol>
+          </div>
+        </section>
+        <section class="curr-phase" data-tracks="film content finisher">
+          <div class="curr-when">
+            <span class="curr-wk">08</span>
+            <span class="curr-who">Film leads; Content and Finisher&rsquo;s continue</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">Pre-production</h3>
+            <p class="curr-ph-s">Cast locked, call sheets issued, gear confirmed.</p>
+          </div>
+        </section>
+        <section class="curr-phase" data-tracks="film content finisher">
+          <div class="curr-when">
+            <span class="curr-wk">09</span>
+            <span class="curr-who">The whole school on set</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">Production week</h3>
+            <p class="curr-ph-s">Film Track students rotate through crew roles, Finisher&rsquo;s students handle data and dailies, and Content students shoot behind-the-scenes. Everyone works on the film that premieres.</p>
+          </div>
+        </section>
+        <section class="curr-phase" data-tracks="film content finisher">
+          <div class="curr-when">
+            <span class="curr-wk">10—11</span>
+            <span class="curr-who">Finisher&rsquo;s leads, Film supervises</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">Post-production</h3>
+            <p class="curr-ph-s">Assembly, cut, grade, mix.</p>
+          </div>
+        </section>
+        <section class="curr-phase" data-tracks="film content finisher">
+          <div class="curr-when">
+            <span class="curr-wk">12</span>
+            <span class="curr-who">All three tracks, together</span>
+          </div>
+          <div class="curr-what">
+            <h3 class="curr-ph-h">Premiere &amp; graduation</h3>
+            <p class="curr-ph-s">Your work on a screen.</p>
+          </div>
+        </section>
+      </div>
+
+      <p class="curr-foot">
+        Class titles are listed in teaching order within each phase, not pinned
+        to a single date. Weeks 8 to 12 are scheduled but class times are still
+        being finalised.
+      </p>
+    </div>
+  </div>
+</dialog>
+
+<!-- No JS, or no <dialog>: the modal never opens, so it becomes an ordinary
+     section instead and the three buttons that would open it are removed.
+     Same trick, and the same reasoning, as the reel handover further up. -->
+<noscript>
+  <style>
+    .curr { display: block; position: static; max-width: none; width: auto;
+            height: auto; max-height: none; border: 0; padding: 0;
+            background: var(--ground); color: var(--body); }
+    .curr-sheet { border-radius: 0; }
+    .curr-grab, .curr-close, .curr-filter { display: none; }
+    .curr-body { overflow: visible; }
+    .trk-cta { display: none; }
+  </style>
+</noscript>
 
 <!-- ============ SHOWCASE ============ -->
 <section class="sec sec-showcase" id="showcase" aria-labelledby="show-h">
@@ -1302,6 +1553,14 @@
      (>=1024, motion allowed, connection not metered) and plays them only
      while the section is on screen. -->
 <script src="content-track.js" defer></script>
+
+<!-- Curriculum modal: a <dialog>, so the top layer, the backdrop, Escape and
+     the inert background come from the browser. This adds the track filter,
+     the mobile sheet's two rest heights and its drag, and the scroll lock a
+     modal dialog does not bring with it. Removes its own buttons where
+     <dialog> is unsupported — the <noscript> style beside the markup has
+     already made it an ordinary section by then. -->
+<script src="curriculum.js" defer></script>
 
 <!-- Paystack checkout. THE FIRST THIRD-PARTY SCRIPT ON THIS PAGE — the README
      otherwise records that there are none, and this is the exception, because

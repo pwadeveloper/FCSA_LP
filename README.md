@@ -1006,6 +1006,94 @@ back in November, or ship the section with real frames from a previous shoot.
 
 ---
 
+## THE CURRICULUM MODAL
+
+`#curriculum` is a `<dialog>`. Each of the three track sections carries a
+**See full curriculum** button that opens it with that track preselected.
+
+### Where the content came from, and what was NOT invented
+
+Every one of the **52 class titles is verbatim** from `content.md`, which
+carries the instruction *"use verbatim, do not edit or reorder for tone"*. They
+are numbered 01–52 off `<ol start>` counters rather than typed in, so a title
+cannot go missing between the syllabus and the page without the numbers saying
+so.
+
+The week ranges are sourced too — the phase spine is the timeline table in
+`content.md`, and each track's range is its own **Days** line (Film 4–8,
+Content and Finisher's 4–9).
+
+**What `content.md` does not contain is a mapping of individual titles to
+individual weeks, and this does not invent one.** Titles hang off the PHASE
+that owns them, never off a week number, and the modal says so in its own
+footer. Inventing a week-by-week schedule for a school people are paying
+₦200,000 to attend would be a lie with a price tag on it. If a real
+week-level schedule ever exists, that footer line is what should change first.
+
+The split into 17 / 12 / 13 / 10 is not a guess either. Each track's
+**What you learn** paragraph quotes the first and last title of its own run:
+
+| Run | Titles | Corroborated by |
+|---|---|---|
+| Foundation | 01–17 | the timeline's "Story, camera, audio, lighting, screenplay" |
+| Film Production | 18–29 | "composition and the master scene technique… direct actors" |
+| The Finisher's | 30–42 | "stages, file organization, assembly… finishing, mastering and delivery" |
+| Content Creation | 43–52 | "What you shoot and how you shoot it… niche, SEO and monetization" |
+
+`tools/` has no script for this — the split is asserted in the generator that
+produced the markup and the assertions are reproduced in the comment above the
+`<dialog>`. **If the source list changes, re-derive it the same way** rather
+than nudging the boundaries by eye.
+
+### Why `<dialog>`, and what it does not give you
+
+Four things a modal has to get right are free: the top layer (so no `z-index`
+on the page can cover it — the fixed header included, measured at rgb(8,7,2)
+behind the backdrop), `::backdrop` without an extra element, Escape firing
+`cancel`, and the rest of the document going inert. A hand-rolled focus trap
+would be a worse copy of one the browser ships.
+
+Three things are not free and are in `curriculum.js`:
+
+- **The page behind still scrolls.** `overflow:hidden` on the root fixes it and
+  costs a sideways jump on any platform with a classic scrollbar, so the
+  scrollbar width is measured and handed back as padding. Overlay scrollbars
+  measure 0 and nothing is added. The documented width invariant holds either
+  way — measured 1440/1440 with the modal open.
+- **The sheet has two rest heights** (68svh and 96svh) and is dragged between
+  them. The height is a custom property, `--curr-h`, because the drag writes a
+  live pixel value on every pointer move and the release animates to a snap
+  point; a class could not do both. `.is-dragging` kills the transition for the
+  duration or the sheet would lag the thumb.
+- **Scrolling expands it.** Reaching for the content is itself the request for
+  more room, so the first scroll off the top snaps it to full rather than
+  making someone find the handle.
+
+The release decision uses the **tracked** height, not a layout read. Removing
+`.is-dragging` re-arms the transition, so measuring the sheet at that moment
+can measure something already animating — and a dismiss gesture that sometimes
+does not dismiss is the worst kind of bug to own.
+
+### Two fallbacks, for two different failures
+
+- **No JavaScript:** a `<noscript><style>` beside the markup turns the dialog
+  into an ordinary static section and hides the three buttons. Same trick, and
+  the same reasoning, as the reel handover.
+- **No `<dialog>` support:** `curriculum.js` removes the three buttons itself.
+  A button that does nothing when pressed never ships.
+
+Either way the curriculum stays readable. It is real content, not a carousel.
+
+### Measured
+
+320 / 375 / 1024 / 1440. Sheet opens at 68% of the viewport on a phone and
+grows to 96%; no horizontal overflow at any width; the close button is 44px;
+the filter is one tab stop with arrow keys moving between the four options;
+Escape, the ×, the backdrop and a downward drag all close it, unlock the page
+and return focus to the button that opened it.
+
+---
+
 ## Files
 
 ```
@@ -1042,6 +1130,9 @@ assets/
                                    fetch, not just playback. PLAYS ON PHONES —
                                    see "the one video that ignores the 1024
                                    rule" below
+  curriculum.js                    the curriculum modal — track filter, mobile
+                                   sheet drag, scroll lock. Removes its own
+                                   buttons where <dialog> is unsupported
   pay.js                           Paystack checkout — trusted with nothing
 api/
   _paystack.js                     shared helpers (underscore = not a route)
