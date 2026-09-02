@@ -1203,30 +1203,63 @@
 
     <!-- CONTACT. The transfer route in #pay already promises "We confirm by
          WhatsApp, usually the same day" and until now the page gave no number
-         to be confirmed on — this is the only place that says how to reach a
-         person.
+         to be confirmed on — this is the only place that says how to reach
+         anyone.
 
-         THE HREF AND THE TEXT DISAGREE ON PURPOSE. Displayed is the local
-         Nigerian form, which is what this audience reads and retypes;
-         wa.me takes E.164 only, so the href drops the trunk 0 and prepends
-         234. Change one and change the other. -->
+         THE WHATSAPP HREF AND ITS VISIBLE TEXT DISAGREE ON PURPOSE. Displayed
+         is the local Nigerian form, which is what this audience reads and
+         retypes into a dialler; wa.me takes E.164 only, so the href drops the
+         trunk 0 and prepends 234. Change one and change the other.
+
+         THE FACEBOOK URL IS THE RESOLVED PAGE, not the share link it came
+         from. facebook.com/share/1DwpxBDHAo/ redirects here — the /people/
+         form carries the page's numeric id, which is the durable half, where a
+         share slug is opaque and can rot. Verified: it serves "The Film and
+         Content School Africa". The tracking params the redirect adds
+         (rdid, share_url) are dropped.
+
+         Two groups rather than one four-across row: a phone number and an
+         email are things you ACT on now, a social handle is somewhere you go
+         later, and the Facebook page has no vanity handle to shorten it with
+         — so its name is the widest value here and would unbalance a single
+         row. -->
     <div class="foot-contact">
-      <h2 class="partners-label">Questions</h2>
-      <ul class="contact-list">
-        <li>
-          <a class="contact" href="https://wa.me/2347030786526" target="_blank" rel="noopener">
-            <span class="contact-what">WhatsApp</span>
-            <span class="contact-val">0703 078 6526</span>
-            <span class="contact-who">Osamudiamen Imasuen</span>
-          </a>
-        </li>
-        <li>
-          <a class="contact" href="mailto:create@multimudia.studio">
-            <span class="contact-what">Email</span>
-            <span class="contact-val">create@multimudia.studio</span>
-          </a>
-        </li>
-      </ul>
+      <div class="foot-reach">
+        <h2 class="partners-label">Questions</h2>
+        <ul class="contact-list">
+          <li>
+            <a class="contact" href="https://wa.me/2348172948113" target="_blank" rel="noopener">
+              <span class="contact-what">WhatsApp</span>
+              <span class="contact-val">0817 294 8113</span>
+              <span class="contact-who">Multimudia Studios</span>
+            </a>
+          </li>
+          <li>
+            <a class="contact" href="mailto:business@filmschool.africa">
+              <span class="contact-what">Email</span>
+              <span class="contact-val">business@filmschool.africa</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="foot-reach">
+        <h2 class="partners-label">Follow</h2>
+        <ul class="contact-list">
+          <li>
+            <a class="contact" href="https://www.instagram.com/filmschool.africa/" target="_blank" rel="noopener">
+              <span class="contact-what">Instagram</span>
+              <span class="contact-val">@filmschool.africa</span>
+            </a>
+          </li>
+          <li>
+            <a class="contact" href="https://www.facebook.com/people/The-Film-and-Content-School-Africa/61594251351392/" target="_blank" rel="noopener">
+              <span class="contact-what">Facebook</span>
+              <span class="contact-val contact-val-long">The Film and Content School Africa</span>
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
 
     <div class="foot-founded">

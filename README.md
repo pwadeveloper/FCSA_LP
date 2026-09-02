@@ -252,16 +252,40 @@ pay section. One fee, all three tracks, no per-track upsells.
 | Application deadline | New FAQ entry, and in the closing section |
 | Certificate — yes or no | New FAQ entry |
 | Reply time, in days | Under the submit button |
-| Socials — school, Clan Yujo, Multimudia | Footer |
+| Socials — Clan Yujo, Multimudia | Footer, alongside the school's own |
 | Tutor roster | Section was cut. Needs photos, credits and each person's sign-off before it earns a place back. |
 
-**Contact is done.** `.foot-contact` in the footer carries a WhatsApp link and
-an email. It is worth knowing why it is load-bearing rather than decorative:
-the transfer route in `#pay` tells people "We confirm by WhatsApp, usually the
-same day", and until this landed the page named no number for that to happen
-on. `wa.me` takes E.164 only, so the href is `2347030786526` while the text
-reads `0703 078 6526` — the local form, which is what this audience reads and
-retypes. **Change one and change the other.**
+**Contact and the school's socials are done.** `.foot-contact` in the footer
+carries four links in two groups — Questions (WhatsApp, email) and Follow
+(Instagram, Facebook).
+
+| | Shown | Href |
+|---|---|---|
+| WhatsApp | `0817 294 8113`, Multimudia Studios | `wa.me/2348172948113` |
+| Email | `business@filmschool.africa` | `mailto:` the same |
+| Instagram | `@filmschool.africa` | `instagram.com/filmschool.africa/` |
+| Facebook | The Film and Content School Africa | `facebook.com/people/…/61594251351392/` |
+
+Three things about that table are easy to break:
+
+- **The WhatsApp number is written twice, in two formats.** `wa.me` takes E.164
+  only, so the href is `2348172948113` — trunk `0` dropped, `234` prepended —
+  while the visible text is the local form this audience reads and retypes into
+  a dialler. **Change one and change the other.**
+- **The Facebook href is the resolved page, not the share link it came from.**
+  `facebook.com/share/1DwpxBDHAo/` redirects to it. The `/people/` form carries
+  the page's numeric id, which is the durable half; a share slug is opaque and
+  can rot. The `rdid` and `share_url` tracking params the redirect appends are
+  dropped. Both this and the Instagram handle were opened and confirmed to
+  serve the right account before they shipped — do the same for any replacement.
+- **The Facebook page has no vanity handle**, which is why its value is the
+  page's full name where Instagram gets a short `@`. At 320px that name fills
+  the column to within a pixel. It is allowed to wrap rather than capped, so a
+  longer name degrades into two balanced lines instead of overflowing.
+
+Why this is load-bearing rather than decorative: the transfer route in `#pay`
+tells people "We confirm by WhatsApp, usually the same day", and until this
+landed the page named no number for that to happen on.
 
 ### 3. There is no application form
 

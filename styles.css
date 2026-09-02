@@ -1899,7 +1899,14 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
    The label sits above the value rather than beside it because "WhatsApp
    0703 078 6526" on one line wraps mid-number at 320px, and half a phone
    number on its own line is worse than a label on its own line. */
-.foot-contact { margin-top: clamp(1.75rem, 4vw, 2.5rem); }
+/* Two groups — "Questions" and "Follow". They sit side by side wherever the
+   room exists and stack where it does not, so the reach-me-now pair and the
+   find-me-later pair never interleave into one undifferentiated run of links. */
+.foot-contact {
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
+  display: flex; flex-wrap: wrap;
+  column-gap: clamp(2.5rem, 7vw, 5.5rem); row-gap: clamp(1.5rem, 4vw, 2rem);
+}
 .contact-list {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-wrap: wrap;
@@ -1925,6 +1932,12 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   font-variant-numeric: tabular-nums;
 }
 .contact-who { color: var(--mute); font-size: var(--t-1); }
+/* The Facebook page has no vanity handle, so its value is the page's full
+   name — 34 characters against an email's 26. NO max-width: a hard cap made it
+   wrap at 1440 as well, where there is room for it on one line and the ragged
+   bottom bought nothing. It wraps on its own once the column runs out, which
+   is the only place a wrap helps; balance splits it evenly when it does. */
+.contact-val-long { text-wrap: balance; }
 .contact:hover .contact-val,
 .contact:focus-visible .contact-val { text-decoration: underline; text-underline-offset: 3px; }
 /* Same two-max-constraint sizing as .head-logo, for the same reason. */
