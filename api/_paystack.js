@@ -91,9 +91,31 @@ export function settings() {
 
 /* A configuration problem is a 503, not a 500: the code is fine, the operator
    has not finished. The message says which variable, because the person
-   reading it is the one who can fix it. */
+   reading it is the one who can fix it.
+
+   THIS ONE GUARDS THE CARD PATH — init and verify — so it still demands keys.
+   Nothing can charge a card without them and pretending otherwise would be
+   worse than a 503. */
 export function configProblem(c) {
   if (!c.hasKeys) return 'Paystack keys are not set. Add PAYSTACK_SECRET_KEY and PAYSTACK_PUBLIC_KEY.';
+  return priceProblem(c);
+}
+
+/* KNOWING THE PRICE AND BEING ABLE TO TAKE A CARD ARE TWO DIFFERENT QUESTIONS,
+   and they were one function until bank transfer became the only route.
+
+   The price is TUITION_KOBO, a constant thirty lines up. It owes Paystack
+   nothing. But `configured` on /api/paystack/config was computed from
+   configProblem, which fails first on missing keys — so pulling the keys, the
+   obvious thing to do when Paystack is out of the picture, would have taken
+   the FIGURES down with the card form. The pay section would have announced
+   that "fees for the 2026 term have not been published yet" next to a bank
+   account it was asking people to send ₦200,000 to.
+
+   So: priceProblem answers "do we know what this costs", which is what gates
+   showing any of it. hasKeys answers "can we take a card", which now gates
+   only the card route. */
+export function priceProblem(c) {
   if (c.totalKobo === null) return 'TUITION_KOBO in api/_paystack.js is not a positive whole number of kobo.';
   return null;
 }

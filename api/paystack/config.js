@@ -7,7 +7,7 @@
    from the total (see api/_paystack.js) so they cannot drift from each other
    either — they are display-only, since the instalment route is a bank
    transfer and nothing charges them. */
-import { settings, configProblem, json } from '../_paystack.js';
+import { settings, configProblem, priceProblem, json } from '../_paystack.js';
 
 /* THE NAME MATTERS. Vercel Functions in /api read the Edge runtime off
    `export const config = { runtime: 'edge' }`. `export const runtime = 'edge'`
@@ -23,11 +23,21 @@ export default async function handler(request) {
   if (request.method !== 'GET') return json({ error: 'Use GET.' }, 405);
 
   const c = settings();
-  const problem = configProblem(c);
+  /* `configured` means WE KNOW THE PRICE — it is what the page uses to decide
+     whether it may show any figures at all, and bank transfer needs nothing
+     from Paystack to be true. Whether a CARD can be taken is a separate
+     question with a separate field; conflating the two meant missing keys
+     blanked the tuition. */
+  const problem = priceProblem(c);
 
   return json({
     configured: !problem,
     reason: problem,
+    /* The card route is live only when the keys are there AND the price is
+       sound. pay.js falls back to bank transfer for every plan when it is
+       false, so this going false degrades the section rather than breaking
+       it. */
+    cardEnabled: !configProblem(c),
     publicKey: c.hasKeys ? c.publicKey : null,   // pk_ only, never sk_
     currency: c.currency,
     live: c.live,

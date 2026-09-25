@@ -1245,10 +1245,22 @@
 
 
 <!-- ============ PAY TUITION ============
-     TWO ROUTES, and they are not the same mechanism.
+     TWO PLANS, ONE MECHANISM — for now.
 
-       Pay in full   -> Paystack card checkout, handled by api/paystack/*
+       Pay in full   -> bank transfer, then a Tally form carrying the receipt
        Pay in two    -> bank transfer, then a Tally form carrying the receipt
+
+     CARD CHECKOUT IS SWITCHED OFF. Paystack is unavailable, so both plans go
+     down the transfer route and the card form is never shown. The switch is
+     CARD_ENABLED at the top of pay.js and the integration underneath it is
+     untouched — api/paystack/* still works, the self-test still covers it,
+     and turning cards back on is that one line. Nothing here was deleted.
+
+     WHAT STILL COMES FROM THE SERVER when Paystack is out of the picture: the
+     PRICE. /api/paystack/config reads TUITION_KOBO, a constant in
+     api/_paystack.js that owes Paystack nothing, so the figures on this page
+     survive the keys being pulled. `configured` means "we know the price";
+     `cardEnabled` is the separate question.
 
      The instalment route is deliberately NOT a card payment. Charging 70% now
      and 30% later means knowing, months apart, who has paid what — which
@@ -1271,7 +1283,7 @@
   <div class="wrap wrap-narrow">
     <div class="apply-head reveal">
       <h2 id="pay-h" class="h2">Pay your tuition</h2>
-      <p class="sec-intro" data-pay-intro>Card, bank transfer or USSD. Pay it all at once, or split it in two.</p>
+      <p class="sec-intro" data-pay-intro>Bank transfer. Pay it all at once, or split it in two.</p>
     </div>
 
     <div class="form reveal">
@@ -1283,7 +1295,7 @@
             <span class="pay-plan-b">
               <span class="pay-plan-t">Pay in full</span>
               <span class="pay-plan-v" data-plan-full>&mdash;</span>
-              <span class="pay-plan-n">Card, transfer or USSD, right here. Nothing else owed.</span>
+              <span class="pay-plan-n" data-plan-full-note>Bank transfer. Nothing else owed.</span>
             </span>
           </label>
           <label class="pay-plan" data-plan-split-row hidden>
@@ -1350,8 +1362,17 @@
         </p>
       </form>
 
-      <!-- ---- ROUTE B: transfer + receipt ---- -->
+      <!-- ---- ROUTE B: transfer + receipt — now the only route ---- -->
       <div class="pay-transfer" data-route-split hidden>
+        <!-- Shown only while CARD_ENABLED is false. Someone who saw this page
+             last week was offered a card; removing that without a word reads
+             as a page that is broken rather than one that is telling you
+             something. pay.js unhides it, so it disappears on its own when
+             cards come back. -->
+        <p class="pay-cardoff" data-pay-cardoff hidden>
+          <strong>Card payment is temporarily unavailable.</strong>
+          Tuition is being collected by bank transfer, and every plan is paid the same way.
+        </p>
         <dl class="pay-bank">
           <div><dt>Bank</dt><dd data-bank-name>&mdash;</dd></div>
           <div><dt>Account name</dt><dd data-bank-account>&mdash;</dd></div>
@@ -1370,9 +1391,14 @@
              BANK.note in pay.js, and hidden when that is null. -->
         <p class="pay-note" data-bank-note hidden></p>
 
+        <!-- Step 2 names the option to tick, and that is not hand-holding for
+             its own sake: the receipt form's "Which payment is this?" question
+             is how a ₦200,000 transfer is told apart from a ₦140,000 one after
+             the fact, and both plans now arrive on the same form. Getting it
+             wrong is a reconciliation problem for a human, weeks later. -->
         <ol class="pay-steps">
           <li>Transfer <strong data-transfer-amount-2>&mdash;</strong> to the account above.</li>
-          <li>Fill in the short form below and attach your receipt or a screenshot.</li>
+          <li>Fill in the short form below, choose <strong data-transfer-which>&mdash;</strong>, and attach your receipt or a screenshot.</li>
           <li>We confirm by WhatsApp, usually the same day.</li>
         </ol>
 
@@ -1380,7 +1406,10 @@
           Send your receipt
         </a>
 
-        <p class="pay-note" data-split-balance>&mdash;</p>
+        <!-- Only the two-part plan has a balance. Hidden outright on pay-in-
+             full rather than left saying "₦0 remaining", which invites the
+             question it exists to prevent. -->
+        <p class="pay-note" data-split-balance hidden>&mdash;</p>
       </div>
     </div>
   </div>

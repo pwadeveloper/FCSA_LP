@@ -1,15 +1,37 @@
 /* ==========================================================================
-   PAY TUITION — two routes.
+   PAY TUITION — two plans, and right now one mechanism.
 
-     Pay in full   -> Paystack card checkout (api/paystack/*)
+     Pay in full   -> bank transfer, then a Tally form carrying the receipt
      Pay in two    -> bank transfer, then a Tally form carrying the receipt
 
-   FILL THESE TWO IN AND THE INSTALMENT OPTION APPEARS. Left null, it is
-   hidden entirely and the page offers pay-in-full only — deliberately, because
-   the alternative is publishing a placeholder account number, and money sent
-   to a wrong account number is money gone. Same idiom as FORM_ENDPOINT at the
-   top of script.js.
+   FILL BANK AND TALLY_URL IN AND THE TRANSFER ROUTE WORKS. Left null it is
+   hidden entirely — deliberately, because the alternative is publishing a
+   placeholder account number, and money sent to a wrong account number is
+   money gone. Same idiom as FORM_ENDPOINT at the top of script.js.
    ========================================================================== */
+
+/* ==========================================================================
+   CARD CHECKOUT — OFF.
+
+   Paystack is unavailable, so both plans go down the bank transfer route and
+   the card form is never put on screen. Set this back to true and the card
+   route returns exactly as it was.
+
+   WHAT WAS NOT DONE, and deliberately: nothing was deleted. api/paystack/*
+   still works, tools/paystack-selftest.mjs still covers it, and the init /
+   verify handlers still refuse to run without keys. A payment integration
+   that took months to get right and has a real charge recorded against it is
+   not something to tear out because it is having a bad week — it is something
+   to switch off behind one boolean.
+
+   THE PAGE STILL NEEDS THE SERVER, just not for cards: /api/paystack/config
+   is where every figure on this section comes from, and it reads TUITION_KOBO,
+   a constant that owes Paystack nothing. That is why `configured` on that
+   endpoint now means "we know the price" and `cardEnabled` is the separate
+   question — otherwise pulling the keys would blank the tuition on a section
+   that is asking people to transfer it.
+   ========================================================================== */
+var CARD_ENABLED = false;
 
 /* Printed on the page for anyone to read — not secrets, these are the details
    on an invoice.
@@ -63,7 +85,16 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
   var splitRow = sec.querySelector('[data-plan-split-row]');
   var routeFull  = sec.querySelector('[data-route-full]');
   var routeSplit = sec.querySelector('[data-route-split]');
+  var cardOffEl  = sec.querySelector('[data-pay-cardoff]');
   var cfg      = null;
+
+  /* Whether a card is on offer is decided by BOTH ends and neither alone: the
+     switch at the top of this file, and the server's own cardEnabled (false
+     when the keys are gone). Either one saying no means no — a card button
+     that cannot reach a working /api/paystack/init is worse than no button. */
+  function cardOn() {
+    return CARD_ENABLED && !!(cfg && cfg.cardEnabled !== false);
+  }
 
   /* Both halves have to be present. A bank with no form leaves the receipt
      nowhere to go; a form with no bank leaves the money nowhere to go. */
@@ -164,6 +195,15 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
       sec.querySelector('[data-plan-split-note]').textContent =
         'Bank transfer, then send us the receipt. ' +
         money(c.balanceKobo, c.currency) + ' on resumption.';
+      /* Written here rather than left in the markup because it used to read
+         "Card, transfer or USSD" — a promise this page can no longer keep —
+         and because it should change back on its own when cards return. */
+      var fullNote = sec.querySelector('[data-plan-full-note]');
+      if (fullNote) {
+        fullNote.textContent = CARD_ENABLED && c.cardEnabled !== false
+          ? 'Card, transfer or USSD, right here. Nothing else owed.'
+          : 'Bank transfer, then send us the receipt. Nothing else owed.';
+      }
 
       if (splitReady) {
         splitRow.hidden = false;
@@ -176,17 +216,41 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
           n.hidden = false;
         }
         sec.querySelector('[data-tally-link]').href = TALLY_URL;
-        sec.querySelector('[data-transfer-amount-2]').textContent = money(c.depositKobo, c.currency);
-        sec.querySelector('[data-split-balance]').textContent =
-          'The remaining ' + money(c.balanceKobo, c.currency) + ' is due on resumption, within the ' +
-          'first four weeks — same account, same form.';
+      }
+
+      /* WITH CARDS OFF, THE BANK DETAILS ARE THE ONLY WAY TO PAY, so their
+         absence stops being a missing option and becomes a dead section. Say
+         so plainly instead of showing a plan chooser that leads nowhere. */
+      if (!cardOn() && !splitReady) {
+        blankPrices();
+        introEl.textContent = 'Payment is not available right now. ' +
+                              'Send us a message and we will take it from there.';
+        btn.disabled = true;
+        btn.textContent = 'Unavailable';
+        return;
+      }
+
+      if (!cardOn()) {
+        introEl.textContent = 'Bank transfer. Pay it all at once, or split it in two.';
+        if (cardOffEl) cardOffEl.hidden = false;
+        /* The card form is removed from the tab order and the accessibility
+           tree, not just visually hidden. A required field inside a display:
+           none ancestor is skipped by validation but a screen reader following
+           the DOM would still meet four inputs nothing intends to collect. */
+        routeFull.hidden = true;
       }
 
       plansEl.hidden = false;
       paint();
 
-      btn.disabled = false;
-      if (!c.live) testEl.hidden = false;
+      /* The submit button belongs to the card form. Leaving it enabled behind
+         a hidden panel is how a stale Enter keypress reaches a route that is
+         switched off. */
+      btn.disabled = !cardOn();
+      /* Test mode is a statement about CARD keys. With no card on offer it is
+         noise at best and, next to a real bank account, actively misleading —
+         "no money moves" is exactly wrong about a transfer. */
+      if (cardOn() && !c.live) testEl.hidden = false;
     })
     .catch(function () {
       /* Missing, broken, or too slow to wait for — the static page served
@@ -212,12 +276,46 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
   function paint() {
     if (!cfg || !cfg.configured) return;
     var split = chosenPlan() === 'split';
-    routeFull.hidden = split;
-    routeSplit.hidden = !split;
+
+    /* WITH CARDS OFF BOTH PLANS LAND HERE. The panel is no longer "the split
+       route" — it is the route — so everything in it that used to be hard
+       wired to the deposit now follows the chosen plan. Getting this wrong
+       means telling someone who picked pay-in-full to transfer ₦140,000. */
+    var transferring = !cardOn() || split;
+
+    routeFull.hidden  = transferring;
+    routeSplit.hidden = !transferring;
+
+    if (transferring) {
+      var due = split ? cfg.depositKobo : cfg.totalKobo;
+      sec.querySelector('[data-transfer-amount-2]').textContent = money(due, cfg.currency);
+
+      /* The exact wording of the option on the receipt form, so the two cannot
+         drift apart. If the choices in tools/tally-form.mjs are edited, these
+         strings are the other half of that edit. */
+      var which = sec.querySelector('[data-transfer-which]');
+      if (which) {
+        which.textContent = split
+          ? 'Deposit \u2014 ' + money(cfg.depositKobo, cfg.currency)
+          : 'Full tuition \u2014 ' + money(cfg.totalKobo, cfg.currency);
+      }
+
+      /* Only the two-part plan owes anything afterwards. */
+      var bal = sec.querySelector('[data-split-balance]');
+      if (bal) {
+        bal.hidden = !split;
+        if (split) {
+          bal.textContent =
+            'The remaining ' + money(cfg.balanceKobo, cfg.currency) + ' is due on resumption, within the ' +
+            'first four weeks — same account, same form.';
+        }
+      }
+    }
+
     /* The button states the amount, so the last thing read before pressing is
        the figure being charged. It comes from the same config value as the
        card, so the two cannot disagree. */
-    if (!split) btn.textContent = 'Pay ' + money(cfg.totalKobo, cfg.currency);
+    if (!transferring) btn.textContent = 'Pay ' + money(cfg.totalKobo, cfg.currency);
   }
   sec.addEventListener('change', function (ev) {
     if (ev.target && ev.target.name === 'plan') { quiet(); paint(); }
@@ -267,6 +365,7 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
     }
 
     if (!cfg || !cfg.configured) { say('Payment is not switched on yet.', 'err'); return; }
+    if (!cardOn()) { say('Card payment is unavailable — please use the bank transfer above.', 'err'); return; }
 
     /* The library is deferred, so on a slow connection a fast clicker can get
        here before it exists. Say that, rather than throwing. */

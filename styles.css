@@ -1888,6 +1888,21 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
 }
 .pay-testmode strong { color: var(--paper); }
 
+/* "Card payment is temporarily unavailable." A SOLID panel, not the dashed
+   one above it: dashed is this page's scaffolding tell — the placeholder slots
+   wore it and .pay-testmode wears it because it is a note to the operator.
+   This one is addressed to the payer and is the first thing in the panel they
+   have to act on, so it reads as part of the page rather than a sticky note
+   left on it. */
+.pay-cardoff {
+  margin: 0 0 clamp(1.25rem, 3vw, 1.75rem);
+  padding: .875rem 1rem;
+  border: 1px solid var(--field); border-left-width: 3px; border-radius: 10px;
+  background: #0A0A0A;
+  color: var(--mute); font-size: var(--t-1); line-height: 1.55;
+}
+.pay-cardoff strong { color: var(--paper); font-weight: 700; }
+
 /* ==========================================================================
    CURRICULUM — a bottom sheet on a phone, a full-screen panel on a desktop.
 

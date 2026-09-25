@@ -1159,13 +1159,65 @@ vercel.json                        no-store on /api/*
 
 ## Payments
 
-**Tuition is ₦200,000.** Two routes, and they are deliberately not the same
-mechanism:
+> ### 🔶 CARD CHECKOUT IS CURRENTLY SWITCHED OFF
+>
+> Paystack is unavailable, so **both plans are paid by bank transfer** and the
+> card form is never shown. The switch is `CARD_ENABLED` at the top of
+> `pay.js`. **Nothing was deleted** — `api/paystack/*` still works, the
+> self-test still covers it, and `init`/`verify` still refuse to run without
+> keys. Setting that one line back to `true` restores the card route exactly
+> as described below.
+>
+> Two things had to change underneath it, and they are the parts worth
+> knowing:
+>
+> 1. **The transfer panel now serves both plans.** It used to be hard-wired to
+>    the deposit. Pay-in-full transfers ₦200,000 and shows no balance line;
+>    pay-in-two transfers ₦140,000 and shows it. Both amounts still come from
+>    the server, so neither can drift from the price.
+> 2. **`configured` no longer means "Paystack is set up".** See *Knowing the
+>    price vs taking a card* below — this was a latent trap that would have
+>    blanked the tuition the moment anyone pulled the keys.
 
-| | |
-|---|---|
-| **Pay in full** — ₦200,000 | Paystack card checkout, `api/paystack/*` |
-| **Pay in two** — ₦140,000 now, ₦60,000 on resumption | bank transfer, then a Tally form carrying the receipt |
+**Tuition is ₦200,000.** Two plans, and until cards return, one mechanism:
+
+| | | |
+|---|---|---|
+| **Pay in full** — ₦200,000 | bank transfer + Tally receipt | ~~Paystack card checkout~~ *(switched off)* |
+| **Pay in two** — ₦140,000 now, ₦60,000 on resumption | bank transfer + Tally receipt | always was |
+
+**The receipt form is how the two are told apart afterwards.** Both plans now
+land on the same Tally form, and its *"Which payment is this?"* question is the
+only thing distinguishing a ₦200,000 transfer from a ₦140,000 one. Step 2 of
+the on-page instructions names the exact option to tick, and those strings are
+written by `paint()` in `pay.js` from the server's figures — **if the choices in
+`tools/tally-form.mjs` are edited, those strings are the other half of that
+edit.**
+
+### Knowing the price vs taking a card
+
+These were one function, `configProblem()`, which fails first on missing keys.
+`/api/paystack/config` computed `configured` from it, and the page uses
+`configured` to decide whether it may show **any figures at all**.
+
+So pulling the Paystack keys — the obvious thing to do when Paystack is out of
+the picture — would have taken the **prices** down with the card form. The pay
+section would have announced that *"fees for the 2026 term have not been
+published yet"* directly above a bank account it was asking people to send
+₦200,000 to.
+
+The price is `TUITION_KOBO`, a constant in `api/_paystack.js`. It owes Paystack
+nothing. So:
+
+| | Means | Gates |
+|---|---|---|
+| `priceProblem()` → `configured` | do we know what this costs | showing any figures |
+| `configProblem()` → `cardEnabled` | can we take a card | the card route only |
+
+`init` and `verify` still call `configProblem()` and still 503 without keys —
+no keys, no charge. **Verified** with the keys blanked: `configured: true`,
+`cardEnabled: false`, prices intact at ₦200,000 / ₦140,000 / ₦60,000, and
+`POST /api/paystack/init` → 503.
 
 The instalment route is **not** a card payment, and that is the whole reason
 this stayed simple. Charging 70% now and 30% months later means knowing, across
@@ -1184,6 +1236,11 @@ student notices. The self-test checks `deposit + balance === total` on figures
 that do not divide cleanly.
 
 ### The card route
+
+> **Currently switched off** (`CARD_ENABLED = false` in `pay.js`). Everything
+> below still describes working code and is what you get back by flipping that
+> line — it is documentation of a dormant route, not of a removed one.
+
 
 ```
 pay.js                     the browser side. Trusted with nothing.
