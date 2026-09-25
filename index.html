@@ -1188,6 +1188,12 @@
       </details>
 
       <details class="q">
+        <summary><span>Classes have started &mdash; can I still join?</span></summary>
+        <div class="q-b"><p>Yes. Classes began on Friday 25 September, and registration stays open until <strong>Saturday 10 October</strong>, at the end of week three. That is the last day to pay and hold a seat.</p>
+        <p>Arriving in the opening fortnight does not leave you behind: the first three weeks assume nothing and are taken by all three tracks together, and tracks are not chosen until the end of week three.</p></div>
+      </details>
+
+      <details class="q">
         <summary><span>What do I need to bring?</span></summary>
         <div class="q-b">
           <ul class="kit">
@@ -1284,6 +1290,17 @@
     <div class="apply-head reveal">
       <h2 id="pay-h" class="h2">Pay your tuition</h2>
       <p class="sec-intro" data-pay-intro>Bank transfer. Pay it all at once, or split it in two.</p>
+
+      <!-- The deadline, where the money is. The sticky bar carries the
+           countdown around the rest of the page; this is the copy that has to
+           stand on its own if the bar was dismissed, if it never showed, or if
+           someone arrived straight at #pay from the header CTA. The "N days
+           left" half is written by deadline.js from the one <time datetime>
+           in the bar — the date in the sentence is prose and must match it. -->
+      <p class="pay-deadline" data-reg-mirror>
+        <strong>Registration closes Saturday 10&nbsp;October.</strong>
+        <span data-reg-left></span>
+      </p>
     </div>
 
     <div class="form reveal">
@@ -1545,6 +1562,97 @@
   </div>
 </footer>
 
+<!-- ============ REGISTRATION DEADLINE ============
+     ONE MACHINE-READABLE DATE, AND EVERY OTHER COPY IS PROSE. The <time
+     datetime> on .regbar-date below is the ONLY value deadline.js reads;
+     the countdown, the line in the pay section and the first-visit notice
+     are all computed from it. Nothing hard-codes a second copy.
+
+     THE PROSE COPIES STILL HAVE TO AGREE WITH IT, and there are five:
+     this bar, #kickoff, the pay section's .pay-deadline, the FAQ's "Can I
+     still join?" and "Can I switch tracks?", and the closing section's
+     intro. tools/paystack-selftest.mjs fails if any of them drift — same
+     guard, and the same reasoning, as the price.
+
+     23:59:59+01:00 — Nigeria is WAT all year and observes no DST, so the
+     offset is a constant and the deadline is the END of Saturday the 10th,
+     not the start of it. A bare "2026-10-10" parses as UTC midnight, which
+     would close registration at 1am local on the day it is supposed to run
+     until. -->
+<div class="regbar" data-regbar hidden>
+  <div class="regbar-in">
+    <p class="regbar-txt">
+      <span class="regbar-lab">Registration closes</span>
+      <time class="regbar-date" data-reg-deadline datetime="2026-10-10T23:59:59+01:00">Sat 10 Oct</time>
+    </p>
+
+    <!-- aria-hidden, and that is the accessible choice rather than a lapse: a
+         live-updating clock announced by a screen reader is unusable, and the
+         sentence above already carries everything this says. The digits are a
+         picture of the sentence. -->
+    <p class="regbar-clock" data-reg-clock aria-hidden="true">
+      <span class="regbar-u"><b data-reg-d>&ndash;&ndash;</b><i>d</i></span>
+      <span class="regbar-u"><b data-reg-h>&ndash;&ndash;</b><i>h</i></span>
+      <span class="regbar-u" data-reg-m-wrap><b data-reg-m>&ndash;&ndash;</b><i>m</i></span>
+      <span class="regbar-u" data-reg-s-wrap hidden><b data-reg-s>&ndash;&ndash;</b><i>s</i></span>
+    </p>
+
+    <a class="regbar-cta" href="#pay">Pay now</a>
+
+    <button type="button" class="regbar-x" data-reg-dismiss aria-label="Hide the registration countdown">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- ============ FIRST VISIT — classes have started ============
+     Shown ONCE per browser, then never again. localStorage, wrapped in
+     try/catch because it throws outright in a locked-down private window —
+     and a storage failure must cost a visitor the notice, not the page.
+
+     IT STOPS ON ITS OWN. Past the deadline in the bar above, this never
+     opens: "classes have started, pay before the 10th" is not a message worth
+     showing on the 11th, and nobody should have to remember to take it down.
+
+     A <dialog>, for the same four reasons as the curriculum: top layer,
+     ::backdrop, Escape, and an inert document. -->
+<dialog id="kickoff" class="ko" aria-labelledby="ko-h">
+  <div class="ko-box">
+    <button type="button" class="ko-x" data-ko-close aria-label="Close">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"></path>
+      </svg>
+    </button>
+
+    <p class="eyebrow ko-eyebrow">Now in session</p>
+    <h2 id="ko-h" class="ko-h" tabindex="-1">Classes have started.</h2>
+
+    <p class="ko-p">
+      The first three weeks began on Friday 25 September and run Fridays and
+      Saturdays. <strong>You can still join.</strong>
+    </p>
+    <p class="ko-p">
+      Registration closes <strong>Saturday 10 October</strong>, at the end of
+      week three — the last day to pay and hold a seat. The opening weeks
+      assume nothing, so arriving now does not leave you behind.
+    </p>
+
+    <div class="ko-clock" data-reg-clock aria-hidden="true">
+      <span class="regbar-u"><b data-reg-d>&ndash;&ndash;</b><i>days</i></span>
+      <span class="regbar-u"><b data-reg-h>&ndash;&ndash;</b><i>hrs</i></span>
+      <span class="regbar-u" data-reg-m-wrap><b data-reg-m>&ndash;&ndash;</b><i>min</i></span>
+      <span class="regbar-u" data-reg-s-wrap hidden><b data-reg-s>&ndash;&ndash;</b><i>sec</i></span>
+    </div>
+
+    <div class="ko-actions">
+      <a class="btn btn-apply" href="#pay" data-ko-cta>Pay your tuition</a>
+      <button type="button" class="ko-later" data-ko-close>Keep looking around</button>
+    </div>
+  </div>
+</dialog>
+
 <script src="script.js"></script>
 <!-- The carousel owns the hero and must be able to run before the shader
      exists; the shader is a pure enhancement that asks the carousel what is on
@@ -1581,6 +1689,12 @@
      <dialog> is unsupported — the <noscript> style beside the markup has
      already made it an ordinary section by then. -->
 <script src="curriculum.js" defer></script>
+
+<!-- Registration deadline: the sticky countdown bar, the first-visit notice,
+     and the "N days left" half of the line in the pay section. Reads ONE
+     <time datetime> out of the bar's markup and computes the rest, and
+     retires all of it on its own once that date passes. -->
+<script src="deadline.js" defer></script>
 
 <!-- Paystack checkout. THE FIRST THIRD-PARTY SCRIPT ON THIS PAGE — the README
      otherwise records that there are none, and this is the exception, because

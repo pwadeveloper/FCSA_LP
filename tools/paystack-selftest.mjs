@@ -149,5 +149,56 @@ console.log('\nprice drift — the page must print what the code charges');
   ok(`content.md prints the ${bal} balance`, copy.includes(`₦${bal}`));
 }
 
+console.log('\nregistration deadline drift — every copy of the date must agree');
+{
+  /* SAME CLASS OF BUG AS THE PRICE, so it is guarded in the same place.
+
+     One machine-readable date exists: the <time datetime> on .regbar-date in
+     index.html, which deadline.js reads and which drives the countdown, the
+     first-visit notice and the "N days left" line beside the money. Every
+     OTHER mention is prose a human edits — the notice, the pay section, two
+     FAQ answers, the closing section, content.md.
+
+     Nothing at runtime can reconcile those. Rewriting them with JS would
+     leave the date missing for anyone without JS and for every crawler, which
+     is the same reason the price is not rewritten either. So: move the
+     deadline and forget a copy, and this fails loudly instead of the site
+     counting down to one date while telling people another. */
+  const html = readFileSync('index.html', 'utf8');
+  const copy = readFileSync('content.md', 'utf8');
+
+  const m = html.match(/data-reg-deadline datetime="([^"]+)"/);
+  ok('index.html carries one machine-readable deadline', Boolean(m));
+
+  if (m) {
+    const when = new Date(m[1]);
+    ok(`the deadline parses (${m[1]})`, !isNaN(when.getTime()));
+
+    /* Built from the date itself, so this cannot be satisfied by a stale
+       literal typed into the test. */
+    const day   = when.toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'Africa/Lagos' });
+    const dnum  = when.toLocaleDateString('en-GB', { day: 'numeric',  timeZone: 'Africa/Lagos' });
+    const month = when.toLocaleDateString('en-GB', { month: 'long',   timeZone: 'Africa/Lagos' });
+    const prose = `${day} ${dnum} ${month}`;                 // "Saturday 10 October"
+    const tight = `${day} ${dnum}&nbsp;${month}`;            // the pay section's non-breaking copy
+
+    const hits = (hay, needle) => hay.split(needle).length - 1;
+
+    ok(`the closing date is the END of ${day.toLowerCase()} in Lagos, not its start`,
+       when.toLocaleTimeString('en-GB', { hour12: false, timeZone: 'Africa/Lagos' }) === '23:59:59');
+
+    ok(`index.html prints "${prose}" in the notice, the FAQ and the closing section`,
+       hits(html, prose) + hits(html, tight) >= 4);
+    ok(`the pay section prints it beside the money`, html.includes(tight) || html.includes(prose));
+    ok(`content.md prints "${prose}"`, copy.includes(prose));
+
+    /* The bar's own short label is the one abbreviation, and it has to be the
+       same day as the long form above it. */
+    const short = when.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Africa/Lagos' });
+    ok(`the sticky bar's short date matches (${short.replace(',', '')})`,
+       html.includes(short.replace(',', '')));
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);

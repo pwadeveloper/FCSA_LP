@@ -2076,6 +2076,178 @@ main[id], section[id] { scroll-margin-top: calc(var(--head-compact-h) + 24px); }
   .curr-filter { padding-inline: 0; }
 }
 
+/* ==========================================================================
+   REGISTRATION DEADLINE — the sticky bar, and the first-visit notice.
+
+   NO YELLOW IN EITHER, and that is the hard part of designing urgency into
+   this palette. Every instinct says to reach for the accent for a countdown;
+   .btn-apply is documented as "THE ONE PLACE YELLOW APPEARS", and a second
+   yellow thing — a permanently visible one, at that — spends the exact
+   attention the Apply pill exists to collect. So the bar is built out of what
+   this page already uses to mean "important": full white against #949494, a
+   hairline rule, tabular figures, and an uppercase eyebrow. The only yellow
+   on screen stays the button you are being pointed at, inside the notice.
+   ========================================================================== */
+
+/* ---------- the sticky bar ---------- */
+.regbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+  background: var(--ground);
+  border-top: 1px solid var(--rule);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* SOLID, not translucent. The header above it gets away with no fill
+     because it only ever floats over media it was contrast-tested against.
+     This crosses the whole page — photo tracks, the black FAQ, the pay
+     section — and a bar whose legibility depends on what happens to be
+     behind it is a bar that is illegible somewhere. */
+}
+/* Below .site-head's z-index of 100: if the two ever meet, the mark and the
+   Apply pill are the more important of the pair. */
+
+/* Enters by sliding up, once, when the hero is behind you. Off-screen by
+   transform rather than display:none so the reveal has something to animate
+   from, and hidden from the a11y tree by [hidden] until it is real. */
+.regbar { transform: translateY(110%); transition: transform .4s var(--ease); }
+.regbar.is-in { transform: none; }
+@media (prefers-reduced-motion: reduce) { .regbar { transition: none; } }
+
+.regbar-in {
+  display: flex; align-items: center; gap: clamp(.75rem, 2.5vw, 1.5rem);
+  padding: .625rem var(--edge-r) .625rem var(--edge-l);
+  min-height: 56px;
+}
+.regbar-txt { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; min-width: 0; }
+.regbar-lab {
+  text-transform: uppercase; letter-spacing: .12em; font-weight: 700;
+  font-size: var(--t-2); color: var(--mute); white-space: nowrap;
+}
+.regbar-date { color: var(--paper); font-weight: 700; font-size: var(--t-1); white-space: nowrap; }
+
+/* The clock. Digits full white and tabular so the bar does not twitch
+   sideways every time a minute rolls over; units in mute, lowercase, small —
+   they are punctuation, not information. */
+.regbar-clock, .ko-clock { display: flex; align-items: baseline; gap: .6rem; margin: 0; }
+.regbar-u { display: inline-flex; align-items: baseline; gap: .15rem; }
+.regbar-u b {
+  color: var(--paper); font-weight: 700; font-variant-numeric: tabular-nums;
+  font-size: var(--t0); letter-spacing: -0.01em;
+}
+.regbar-u i { color: var(--mute); font-style: normal; font-size: var(--t-2); font-weight: 700; }
+
+/* Pushed to the right edge, so the bar reads left to right as
+   what closes -> when -> what to do about it. */
+.regbar-cta {
+  margin-left: auto; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 40px; padding: 0 1.1rem;
+  border: 1px solid var(--paper); border-radius: 999px;
+  color: var(--paper); text-decoration: none;
+  font-size: var(--t-1); font-weight: 700; white-space: nowrap;
+  transition: background-color .2s var(--ease), color .2s var(--ease);
+}
+.regbar-cta:hover { background: var(--paper); color: var(--ground); }
+
+.regbar-x {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; margin-right: -.5rem;
+  background: transparent; border: 0; border-radius: 999px;
+  color: var(--mute); cursor: pointer;
+}
+.regbar-x svg { width: 18px; height: 18px; }
+.regbar-x:hover { color: var(--paper); background: rgba(255,255,255,.08); }
+
+/* The footer is the only thing that ends where the bar sits. Its own bottom
+   padding is ~48px against a 56px bar, so the partner strip would finish
+   underneath it. --regbar-h is measured and written by deadline.js, because
+   the bar stacks on a narrow phone and its height is not a constant. */
+.has-regbar .foot { padding-bottom: calc(clamp(3rem, 7vw, 5rem) + var(--regbar-h, 56px)); }
+
+/* Narrow: the label is the first thing to go. "Registration closes" in front
+   of a date that already says Sat 10 Oct is the most repeatable part of the
+   sentence, and at 360px the CTA is worth more than the preamble. */
+@media (max-width: 599.98px) {
+  .regbar-in { gap: .625rem; min-height: 52px; }
+  .regbar-lab { display: none; }
+  .regbar-date { font-size: var(--t-2); }
+  .regbar-clock { gap: .45rem; }
+  .regbar-u b { font-size: var(--t-1); }
+  .regbar-cta { min-height: 36px; padding: 0 .85rem; font-size: var(--t-2); }
+}
+
+/* ---------- first visit: classes have started ---------- */
+.ko {
+  margin: auto; padding: 0; border: 0; max-width: none; max-height: none;
+  background: transparent; color: var(--body);
+  width: min(34rem, calc(100vw - 2 * var(--edge-l)));
+}
+.ko::backdrop { background: rgba(0,0,0,.88); }
+
+.ko-box {
+  position: relative;
+  background: var(--ground);
+  border: 1px solid var(--rule); border-radius: 18px;
+  padding: clamp(1.5rem, 5vw, 2.25rem);
+  max-height: 88svh; overflow-y: auto; overscroll-behavior: contain;
+}
+.ko-x {
+  position: absolute; top: .5rem; right: .5rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  background: transparent; border: 0; border-radius: 999px;
+  color: var(--mute); cursor: pointer;
+}
+.ko-x svg { width: 20px; height: 20px; }
+.ko-x:hover { color: var(--paper); background: rgba(255,255,255,.08); }
+
+.ko-eyebrow { color: var(--mute); }
+.ko-h {
+  margin-top: .5rem;
+  font-size: clamp(1.75rem, 6vw, 2.25rem); font-weight: 900; color: var(--paper);
+  line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance;
+}
+/* The heading takes focus when the notice opens, so the title is the first
+   thing announced rather than the close button. NO RING ON IT, and this is the
+   one place that exception is right: the notice opens on its own, before the
+   visitor has touched anything, so Chrome has no interaction to judge against
+   and falls back to showing the keyboard ring. Nobody navigated here. Focus is
+   still trapped in the dialog and the next Tab lands on a control that does
+   ring, so the indicator is one keypress away for anyone actually using one.
+   (.curr-h deliberately keeps its ring — that modal only ever opens from a
+   press, so a ring there means somebody pressed Enter.) */
+.ko-h:focus-visible { outline: none; box-shadow: none; }
+
+.ko-p { margin-top: .875rem; color: var(--body); font-size: var(--t-1); line-height: 1.55; }
+.ko-p strong { color: var(--paper); font-weight: 700; }
+
+/* Bigger than the bar's, and boxed: in the bar the clock is an ambient
+   reminder, here it is the argument. */
+.ko-clock {
+  margin-top: 1.25rem; padding: .875rem 1rem;
+  gap: clamp(.75rem, 4vw, 1.25rem);
+  border: 1px solid var(--rule); border-radius: 12px; background: #0A0A0A;
+}
+.ko-clock .regbar-u b { font-size: clamp(1.25rem, 5vw, 1.5rem); }
+
+.ko-actions { margin-top: 1.25rem; display: flex; flex-direction: column; gap: .75rem; align-items: stretch; }
+.ko-actions .btn { width: 100%; }
+/* A real button, not a link, and deliberately quiet: dismissing is the second
+   choice here, and it still has to be a 44px target rather than a scrap of
+   underlined text under a 52px pill. */
+.ko-later {
+  min-height: 44px; background: transparent; border: 0;
+  color: var(--mute); font-size: var(--t-1); font-weight: 700; cursor: pointer;
+}
+.ko-later:hover { color: var(--paper); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- the same deadline, next to the money ---------- */
+.pay-deadline {
+  margin-top: 1.125rem; padding: .75rem 0 0;
+  border-top: 1px solid var(--rule);
+  color: var(--mute); font-size: var(--t-1); line-height: 1.5;
+}
+.pay-deadline strong { color: var(--paper); font-weight: 700; }
+.pay-deadline [data-reg-left]:not(:empty)::before { content: ' '; }
+
 /* ---------- FOOTER ---------- */
 .foot { border-top: 1px solid var(--rule); padding-block: clamp(3rem, 7vw, 5rem); }
 .foot-name { font-size: var(--t2); font-weight: 900; color: var(--paper); line-height: 1.05; letter-spacing: -0.032em; }

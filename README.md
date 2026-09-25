@@ -1094,6 +1094,86 @@ and return focus to the button that opened it.
 
 ---
 
+## THE REGISTRATION DEADLINE
+
+Classes began **Friday 25 September 2026**. Registration — which is to say
+**paying** — closes **Saturday 10 October 2026**, at the end of week three.
+That fortnight is the whole reason any of the following exists.
+
+Four things say so, and `deadline.js` drives all of them:
+
+| | Where | Behaviour |
+|---|---|---|
+| **First-visit notice** | `#kickoff`, a `<dialog>` | Opens once per browser, 1.2s after load |
+| **Sticky bar** | `.regbar`, fixed to the bottom | Slides up once the hero is behind you |
+| **Beside the money** | `.pay-deadline` in `#pay` | "N days left", under the section intro |
+| **FAQ** | *"Classes have started — can I still join?"* | Static prose |
+
+### One date, read from the DOM
+
+The `<time datetime="2026-10-10T23:59:59+01:00">` on `.regbar-date` is the
+**only** machine-readable copy. `deadline.js` hard-codes no date at all — it
+reads that attribute and computes everything else, so the countdown, the
+notice and the pay line cannot disagree with each other.
+
+**23:59:59+01:00, not a bare date.** Nigeria is WAT all year and observes no
+DST, so the offset is a constant. A bare `2026-10-10` parses as UTC midnight,
+which would close registration at 1am local **on the day it is supposed to run
+until** — a full day early, and silently.
+
+Every other mention is prose a human edits, and `npm run test:paystack` now
+fails if any of them drift from the attribute. Same guard, same reasoning, and
+the same section as the price. **Verified it can fail:** moving the attribute a
+week without touching the copy produces 4 failures naming each stale location.
+
+### It retires itself
+
+Past the deadline the bar never shows, the notice never opens, and the pay
+line stops counting down and says registration has closed. The deadline
+passing **while someone is on the page** is handled too — the bar leaves and
+the line rewrites itself.
+
+Nobody has to remember to take this down on the 11th, which matters, because
+the person who would have to remember is the person teaching that week.
+
+### The design, and the one rule it had to work around
+
+`.btn-apply` is documented as **"THE ONE PLACE YELLOW APPEARS"**, and every
+instinct for a countdown says reach for the accent. A second yellow thing —
+permanently on screen, at that — spends exactly the attention the Apply pill
+exists to collect. So the bar is built from what this page already uses to
+mean *important*: full white against `#949494`, a hairline rule, tabular
+figures and an uppercase eyebrow. The only yellow on screen stays the button
+you are being pointed at, inside the notice.
+
+Other decisions worth keeping:
+
+- **Not on the hero.** The bar arrives once the hero is behind you. A bar
+  across the bottom of the opening screen is the page interrupting its own
+  first line.
+- **Solid, not translucent.** The header gets away with no fill because it only
+  floats over media it was contrast-tested against. This bar crosses photo
+  tracks, the black FAQ and the pay section; one whose legibility depends on
+  what is behind it is illegible somewhere.
+- **The clock is `aria-hidden`.** A live-updating countdown announced by a
+  screen reader is unusable, and the sentence beside it already carries
+  everything it says.
+- **Days/hours/minutes, ticking every 30s** — and seconds, every 1s, only
+  inside the last day. A seconds column repainting 60 times a minute for a
+  fortnight tells you nothing new. The timer pauses on a hidden tab.
+- **Dismissal is `sessionStorage`, the notice is `localStorage`.** Dismissing
+  the bar means "not now", so it returns next visit; the notice means "seen
+  it", so it does not. Both reads and writes are wrapped — storage throws
+  outright in a locked-down private window, and that must cost a visitor the
+  notice, never the page.
+- **The footer gets extra bottom padding** while the bar is up, from a
+  `--regbar-h` that `deadline.js` measures rather than assumes — the bar
+  stacks on a narrow phone and its height is not a constant.
+- **Arriving at `#pay` suppresses the notice.** They are already doing the
+  thing it exists to ask for.
+
+---
+
 ## Files
 
 ```
@@ -1133,6 +1213,9 @@ assets/
   curriculum.js                    the curriculum modal — track filter, mobile
                                    sheet drag, scroll lock. Removes its own
                                    buttons where <dialog> is unsupported
+  deadline.js                      the registration countdown — sticky bar,
+                                   first-visit notice, and the "N days left"
+                                   beside the money. Retires itself on 10 Oct
   pay.js                           Paystack checkout — trusted with nothing
 api/
   _paystack.js                     shared helpers (underscore = not a route)
