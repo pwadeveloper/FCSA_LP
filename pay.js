@@ -85,7 +85,6 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
   var splitRow = sec.querySelector('[data-plan-split-row]');
   var routeFull  = sec.querySelector('[data-route-full]');
   var routeSplit = sec.querySelector('[data-route-split]');
-  var cardOffEl  = sec.querySelector('[data-pay-cardoff]');
   var cfg      = null;
 
   /* Whether a card is on offer is decided by BOTH ends and neither alone: the
@@ -232,7 +231,10 @@ var TALLY_URL = 'https://tally.so/r/kdPAX6';
 
       if (!cardOn()) {
         introEl.textContent = 'Bank transfer. Pay it all at once, or split it in two.';
-        if (cardOffEl) cardOffEl.hidden = false;
+        /* NO "card is temporarily unavailable" NOTICE. There was one, and it
+           is gone by request: the section does not explain an absence, it just
+           offers the way you pay. Nothing on the page promises a card any
+           more, so there is no gap left to account for. */
         /* The card form is removed from the tab order and the accessibility
            tree, not just visually hidden. A required field inside a display:
            none ancestor is skipped by validation but a screen reader following
